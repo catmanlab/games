@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Catman Lab · 小游戏空间</title>
+  <title>Catman Lab · Mini Game Hub</title>
+  <link rel="icon" href="catman_lab_logo.png" type="image/png" />
   <style>
     :root {
       --bg: #050508;
@@ -22,7 +23,7 @@
       min-height: 100vh;
       background: var(--bg);
       color: var(--text);
-      font-family: "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
       overflow-x: hidden;
     }
 
@@ -67,46 +68,39 @@
       animation: fadeUp 0.9s ease both;
     }
 
-    .badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 6px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: rgba(255, 255, 255, 0.04);
-      font-size: 0.78rem;
-      color: var(--muted);
-      letter-spacing: 0.06em;
-      margin-bottom: 20px;
+    .logo-wrap {
+      display: inline-block;
+      margin-bottom: 22px;
+      border-radius: 20px;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.96);
+      box-shadow:
+        0 12px 40px rgba(0, 0, 0, 0.45),
+        0 0 0 1px rgba(255, 255, 255, 0.08);
+      transition: transform 0.35s ease, box-shadow 0.35s ease;
       cursor: default;
-      transition: border-color 0.25s, box-shadow 0.25s;
     }
-    .badge:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 20px var(--accent-dim);
+    .logo-wrap:hover {
+      transform: translateY(-6px) scale(1.02);
+      box-shadow:
+        0 20px 56px rgba(0, 0, 0, 0.55),
+        0 0 32px var(--accent-dim);
     }
-    .badge-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--accent);
-      box-shadow: 0 0 10px var(--accent);
-      animation: pulse 2s ease infinite;
+    .logo {
+      display: block;
+      width: min(320px, 78vw);
+      height: auto;
+      user-select: none;
+      -webkit-user-drag: none;
     }
 
     h1 {
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(1.6rem, 5vw, 2.2rem);
       font-weight: 700;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.08em;
       line-height: 1.2;
       margin-bottom: 16px;
-    }
-    h1 span {
-      background: linear-gradient(90deg, var(--accent), #a78bfa, var(--warm));
-      -webkit-background-clip: text;
-      background-clip: text;
-      color: transparent;
+      color: var(--text);
     }
 
     .subtitle {
@@ -228,11 +222,6 @@
       from { opacity: 0; transform: translateY(24px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50%      { opacity: 0.4; }
-    }
-
     .confetti {
       position: fixed;
       pointer-events: none;
@@ -253,28 +242,36 @@
 
   <main>
     <section class="hero">
-      <div class="badge"><span class="badge-dot"></span>CATMAN LAB</div>
-      <h1><span>Catman Lab</span><br />小游戏空间</h1>
+      <div class="logo-wrap">
+        <img
+          class="logo"
+          src="catman_lab_logo.png"
+          alt="Catman Lab logo — scientist cat with flask, coding and gaming icons"
+          width="1254"
+          height="1254"
+        />
+      </div>
+      <h1>Mini Game Hub</h1>
       <p class="subtitle">
-        这里是 Catman Lab 的在线小游戏集合。<br />
-        随手点开，轻松来一局。
+        Welcome to Catman Lab's collection of browser mini games.<br />
+        Pick one and jump in — quick, casual, and fun.
       </p>
-      <p class="welcome">欢迎好友来<em id="playWord">玩儿</em> 🎮</p>
+      <p class="welcome">Friends welcome — come <em id="playWord">play</em> 🎮</p>
     </section>
 
     <section class="games">
-      <p class="games-label">— 游戏列表 —</p>
+      <p class="games-label">— Games —</p>
       <a class="game-card" href="supergun/index.html">
         <div class="game-icon">🔫</div>
         <div class="game-info">
           <h2>Supergun</h2>
-          <p>经典射击小游戏 · 点击开始</p>
+          <p>Classic shooter · tap to start</p>
         </div>
         <span class="game-arrow">→</span>
       </a>
     </section>
 
-    <p class="footer">移动鼠标，星星会跟着你闪 ✨ · 点击「玩儿」有惊喜</p>
+    <p class="footer">Move your mouse — the stars light up ✨ · click “play” for a surprise</p>
   </main>
 
   <script>

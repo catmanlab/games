@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <title>Fighter Cats Simulator</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -633,12 +636,12 @@
 
         <div class="side-panel" id="sidePanel">
             <h3 id="panelTitle">Punching Bags</h3>
-            <div id="bagList" class="bag-legend"></div>
             <h4 class="soul-panel-title">Cat's Soul Shop</h4>
             <div id="soulShop" class="soul-shop">
                 <h4>✨ Cat's Soul</h4>
                 <p>Win fights for trophies, then buy soul upgrades here for ×2, ×4, ×8, ×24, and ×72 effective strength.</p>
             </div>
+            <div id="bagList" class="bag-legend"></div>
             <div id="enemyList"></div>
             <button class="fight-btn" id="fightBtn" disabled>Start Fight</button>
         </div>
@@ -650,10 +653,11 @@
         Higher bags speed up the bar · Win fights for trophies · Cat's Soul upgrades (150 🏆 → ×2, then ×4, ×8, ×24, ×72; each costs 2.85× the last) ·
         Arena: pick an enemy and press <kbd>SPACE</kbd> to attack
     </p>
-    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device.</p>
+    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device. · v2026.06.15</p>
     </div>
 
     <script>
+        const GAME_VERSION = '2026.06.15';
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
@@ -822,7 +826,7 @@
                 localStorage.setItem(userSaveKey(currentUserSlug), JSON.stringify(captureSaveState()));
                 saveDirty = false;
                 lastSaveAt = now;
-                if (saveHint) saveHint.textContent = 'Saved · ' + new Date().toLocaleTimeString();
+                if (saveHint) saveHint.textContent = 'Saved · ' + new Date().toLocaleTimeString() + ' · v' + GAME_VERSION;
             } catch (_) {
                 if (saveHint) saveHint.textContent = 'Could not save — storage may be full.';
             }
@@ -1165,6 +1169,7 @@
             if (soulMultTag) soulMultTag.textContent = soulMult > 1 ? ' (×' + soulMult + ' Soul)' : '';
             if (trophyDisplay) trophyDisplay.textContent = formatNum(trophies);
             if (resistDisplay) resistDisplay.textContent = Math.round(getResistance() * 100) + '%';
+            updateSoulShop();
             if (challengeGlobal && activeChallengeBag) {
                 const mult = getMultiplierAtPos(timingCursor);
                 const bonus = activeChallengeBag.rate * mult;
@@ -1185,12 +1190,16 @@
             }).join('');
         }
 
+        let soulShopSnapshot = '';
+
         function updateSoulShop() {
             if (!soulShopEl) return;
+            const snap = catSoulLevel + ':' + trophies;
             soulShopEl.style.display = 'block';
             const maxLevel = SOUL_STRENGTH_MULTS.length;
             const curMult = getSoulStrengthMult(catSoulLevel);
             if (catSoulLevel >= maxLevel) {
+                soulShopSnapshot = snap;
                 soulShopEl.className = 'soul-shop owned';
                 soulShopEl.innerHTML = `<h4>✨ Cat's Soul</h4><p>Max level — your effective strength is ×${curMult} in training and fights.</p>`;
                 return;
@@ -1198,6 +1207,9 @@
             const nextMult = SOUL_STRENGTH_MULTS[catSoulLevel];
             const cost = getSoulTierCost(catSoulLevel);
             const canBuy = trophies >= cost;
+            const snapWithBuy = snap + ':' + canBuy;
+            if (snapWithBuy === soulShopSnapshot && document.getElementById('btnBuySoul')) return;
+            soulShopSnapshot = snapWithBuy;
             soulShopEl.className = catSoulLevel > 0 ? 'soul-shop owned' : 'soul-shop';
             const ownedLine = catSoulLevel > 0
                 ? `<p>Owned: ×${curMult} effective strength.</p>`

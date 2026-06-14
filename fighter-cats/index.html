@@ -340,6 +340,52 @@
             line-height: 1.5;
         }
 
+        #soulMultTag { color: #ffd700; font-size: 12px; }
+
+        .soul-panel-title {
+            margin-top: 14px;
+            margin-bottom: 6px;
+            font-size: 13px;
+            color: #ffd700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+
+        .soul-shop {
+            margin-top: 12px;
+            padding: 10px;
+            background: rgba(255, 215, 0, 0.08);
+            border: 2px solid rgba(255, 215, 0, 0.35);
+            border-radius: 10px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+
+        .soul-shop h4 {
+            color: #ffd700;
+            font-size: 13px;
+            margin-bottom: 6px;
+            text-align: center;
+        }
+
+        .soul-shop.owned { border-color: rgba(76, 175, 80, 0.5); background: rgba(76, 175, 80, 0.08); }
+
+        .btn-soul {
+            width: 100%;
+            margin-top: 8px;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #9b59b6, #8e44ad);
+            color: #fff;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 12px;
+        }
+
+        .btn-soul:disabled { opacity: 0.45; cursor: not-allowed; }
+        .btn-soul:not(:disabled):hover { filter: brightness(1.1); }
+
         .fight-btn {
             width: 100%;
             margin-top: 8px;
@@ -538,7 +584,9 @@
             <button type="button" id="btnLogout" class="btn-logout">Log out</button>
             <button type="button" id="btnDeleteAccount" class="btn-delete-acct">Delete account…</button>
         </div>
-        <div class="hud-item">Strength: <span id="strengthDisplay">0</span></div>
+        <div class="hud-item">Strength: <span id="strengthDisplay">0</span><span id="soulMultTag"></span></div>
+        <div class="hud-item">Trophies: <span id="trophyDisplay">0</span> 🏆</div>
+        <div class="hud-item">Resistance: <span id="resistDisplay">0%</span></div>
         <div class="hud-item">Bonus: <span id="bonusDisplay">—</span></div>
         <div class="mode-tabs">
             <button class="mode-tab active" data-mode="gym">Dojo</button>
@@ -559,9 +607,9 @@
                     <div class="timing-cursor" id="timingCursor"></div>
                 </div>
                 <div class="timing-legend">
-                    <span class="z2">×2 (1/5)</span>
-                    <span class="z3">×3 (1/7)</span>
-                    <span class="z4">×4 (1/9)</span>
+                    <span class="z2">×2 (1/7)</span>
+                    <span class="z3">×3 (1/8)</span>
+                    <span class="z4">×4 (1/10)</span>
                     <span>else regular</span>
                 </div>
                 <div class="timing-feedback" id="timingFeedback"></div>
@@ -586,6 +634,11 @@
         <div class="side-panel" id="sidePanel">
             <h3 id="panelTitle">Punching Bags</h3>
             <div id="bagList" class="bag-legend"></div>
+            <h4 class="soul-panel-title">Cat's Soul Shop</h4>
+            <div id="soulShop" class="soul-shop">
+                <h4>✨ Cat's Soul</h4>
+                <p>Win fights for trophies, then buy soul upgrades here for ×2, ×4, ×8, ×24, and ×72 effective strength.</p>
+            </div>
             <div id="enemyList"></div>
             <button class="fight-btn" id="fightBtn" disabled>Start Fight</button>
         </div>
@@ -593,7 +646,8 @@
 
     <p class="controls-hint">
         <kbd>WASD</kbd> / arrows to move · Stand in the glowing circle to train ·
-        Hit <kbd>SPACE</kbd> on the timing bar for ×2 (1/5), ×3 (1/7), or ×4 (1/9) bonus — else regular (0.9s cooldown) ·
+        Hit <kbd>SPACE</kbd> on the timing bar for ×2 (1/7), ×3 (1/8), or ×4 (1/10) bonus — else regular (0.9s cooldown) ·
+        Higher bags speed up the bar · Win fights for trophies · Cat's Soul upgrades (150 🏆 → ×2, then ×4, ×8, ×24, ×72; each costs 2.85× the last) ·
         Arena: pick an enemy and press <kbd>SPACE</kbd> to attack
     </p>
     <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device.</p>
@@ -606,6 +660,9 @@
         const H = canvas.height;
 
         const strengthDisplay = document.getElementById('strengthDisplay');
+        const soulMultTag = document.getElementById('soulMultTag');
+        const trophyDisplay = document.getElementById('trophyDisplay');
+        const resistDisplay = document.getElementById('resistDisplay');
         const bonusDisplay = document.getElementById('bonusDisplay');
         const timingPanel = document.getElementById('timingPanel');
         const timingCursorEl = document.getElementById('timingCursor');
@@ -619,6 +676,7 @@
         const battleInfo = document.getElementById('battleInfo');
         const battleEnemyName = document.getElementById('battleEnemyName');
         const bagListEl = document.getElementById('bagList');
+        const soulShopEl = document.getElementById('soulShop');
         const enemyListEl = document.getElementById('enemyList');
         const fightBtn = document.getElementById('fightBtn');
         const panelTitle = document.getElementById('panelTitle');
@@ -681,6 +739,8 @@
         function defaultSaveState() {
             return {
                 strength: 0,
+                trophies: 0,
+                catSoulLevel: 0,
                 beaten: [],
                 unlocked: ['mouse'],
                 selectedEnemy: 'mouse',
@@ -693,6 +753,8 @@
         function captureSaveState() {
             return {
                 strength,
+                trophies,
+                catSoulLevel,
                 beaten: [...beaten],
                 unlocked: [...unlocked],
                 selectedEnemy,
@@ -705,6 +767,14 @@
         function applySaveState(data) {
             const d = data && typeof data === 'object' ? data : defaultSaveState();
             strength = Math.max(0, Number(d.strength) || 0);
+            trophies = Math.max(0, Number(d.trophies) || 0);
+            if (typeof d.catSoulLevel === 'number') {
+                catSoulLevel = Math.max(0, Math.min(SOUL_STRENGTH_MULTS.length, Math.floor(d.catSoulLevel)));
+            } else if (d.hasCatSoul) {
+                catSoulLevel = 1;
+            } else {
+                catSoulLevel = 0;
+            }
             beaten = new Set(Array.isArray(d.beaten) ? d.beaten : []);
             unlocked = new Set(Array.isArray(d.unlocked) ? d.unlocked : ['mouse']);
             if (!unlocked.has('mouse')) unlocked.add('mouse');
@@ -730,7 +800,9 @@
             fightBtn.style.display = mode === 'arena' ? 'block' : 'none';
             fightBtn.disabled = !unlocked.has(selectedEnemy);
             buildEnemyList();
+            buildBagList();
             updateHud();
+            updateSoulShop();
         }
 
         function loadUserSave(slug) {
@@ -888,32 +960,39 @@
         const TICK_MS = 400;
         const MULT_COOLDOWN_MS = 900;
         const CHALLENGE_INTERVAL_MS = 1800;
-        const TIMING_SWEEP_MS = 1100;
+        const TIMING_SWEEP_MS = 750;
+        const SOUL_BASE_COST = 150;
+        const SOUL_COST_MULT = 2.85;
+        const SOUL_STRENGTH_MULTS = [2, 4, 8, 24, 72];
+        const BATTLE_METER_SCALE = 50;
+        const MAX_ENEMY_METER_DRAIN = 8;
 
         const TIMING_ZONE_DEFS = [
-            { mult: 4, frac: 1 / 9, el: () => timingZ4 },
-            { mult: 3, frac: 1 / 7, el: () => timingZ3 },
-            { mult: 2, frac: 1 / 5, el: () => timingZ2 }
+            { mult: 4, frac: 1 / 10, el: () => timingZ4 },
+            { mult: 3, frac: 1 / 8, el: () => timingZ3 },
+            { mult: 2, frac: 1 / 7, el: () => timingZ2 }
         ];
 
         const BAG_DEFS = [
-            { id: 0, name: 'Starter Bag', req: 0,   rate: 1, color: '#c0392b', x: 90,  y: 210 },
-            { id: 1, name: 'Iron Bag',    req: 50,  rate: 2, color: '#8e44ad', x: 220, y: 170 },
-            { id: 2, name: 'Steel Bag',   req: 250, rate: 3, color: '#2980b9', x: 380, y: 170 },
-            { id: 3, name: 'Titan Bag',   req: 1000,rate: 4, color: '#d35400', x: 540, y: 170 },
-            { id: 4, name: 'Legend Bag',  req: 3000,rate: 5, color: '#f1c40f', x: 670, y: 210 }
+            { id: 0, name: 'Starter Bag', req: 0,    rate: 1, color: '#c0392b', x: 90,  y: 210 },
+            { id: 1, name: 'Iron Bag',    req: 88,   rate: 2, color: '#8e44ad', x: 220, y: 170 },
+            { id: 2, name: 'Steel Bag',   req: 438,  rate: 3, color: '#2980b9', x: 380, y: 170 },
+            { id: 3, name: 'Titan Bag',   req: 1750, rate: 4, color: '#d35400', x: 540, y: 170 },
+            { id: 4, name: 'Legend Bag',  req: 5250, rate: 5, color: '#f1c40f', x: 670, y: 210 }
         ];
 
         const ENEMY_DEFS = [
-            { id: 'mouse',    name: 'Mouse',    emoji: '🐭', power: 25,   unlock: null },
-            { id: 'frog',     name: 'Frog',     emoji: '🐸', power: 120,  unlock: 'mouse' },
-            { id: 'squirrel', name: 'Squirrel', emoji: '🐿️', power: 900,  unlock: 'frog' },
-            { id: 'crab',     name: 'Crab',     emoji: '🦀', power: 3000, unlock: 'squirrel' },
-            { id: 'hare',     name: 'Hare',     emoji: '🐇', power: 6500, unlock: 'crab' }
+            { id: 'mouse',    name: 'Mouse',    emoji: '🐭', power: 25,   trophies: 25, unlock: null },
+            { id: 'frog',     name: 'Frog',     emoji: '🐸', power: 120,  trophies: 36, unlock: 'mouse' },
+            { id: 'squirrel', name: 'Squirrel', emoji: '🐿️', power: 400,  trophies: 53, unlock: 'frog' },
+            { id: 'crab',     name: 'Crab',     emoji: '🦀', power: 3000, trophies: 76, unlock: 'squirrel' },
+            { id: 'hare',     name: 'Hare',     emoji: '🐇', power: 6500, trophies: 111, unlock: 'crab' }
         ];
 
         const keys = {};
         let strength = 0;
+        let trophies = 0;
+        let catSoulLevel = 0;
         let gameStats = { wins: 0, losses: 0, fights: 0 };
         let mode = 'gym';
         let particles = [];
@@ -948,7 +1027,6 @@
         let challengeGlobal = false;
         let activeChallengeBag = null;
         let timingCursor = 0;
-        let timingCursorDir = 1;
 
         let selectedEnemy = 'mouse';
         let inBattle = false;
@@ -959,13 +1037,68 @@
         let enemyPunchAnim = 0;
         let lastEnemyHitDmg = 0;
 
+        function getSoulStrengthMult(level) {
+            if (level <= 0) return 1;
+            return SOUL_STRENGTH_MULTS[Math.min(level, SOUL_STRENGTH_MULTS.length) - 1];
+        }
+
+        function getSoulTierCost(level) {
+            return Math.round(SOUL_BASE_COST * Math.pow(SOUL_COST_MULT, level));
+        }
+
+        function getEffectiveStrength() {
+            return strength * getSoulStrengthMult(catSoulLevel);
+        }
+
+        function getResistance() {
+            const s = getEffectiveStrength();
+            if (s <= 0) return 0;
+            return Math.min(0.75, Math.sqrt(s) / (Math.sqrt(s) + 25));
+        }
+
+        function getEnemyCombatPower(enemy) {
+            return enemy.power * ENEMY_POWER_MULT;
+        }
+
+        function getBattleMeterScale(enemy) {
+            return BATTLE_METER_SCALE / getEnemyCombatPower(enemy);
+        }
+
+        function getPlayerMeterGain(effStr, enemy) {
+            const cp = getEnemyCombatPower(enemy);
+            const dmg = Math.max(1, effStr * 0.04);
+            const scale = BATTLE_METER_SCALE / cp;
+            const powerRatio = effStr / Math.max(cp, 1);
+            const advantage = powerRatio > 1 ? Math.sqrt(powerRatio) : 1;
+            return dmg * scale * advantage;
+        }
+
+        function getEnemyMeterDrain(enemy, resist) {
+            const effStr = getEffectiveStrength();
+            const cp = getEnemyCombatPower(enemy);
+            const rawDmg = getEnemyAttackDamage(enemy);
+            const scale = getBattleMeterScale(enemy);
+            let drain = rawDmg * (1 - resist) * scale;
+            if (effStr > cp) {
+                drain *= Math.max(0.12, cp / effStr);
+            }
+            const maxDrain = Math.min(MAX_ENEMY_METER_DRAIN, Math.max(3, BATTLE_METER_SCALE * scale * 4));
+            return Math.min(drain, maxDrain);
+        }
+
+        function getTimingSweepMs(bag) {
+            if (!bag) return TIMING_SWEEP_MS;
+            return TIMING_SWEEP_MS / Math.pow(1.01, bag.id);
+        }
+
         function getEnemyAttackInterval(enemy) {
-            return Math.max(280, 1650 - Math.sqrt(enemy.power) * 20);
+            return Math.max(280, 1650 - Math.sqrt(getEnemyCombatPower(enemy)) * 20);
         }
 
         function getEnemyAttackDamage(enemy) {
-            const base = enemy.power * 0.032;
-            const tierBoost = 1 + Math.log10(enemy.power + 1) * 0.4;
+            const cp = getEnemyCombatPower(enemy);
+            const base = cp * 0.026;
+            const tierBoost = 1 + Math.log10(cp + 1) * 0.3;
             return base * tierBoost;
         }
 
@@ -1028,6 +1161,10 @@
 
         function updateHud() {
             strengthDisplay.textContent = formatNum(strength);
+            const soulMult = getSoulStrengthMult(catSoulLevel);
+            if (soulMultTag) soulMultTag.textContent = soulMult > 1 ? ' (×' + soulMult + ' Soul)' : '';
+            if (trophyDisplay) trophyDisplay.textContent = formatNum(trophies);
+            if (resistDisplay) resistDisplay.textContent = Math.round(getResistance() * 100) + '%';
             if (challengeGlobal && activeChallengeBag) {
                 const mult = getMultiplierAtPos(timingCursor);
                 const bonus = activeChallengeBag.rate * mult;
@@ -1038,9 +1175,53 @@
         }
 
         function buildBagList() {
-            bagListEl.innerHTML = BAG_DEFS.map(b =>
-                `<div>${b.name}: +${b.rate}/0.4s${b.req ? ` (need ${b.req} str)` : ' (free)'}</div>`
-            ).join('');
+            bagListEl.innerHTML = BAG_DEFS.map(b => {
+                const unlocked = isBagUnlocked(b);
+                if (unlocked) {
+                    const reqText = b.req ? `need ${formatNum(b.req)} str` : 'free';
+                    return `<div>${b.name}: +${b.rate}/0.4s (${reqText})</div>`;
+                }
+                return `<div>${b.name}: +${b.rate}/0.4s 🔒 ${formatNum(b.req)} str</div>`;
+            }).join('');
+        }
+
+        function updateSoulShop() {
+            if (!soulShopEl) return;
+            soulShopEl.style.display = 'block';
+            const maxLevel = SOUL_STRENGTH_MULTS.length;
+            const curMult = getSoulStrengthMult(catSoulLevel);
+            if (catSoulLevel >= maxLevel) {
+                soulShopEl.className = 'soul-shop owned';
+                soulShopEl.innerHTML = `<h4>✨ Cat's Soul</h4><p>Max level — your effective strength is ×${curMult} in training and fights.</p>`;
+                return;
+            }
+            const nextMult = SOUL_STRENGTH_MULTS[catSoulLevel];
+            const cost = getSoulTierCost(catSoulLevel);
+            const canBuy = trophies >= cost;
+            soulShopEl.className = catSoulLevel > 0 ? 'soul-shop owned' : 'soul-shop';
+            const ownedLine = catSoulLevel > 0
+                ? `<p>Owned: ×${curMult} effective strength.</p>`
+                : '<p>First purchase: 150 trophies for ×2 effective strength.</p>';
+            soulShopEl.innerHTML = `<h4>✨ Cat's Soul</h4>
+                ${ownedLine}
+                <p>Next upgrade: <strong>${formatNum(cost)} trophies</strong> → ×${nextMult} effective strength.</p>
+                <p>Your trophies: <strong>${formatNum(trophies)}</strong></p>
+                <button type="button" class="btn-soul" id="btnBuySoul"${canBuy ? '' : ' disabled'}>Buy Cat's Soul (${formatNum(cost)} trophies)</button>`;
+            const btn = document.getElementById('btnBuySoul');
+            if (btn) btn.addEventListener('click', buyCatSoul);
+        }
+
+        function buyCatSoul() {
+            if (catSoulLevel >= SOUL_STRENGTH_MULTS.length) return;
+            const cost = getSoulTierCost(catSoulLevel);
+            if (trophies < cost) return;
+            trophies -= cost;
+            catSoulLevel++;
+            const mult = getSoulStrengthMult(catSoulLevel);
+            showToast("Cat's Soul tier " + catSoulLevel + "! ×" + mult + " effective strength!");
+            updateHud();
+            updateSoulShop();
+            markDirty();
         }
 
         function buildEnemyList() {
@@ -1048,9 +1229,10 @@
                 const isUnlocked = unlocked.has(e.id);
                 const sel = selectedEnemy === e.id ? ' selected' : '';
                 const lock = isUnlocked ? '' : ' locked';
+                const cp = formatNum(getEnemyCombatPower(e));
                 return `<div class="enemy-card${sel}${lock}" data-enemy="${e.id}">
                     <div class="name">${e.emoji} ${e.name}</div>
-                    <div class="meta">~${formatNum(e.power)} power · fights back hard</div>
+                    <div class="meta">~${cp} power · 🏆 ${e.trophies} on win</div>
                     ${!isUnlocked ? '<div class="meta">🔒 Beat previous enemy</div>' : ''}
                     ${beaten.has(e.id) ? '<div class="beaten">✓ Defeated</div>' : ''}
                 </div>`;
@@ -1081,7 +1263,6 @@
             activeChallengeBag = bag;
             bag.challengeActive = true;
             timingCursor = 0;
-            timingCursorDir = 1;
             layoutTimingZones();
             updateTimingCursorUI();
             timingFeedbackEl.textContent = '';
@@ -1102,15 +1283,9 @@
         }
 
         function updateTimingChallenge(dt) {
-            if (!challengeGlobal) return;
-            timingCursor += timingCursorDir * (dt / TIMING_SWEEP_MS);
-            if (timingCursor >= 1) {
-                timingCursor = 1;
-                timingCursorDir = -1;
-            } else if (timingCursor <= 0) {
-                timingCursor = 0;
-                timingCursorDir = 1;
-            }
+            if (!challengeGlobal || !activeChallengeBag) return;
+            timingCursor += dt / getTimingSweepMs(activeChallengeBag);
+            if (timingCursor >= 1) timingCursor = 0;
             updateTimingCursorUI();
             updateHud();
         }
@@ -1178,7 +1353,7 @@
             gameStats.fights++;
             battleUI.classList.add('active');
             battleEnemyName.textContent = def.emoji + ' ' + def.name;
-            battleInfo.textContent = 'Press SPACE to punch! (str: ' + formatNum(strength) + ')';
+            battleInfo.textContent = 'Press SPACE to punch! (eff. str: ' + formatNum(getEffectiveStrength()) + ')';
             fightBtn.disabled = true;
             buildEnemyList();
             updateBattleBar();
@@ -1192,8 +1367,9 @@
             if (won) {
                 gameStats.wins++;
                 unlockNext(battleEnemy.id);
-                showToast('Victory! ' + battleEnemy.emoji);
-                strength += Math.floor(battleEnemy.power * 0.5);
+                const reward = battleEnemy.trophies || 0;
+                trophies += reward;
+                showToast('Victory! +' + reward + ' 🏆');
             } else {
                 gameStats.losses++;
                 showToast('Defeated... train more!');
@@ -1201,6 +1377,7 @@
             battleEnemy = null;
             buildEnemyList();
             updateHud();
+            updateSoulShop();
             markDirty();
             saveUserProgress(true);
         }
@@ -1213,8 +1390,8 @@
             if (!inBattle || playerAttackCd > 0) return;
             playerAttackCd = 280;
 
-            const dmg = Math.max(1, strength * 0.04);
-            battleMeter = Math.min(100, battleMeter + dmg * (50 / battleEnemy.power));
+            const dmg = Math.max(1, getEffectiveStrength() * 0.04);
+            battleMeter = Math.min(100, battleMeter + getPlayerMeterGain(getEffectiveStrength(), battleEnemy));
             cat.punchAnim = 14;
             cat.facing = 1;
             spawnParticles(W * 0.62, H * 0.55, '#ffd700');
@@ -1237,14 +1414,16 @@
 
             if (enemyAttackTimer >= interval) {
                 enemyAttackTimer = 0;
-                const dmg = getEnemyAttackDamage(battleEnemy);
+                const resist = getResistance();
+                const dmg = getEnemyMeterDrain(battleEnemy, resist);
                 lastEnemyHitDmg = dmg;
                 battleMeter = Math.max(0, battleMeter - dmg);
                 enemyPunchAnim = 12;
                 spawnParticles(180, H * 0.55, '#f44336');
                 spawnParticles(W * 0.62, H * 0.52, '#ff5722');
                 updateBattleBar();
-                battleInfo.textContent = battleEnemy.emoji + ' hit you for ' + formatNum(dmg) + '! Meter: ' + Math.floor(battleMeter) + '%';
+                const resistNote = resist > 0 ? ' (' + Math.round(resist * 100) + '% resisted)' : '';
+                battleInfo.textContent = battleEnemy.emoji + ' hit for ' + formatNum(dmg) + '!' + resistNote + ' Meter: ' + Math.floor(battleMeter) + '%';
 
                 if (battleMeter <= 0) {
                     endBattle(false);
@@ -1378,6 +1557,8 @@
             if (locked) {
                 ctx.font = '16px Arial';
                 ctx.fillText('🔒', 0, -30);
+                ctx.font = '9px Arial';
+                ctx.fillText(formatNum(bag.req) + ' str', 0, -16);
             }
 
             ctx.restore();
@@ -1620,6 +1801,7 @@
                 enemyListEl.style.display = mode === 'arena' ? 'block' : 'none';
                 fightBtn.style.display = mode === 'arena' ? 'block' : 'none';
                 endChallenge();
+                updateSoulShop();
             });
         });
 
@@ -1654,6 +1836,7 @@
 
         buildBagList();
         buildEnemyList();
+        updateSoulShop();
         fightBtn.style.display = 'none';
         enemyListEl.style.display = 'none';
         layoutTimingZones();

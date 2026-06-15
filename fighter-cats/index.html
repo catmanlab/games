@@ -591,7 +591,6 @@
         </div>
         <div class="hud-item">Strength: <span id="strengthDisplay">0</span><span id="soulMultTag"></span></div>
         <div class="hud-item">Trophies: <span id="trophyDisplay">0</span> 🏆</div>
-        <div class="hud-item">Resistance: <span id="resistDisplay">0%</span></div>
         <div class="hud-item">Bonus: <span id="bonusDisplay">—</span></div>
         <div class="mode-tabs">
             <button class="mode-tab active" data-mode="gym">Dojo</button>
@@ -668,7 +667,6 @@
         const strengthDisplay = document.getElementById('strengthDisplay');
         const soulMultTag = document.getElementById('soulMultTag');
         const trophyDisplay = document.getElementById('trophyDisplay');
-        const resistDisplay = document.getElementById('resistDisplay');
         const bonusDisplay = document.getElementById('bonusDisplay');
         const timingPanel = document.getElementById('timingPanel');
         const timingCursorEl = document.getElementById('timingCursor');
@@ -1033,9 +1031,9 @@
         const SOUL_BASE_COST = 150;
         const SOUL_COST_MULT = 2.85;
         const SOUL_STRENGTH_MULTS = [2, 4, 8, 24, 72];
-        const ENEMY_POWER_MULT = 1.30;
+        const ENEMY_POWER_MULT = 1.70;
         const BATTLE_METER_SCALE = 50;
-        const MAX_ENEMY_METER_DRAIN = 8;
+        const MAX_ENEMY_METER_DRAIN = 10;
 
         const TIMING_ZONE_DEFS = [
             { mult: 4, frac: 1 / 10, el: () => timingZ4 },
@@ -1054,9 +1052,9 @@
         const ENEMY_DEFS = [
             { id: 'mouse',    name: 'Mouse',    emoji: '🐭', power: 25,   trophies: 25, unlock: null },
             { id: 'frog',     name: 'Frog',     emoji: '🐸', power: 120,  trophies: 36, unlock: 'mouse' },
-            { id: 'squirrel', name: 'Squirrel', emoji: '🐿️', power: 400,  trophies: 53, unlock: 'frog' },
-            { id: 'crab',     name: 'Crab',     emoji: '🦀', power: 3000, trophies: 76, unlock: 'squirrel' },
-            { id: 'hare',     name: 'Hare',     emoji: '🐇', power: 6500, trophies: 111, unlock: 'crab' }
+            { id: 'squirrel', name: 'Squirrel', emoji: '🐿️', power: 480,  trophies: 53, unlock: 'frog' },
+            { id: 'crab',     name: 'Crab',     emoji: '🦀', power: 3200, trophies: 76, unlock: 'squirrel' },
+            { id: 'hare',     name: 'Hare',     emoji: '🐇', power: 7000, trophies: 111, unlock: 'crab' }
         ];
 
         const keys = {};
@@ -1120,12 +1118,6 @@
             return strength * getSoulStrengthMult(catSoulLevel);
         }
 
-        function getResistance() {
-            const s = getEffectiveStrength();
-            if (s <= 0) return 0;
-            return Math.min(0.75, Math.sqrt(s) / (Math.sqrt(s) + 25));
-        }
-
         function getEnemyCombatPower(enemy) {
             return enemy.power * ENEMY_POWER_MULT;
         }
@@ -1136,23 +1128,16 @@
 
         function getPlayerMeterGain(effStr, enemy) {
             const cp = getEnemyCombatPower(enemy);
-            const dmg = Math.max(1, effStr * 0.04);
+            const dmg = Math.max(1, effStr * 0.035);
             const scale = BATTLE_METER_SCALE / cp;
-            const powerRatio = effStr / Math.max(cp, 1);
-            const advantage = powerRatio > 1 ? Math.sqrt(powerRatio) : 1;
-            return dmg * scale * advantage;
+            return dmg * scale;
         }
 
-        function getEnemyMeterDrain(enemy, resist) {
-            const effStr = getEffectiveStrength();
-            const cp = getEnemyCombatPower(enemy);
+        function getEnemyMeterDrain(enemy) {
             const rawDmg = getEnemyAttackDamage(enemy);
             const scale = getBattleMeterScale(enemy);
-            let drain = rawDmg * (1 - resist) * scale;
-            if (effStr > cp) {
-                drain *= Math.max(0.12, cp / effStr);
-            }
-            const maxDrain = Math.min(MAX_ENEMY_METER_DRAIN, Math.max(3, BATTLE_METER_SCALE * scale * 4));
+            let drain = rawDmg * scale;
+            const maxDrain = Math.min(MAX_ENEMY_METER_DRAIN, Math.max(4, BATTLE_METER_SCALE * scale * 5));
             return Math.min(drain, maxDrain);
         }
 
@@ -1162,13 +1147,14 @@
         }
 
         function getEnemyAttackInterval(enemy) {
-            return Math.max(280, 1650 - Math.sqrt(getEnemyCombatPower(enemy)) * 20);
+            const base = Math.max(240, 1550 - Math.sqrt(getEnemyCombatPower(enemy)) * 22);
+            return base * 0.82;
         }
 
         function getEnemyAttackDamage(enemy) {
             const cp = getEnemyCombatPower(enemy);
-            const base = cp * 0.026;
-            const tierBoost = 1 + Math.log10(cp + 1) * 0.3;
+            const base = cp * 0.036;
+            const tierBoost = 1 + Math.log10(cp + 1) * 0.42;
             return base * tierBoost;
         }
 
@@ -1234,7 +1220,6 @@
             const soulMult = getSoulStrengthMult(catSoulLevel);
             if (soulMultTag) soulMultTag.textContent = soulMult > 1 ? ' (×' + soulMult + ' Soul)' : '';
             if (trophyDisplay) trophyDisplay.textContent = formatNum(trophies);
-            if (resistDisplay) resistDisplay.textContent = Math.round(getResistance() * 100) + '%';
             updateSoulShop();
             if (challengeGlobal && activeChallengeBag) {
                 const mult = getMultiplierAtPos(timingCursor);
@@ -1468,7 +1453,7 @@
             if (!inBattle || playerAttackCd > 0) return;
             playerAttackCd = 280;
 
-            const dmg = Math.max(1, getEffectiveStrength() * 0.04);
+            const dmg = Math.max(1, getEffectiveStrength() * 0.035);
             battleMeter = Math.min(100, battleMeter + getPlayerMeterGain(getEffectiveStrength(), battleEnemy));
             cat.punchAnim = 14;
             cat.facing = 1;
@@ -1492,16 +1477,14 @@
 
             if (enemyAttackTimer >= interval) {
                 enemyAttackTimer = 0;
-                const resist = getResistance();
-                const dmg = getEnemyMeterDrain(battleEnemy, resist);
+                const dmg = getEnemyMeterDrain(battleEnemy);
                 lastEnemyHitDmg = dmg;
                 battleMeter = Math.max(0, battleMeter - dmg);
                 enemyPunchAnim = 12;
                 spawnParticles(180, H * 0.55, '#f44336');
                 spawnParticles(W * 0.62, H * 0.52, '#ff5722');
                 updateBattleBar();
-                const resistNote = resist > 0 ? ' (' + Math.round(resist * 100) + '% resisted)' : '';
-                battleInfo.textContent = battleEnemy.emoji + ' hit for ' + formatNum(dmg) + '!' + resistNote + ' Meter: ' + Math.floor(battleMeter) + '%';
+                battleInfo.textContent = battleEnemy.emoji + ' hit for ' + formatNum(dmg) + '! Meter: ' + Math.floor(battleMeter) + '%';
 
                 if (battleMeter <= 0) {
                     endBattle(false);

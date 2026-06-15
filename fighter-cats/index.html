@@ -557,12 +557,14 @@
         <div class="auth-card">
             <h2>🐱 Fighter Cats Simulator</h2>
             <p class="auth-tag">Accounts are saved in this browser and stay after you restart your computer. They are only removed if you delete the account or clear site data.</p>
+            <p class="auth-tag" id="authVersion" style="margin-top:6px;color:#888;"></p>
             <div class="auth-tabs">
                 <button type="button" id="tabLogin" class="active">Log in</button>
                 <button type="button" id="tabRegister">Register</button>
             </div>
             <form id="loginForm" class="auth-form" action="#" novalidate>
-                <label>Username <input id="loginUser" type="text" maxlength="16" autocomplete="username" /></label>
+                <label>Username <span style="color:#666;font-size:11px;">(a–z, 0–9, _ only)</span>
+                    <input id="loginUser" type="text" maxlength="16" autocomplete="username" /></label>
                 <label>Password <input id="loginPass" type="password" maxlength="64" autocomplete="current-password" /></label>
                 <button type="submit" class="main">Log in</button>
             </form>
@@ -653,11 +655,11 @@
         Higher bags speed up the bar · Win fights for trophies · Cat's Soul upgrades (150 🏆 → ×2, then ×4, ×8, ×24, ×72; each costs 2.85× the last) ·
         Arena: pick an enemy and press <kbd>SPACE</kbd> to attack
     </p>
-    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device. · v2026.06.15b</p>
+    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device. · v2026.06.15c</p>
     </div>
 
     <script>
-        const GAME_VERSION = '2026.06.15b';
+        const GAME_VERSION = '2026.06.15c';
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
@@ -694,6 +696,7 @@
         const regPass = document.getElementById('regPass');
         const regPass2 = document.getElementById('regPass2');
         const authMsg = document.getElementById('authMsg');
+        const authVersion = document.getElementById('authVersion');
         const tabLogin = document.getElementById('tabLogin');
         const tabRegister = document.getElementById('tabRegister');
         const loggedInName = document.getElementById('loggedInName');
@@ -769,6 +772,7 @@
         }
 
         function applySaveState(data) {
+            try {
             const d = data && typeof data === 'object' ? data : defaultSaveState();
             strength = Math.max(0, Number(d.strength) || 0);
             trophies = Math.max(0, Number(d.trophies) || 0);
@@ -807,6 +811,17 @@
             buildBagList();
             updateHud();
             updateSoulShop();
+            } catch (err) {
+                console.error('applySaveState failed', err);
+                strength = 0;
+                trophies = 0;
+                catSoulLevel = 0;
+                beaten = new Set();
+                unlocked = new Set(['mouse']);
+                selectedEnemy = 'mouse';
+                mode = 'gym';
+                inBattle = false;
+            }
         }
 
         function loadUserSave(slug) {
@@ -866,10 +881,15 @@
         async function handleRegister(e) {
             e.preventDefault();
             authMsg.classList.remove('ok');
+            try {
+            if (!crypto?.subtle) {
+                authMsg.textContent = 'Registration needs HTTPS. Open https://catmanlab.github.io/games/fighter-cats/';
+                return;
+            }
             const raw = regUser.value;
             const u = normalizeUsername(raw);
             if (u.length < 3) {
-                authMsg.textContent = 'Username needs at least 3 letters or numbers.';
+                authMsg.textContent = 'Username needs at least 3 letters or numbers (a–z, 0–9, _).';
                 return;
             }
             const p = regPass.value;
@@ -886,6 +906,7 @@
                 authMsg.textContent = 'That username is already taken on this device.';
                 return;
             }
+            authMsg.textContent = 'Creating account...';
             const displayName = raw.trim().slice(0, 16).replace(/[^\w\s\-]/g, '') || u;
             const salt = randomSalt();
             const hash = await hashPassword(p, salt);
@@ -893,22 +914,27 @@
             saveAccounts(accounts);
             currentUserSlug = u;
             localStorage.setItem(SESSION_KEY, JSON.stringify({ slug: u }));
-            try {
-                applySaveState(defaultSaveState());
-                saveUserProgress(true);
-            } catch (err) {
-                console.error('Register save init failed.', err);
-            }
+            applySaveState(defaultSaveState());
+            saveUserProgress(true);
             regPass.value = '';
             regPass2.value = '';
-            authMsg.textContent = 'Account created! Your progress will be saved here.';
+            authMsg.textContent = 'Account created! Logged in as ' + displayName + '.';
             authMsg.classList.add('ok');
             updateAuthUI();
+            } catch (err) {
+                console.error('Register failed', err);
+                authMsg.textContent = 'Could not create account. Hard-refresh (Ctrl+F5) and try again.';
+            }
         }
 
         async function handleLogin(e) {
             e.preventDefault();
             authMsg.classList.remove('ok');
+            try {
+            if (!crypto?.subtle) {
+                authMsg.textContent = 'Login needs HTTPS. Open https://catmanlab.github.io/games/fighter-cats/';
+                return;
+            }
             const u = normalizeUsername(loginUser.value);
             const p = loginPass.value;
             if (!u || !p) {
@@ -917,23 +943,31 @@
             }
             const acc = loadAccounts()[u];
             if (!acc) {
-                authMsg.textContent = 'Wrong username or password. Register if you are new.';
+                const tried = loginUser.value.trim();
+                const hint = tried && tried !== u ? ' Your username is saved as "' + u + '".' : '';
+                authMsg.textContent = 'No account found.' + hint + ' Register if you are new on this device.';
                 return;
             }
+            authMsg.textContent = 'Logging in...';
             const h = await hashPassword(p, acc.salt);
             if (h !== acc.hash) {
-                authMsg.textContent = 'Wrong username or password.';
+                authMsg.textContent = 'Wrong password for "' + u + '".';
                 return;
             }
             currentUserSlug = u;
             localStorage.setItem(SESSION_KEY, JSON.stringify({ slug: u }));
             loginPass.value = '';
-            try {
-                loadUserSave(u);
-            } catch (err) {
-                console.error('Login save load failed.', err);
-            }
+            loadUserSave(u);
             updateAuthUI();
+            if (!authScreen.hidden) {
+                authMsg.textContent = 'Login failed to open game. Hard-refresh with Ctrl+F5.';
+                return;
+            }
+            authMsg.textContent = '';
+            } catch (err) {
+                console.error('Login failed', err);
+                authMsg.textContent = 'Login error. Hard-refresh (Ctrl+F5) and try again.';
+            }
         }
 
         function logoutAccount() {
@@ -969,9 +1003,27 @@
                     currentUserSlug = null;
                     if (slug) localStorage.removeItem(SESSION_KEY);
                 }
-            } catch (_) {
-                currentUserSlug = null;
+            } catch (err) {
+                console.error('Session load failed', err);
             }
+        }
+
+        function bootGame() {
+            if (authVersion) authVersion.textContent = 'Game version ' + GAME_VERSION + ' — if login fails, press Ctrl+F5';
+            if (!crypto?.subtle) {
+                authMsg.textContent = 'This game needs HTTPS to log in. Use https://catmanlab.github.io/games/fighter-cats/';
+                return;
+            }
+            buildBagList();
+            buildEnemyList();
+            updateSoulShop();
+            fightBtn.style.display = 'none';
+            enemyListEl.style.display = 'none';
+            layoutTimingZones();
+            loadSessionUser();
+            updateAuthUI();
+            updateHud();
+            requestAnimationFrame(gameLoop);
         }
 
         const TICK_MS = 400;
@@ -1860,16 +1912,7 @@
         btnDeleteAccount.addEventListener('click', deleteCurrentAccount);
         window.addEventListener('beforeunload', () => saveUserProgress(true));
 
-        buildBagList();
-        buildEnemyList();
-        updateSoulShop();
-        fightBtn.style.display = 'none';
-        enemyListEl.style.display = 'none';
-        layoutTimingZones();
-        loadSessionUser();
-        updateAuthUI();
-        updateHud();
-        requestAnimationFrame(gameLoop);
+        bootGame();
     </script>
 </body>
 </html>

@@ -1,0 +1,329 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: "Comic Sans MS", "Chalkboard SE", "PingFang SC", "Microsoft YaHei", sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ===== Start screen ===== */
+#start-screen {
+  text-align: center;
+  color: #fff;
+  padding: 2rem;
+  max-width: 800px;
+}
+
+.studio-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  padding: 0.8rem 1.5rem;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(6px);
+}
+
+.studio-logo {
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
+  animation: logoFloat 3s ease-in-out infinite;
+}
+
+@keyframes logoFloat {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-4px); }
+}
+
+.studio-text {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.studio-name {
+  font-size: 1.6rem;
+  font-weight: bold;
+  letter-spacing: 1px;
+  background: linear-gradient(90deg, #FFE66D, #FF6B6B, #4FC3F7);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.studio-tag {
+  font-size: 0.85rem;
+  opacity: 0.7;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+
+#start-screen h1 {
+  font-size: 3rem;
+  text-shadow: 3px 3px 0 #333, 0 0 20px rgba(255,255,255,0.5);
+  animation: bounce 1s ease infinite alternate;
+  margin-bottom: 0.5rem;
+}
+
+@keyframes bounce {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-10px); }
+}
+
+.tagline {
+  font-size: 1.2rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.9;
+}
+
+.controls-info {
+  display: flex;
+  gap: 1.5rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.player-card {
+  background: rgba(255,255,255,0.15);
+  border-radius: 16px;
+  padding: 1.2rem;
+  backdrop-filter: blur(8px);
+  border: 2px solid rgba(255,255,255,0.3);
+  min-width: 280px;
+  text-align: left;
+}
+
+.player-card h2 {
+  margin-bottom: 0.6rem;
+}
+
+.player-card p {
+  font-size: 0.9rem;
+  margin: 0.3rem 0;
+  line-height: 1.6;
+}
+
+kbd {
+  background: rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.4);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.85rem;
+}
+
+.item-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  justify-content: center;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.item-legend .good {
+  background: rgba(76, 175, 80, 0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.item-legend .bad {
+  background: rgba(244, 67, 54, 0.4);
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+#start-btn, #restart-btn {
+  font-family: inherit;
+  font-size: 1.4rem;
+  padding: 0.8rem 2.5rem;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(45deg, #FF6B6B, #FFE66D);
+  color: #333;
+  cursor: pointer;
+  font-weight: bold;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+
+#start-btn:hover, #restart-btn:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.4);
+}
+
+/* ===== 游戏容器 ===== */
+#game-container {
+  position: relative;
+  width: 900px;
+  max-width: 100vw;
+}
+
+#arena {
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+  display: block;
+}
+
+/* ===== HUD ===== */
+#hud {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(0,0,0,0.5);
+  border-radius: 12px 12px 0 0;
+  color: #fff;
+}
+
+.hud-player {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex: 1;
+}
+
+.dog-hud {
+  flex-direction: row-reverse;
+}
+
+.hud-player .name {
+  font-weight: bold;
+  font-size: 1rem;
+  white-space: nowrap;
+}
+
+.bar-wrap {
+  flex: 1;
+  max-width: 200px;
+  height: 18px;
+  background: rgba(0,0,0,0.4);
+  border-radius: 9px;
+  overflow: hidden;
+  border: 2px solid rgba(255,255,255,0.3);
+}
+
+.bar {
+  height: 100%;
+  border-radius: 7px;
+  transition: width 0.3s ease;
+}
+
+.cat-hud .hp-bar {
+  background: linear-gradient(90deg, #FF6B9D, #FF8E53);
+  width: 100%;
+}
+
+.dog-hud .hp-bar {
+  background: linear-gradient(90deg, #4FC3F7, #29B6F6);
+  width: 100%;
+}
+
+.score {
+  font-size: 0.9rem;
+  min-width: 50px;
+}
+
+#timer {
+  font-size: 1.8rem;
+  font-weight: bold;
+  min-width: 60px;
+  text-align: center;
+  text-shadow: 0 0 10px rgba(255,255,255,0.5);
+}
+
+/* ===== 公告 ===== */
+#announcement {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  font-weight: bold;
+  color: #fff;
+  text-shadow: 3px 3px 6px rgba(0,0,0,0.8);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 10;
+  white-space: nowrap;
+}
+
+#announcement.show {
+  opacity: 1;
+  animation: announcePop 0.6s ease;
+}
+
+@keyframes announcePop {
+  0%   { transform: translate(-50%, -50%) scale(0.3); }
+  60%  { transform: translate(-50%, -50%) scale(1.2); }
+  100% { transform: translate(-50%, -50%) scale(1); }
+}
+
+/* ===== 胜利界面 ===== */
+#win-screen {
+  text-align: center;
+  color: #fff;
+  padding: 2rem;
+}
+
+#win-screen h1 {
+  font-size: 3rem;
+  text-shadow: 3px 3px 0 #333;
+  margin-bottom: 1rem;
+  animation: bounce 0.8s ease infinite alternate;
+}
+
+#final-scores {
+  font-size: 1.3rem;
+  margin-bottom: 1.5rem;
+}
+
+/* ===== SVG 动画类 ===== */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.15); }
+}
+
+@keyframes floatUp {
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-60px); }
+}
+
+.damage-text {
+  font-family: "Comic Sans MS", sans-serif;
+  font-weight: bold;
+  pointer-events: none;
+  animation: floatUp 1s ease forwards;
+}

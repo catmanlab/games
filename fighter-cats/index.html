@@ -653,11 +653,11 @@
         Higher bags speed up the bar · Win fights for trophies · Cat's Soul upgrades (150 🏆 → ×2, then ×4, ×8, ×24, ×72; each costs 2.85× the last) ·
         Arena: pick an enemy and press <kbd>SPACE</kbd> to attack
     </p>
-    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device. · v2026.06.15</p>
+    <p class="save-hint" id="saveHint">Progress auto-saves to your account on this device. · v2026.06.15b</p>
     </div>
 
     <script>
-        const GAME_VERSION = '2026.06.15';
+        const GAME_VERSION = '2026.06.15b';
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const W = canvas.width;
@@ -813,8 +813,13 @@
             try {
                 const raw = localStorage.getItem(userSaveKey(slug));
                 applySaveState(raw ? JSON.parse(raw) : defaultSaveState());
-            } catch (_) {
-                applySaveState(defaultSaveState());
+            } catch (err) {
+                console.error('Could not load save, starting fresh.', err);
+                try {
+                    applySaveState(defaultSaveState());
+                } catch (err2) {
+                    console.error('Could not apply default save.', err2);
+                }
             }
         }
 
@@ -888,8 +893,12 @@
             saveAccounts(accounts);
             currentUserSlug = u;
             localStorage.setItem(SESSION_KEY, JSON.stringify({ slug: u }));
-            applySaveState(defaultSaveState());
-            saveUserProgress(true);
+            try {
+                applySaveState(defaultSaveState());
+                saveUserProgress(true);
+            } catch (err) {
+                console.error('Register save init failed.', err);
+            }
             regPass.value = '';
             regPass2.value = '';
             authMsg.textContent = 'Account created! Your progress will be saved here.';
@@ -919,7 +928,11 @@
             currentUserSlug = u;
             localStorage.setItem(SESSION_KEY, JSON.stringify({ slug: u }));
             loginPass.value = '';
-            loadUserSave(u);
+            try {
+                loadUserSave(u);
+            } catch (err) {
+                console.error('Login save load failed.', err);
+            }
             updateAuthUI();
         }
 
@@ -968,6 +981,7 @@
         const SOUL_BASE_COST = 150;
         const SOUL_COST_MULT = 2.85;
         const SOUL_STRENGTH_MULTS = [2, 4, 8, 24, 72];
+        const ENEMY_POWER_MULT = 1.30;
         const BATTLE_METER_SCALE = 50;
         const MAX_ENEMY_METER_DRAIN = 8;
 

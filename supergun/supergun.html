@@ -257,6 +257,7 @@
       display: flex;
       gap: 6px;
       pointer-events: none;
+      z-index: 16;
     }
     #rightHud {
       position: absolute;
@@ -318,6 +319,7 @@
       display: none;
       gap: 6px;
       pointer-events: none;
+      z-index: 16;
     }
     #inventoryHudP2.visible { display: flex; }
     .menu-two-player {
@@ -561,27 +563,24 @@
       justify-content: center;
       border-radius: 4px;
       overflow: hidden;
-    }
-    .inv-slot .gun-icon-wrap::after {
-      content: "";
-      position: absolute;
-      inset: 0;
-      background: var(--rarity-tint, transparent);
-      mix-blend-mode: color;
-      opacity: 0.72;
-      pointer-events: none;
+      background: #e8e8e8;
+      border: 1px solid var(--rarity-tint, #555);
+      box-shadow: 0 0 6px color-mix(in srgb, var(--rarity-tint, #555) 45%, transparent);
     }
     .inv-slot .gun-icon {
-      width: 34px;
-      height: 26px;
+      width: 32px;
+      height: 24px;
       object-fit: contain;
-      position: relative;
-      z-index: 1;
+      display: block;
       pointer-events: none;
-      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85));
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35));
+    }
+    .inv-slot .gun-icon.is-tinted {
+      mix-blend-mode: multiply;
+      opacity: 0.92;
     }
     .inv-slot .gun-icon.fallback {
-      opacity: 0.55;
+      opacity: 0.45;
     }
     .inv-slot .med-dot {
       width: 10px;
@@ -1761,15 +1760,55 @@
     return table[table.length - 1][0];
   }
 
+  function resolveGunImageSrc(relativePath) {
+    try {
+      return new URL(relativePath, document.baseURI).href;
+    } catch (e) {
+      return relativePath;
+    }
+  }
+
   function gunImagePaths(typeId) {
     const base = GUN_IMAGE_NAMES[typeId] || typeId;
-    return GUN_IMAGE_EXTS.map((ext) => GUN_IMAGE_DIR + encodeURIComponent(base + ext));
+    return GUN_IMAGE_EXTS.map((ext) => resolveGunImageSrc(GUN_IMAGE_DIR + encodeURIComponent(base + ext)));
   }
 
   function gunImageUrl(typeId) {
     const entry = gunImageCache[typeId];
     if (entry && entry.loadedSrc) return entry.loadedSrc;
     return gunImagePaths(typeId)[0];
+  }
+
+  function markGunImageReady(typeId, img, src) {
+    gunImageCache[typeId] = { img, loadedSrc: src };
+    gunImageReady[typeId] = true;
+    gunImageFailed[typeId] = false;
+    refreshInventoryHud();
+  }
+
+  function bindInventoryGunImage(imgEl, typeId) {
+    if (isGunImageReady(typeId) && gunImageCache[typeId] && gunImageCache[typeId].loadedSrc) {
+      const src = gunImageCache[typeId].loadedSrc;
+      if (imgEl.src !== src) imgEl.src = src;
+      imgEl.classList.remove("fallback");
+      return;
+    }
+    if (imgEl.dataset.loadingType === typeId) return;
+    imgEl.dataset.loadingType = typeId;
+    const paths = gunImagePaths(typeId);
+    let pathIdx = 0;
+    function tryNext() {
+      if (pathIdx >= paths.length) {
+        gunImageFailed[typeId] = true;
+        imgEl.classList.add("fallback");
+        return;
+      }
+      const src = paths[pathIdx++];
+      imgEl.onload = () => markGunImageReady(typeId, imgEl, src);
+      imgEl.onerror = tryNext;
+      imgEl.src = src;
+    }
+    tryNext();
   }
 
   function isGunImageReady(typeId) {
@@ -1783,12 +1822,7 @@
     }
     const src = paths[idx];
     const img = new Image();
-    img.onload = () => {
-      gunImageCache[typeId] = { img, loadedSrc: src };
-      gunImageReady[typeId] = true;
-      gunImageFailed[typeId] = false;
-      refreshInventoryHud();
-    };
+    img.onload = () => markGunImageReady(typeId, img, src);
     img.onerror = () => {
       if (idx + 1 < paths.length) tryLoadGunImage(typeId, paths, idx + 1);
       else gunImageFailed[typeId] = true;
@@ -2341,24 +2375,23 @@
           el.appendChild(wrapEl);
         }
         wrapEl.style.setProperty("--rarity-tint", ng.color);
-        wrapEl.style.boxShadow = "inset 0 0 0 1px " + ng.color;
         wrapEl.style.display = "flex";
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
           imgEl = document.createElement("img");
-          imgEl.className = "gun-icon";
+          imgEl.className = "gun-icon is-tinted";
           imgEl.alt = ng.typeLabel;
           wrapEl.appendChild(imgEl);
         }
-        imgEl.src = gunImageUrl(ng.type);
-        imgEl.classList.toggle("fallback", !isGunImageReady(ng.type));
+        imgEl.classList.add("is-tinted");
+        bindInventoryGunImage(imgEl, ng.type);
         if (!typeEl) {
           typeEl = document.createElement("div");
           typeEl.className = "gun-type";
           el.appendChild(typeEl);
         }
-        typeEl.textContent = isGunImageReady(ng.type) ? "" : ng.typeLabel;
-        typeEl.style.display = isGunImageReady(ng.type) ? "none" : "block";
+        typeEl.textContent = ng.label;
+        typeEl.style.display = "block";
         el.title = ng.label + " " + ng.typeLabel;
       } else {
         if (inner) inner.remove();
@@ -2420,7 +2453,6 @@
         '<div class="hud-line">Alive <strong>' + alive + "</strong> / " + TOTAL_DOTS +
         " · Kills <strong>" + player.kills + "</strong> · vs <strong>" + player2Name + "</strong> (" + player2.kills + ")</div>";
     }
-    refreshInventoryHud();
   }
 
   function isMedItem(item) {

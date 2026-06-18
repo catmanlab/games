@@ -1940,24 +1940,83 @@
     return false;
   }
 
+  function getRarityDrawStyle(rarityId) {
+    const id = rarityId && RARITIES[rarityId] ? rarityId : "common";
+    const meta = RARITIES[id];
+    const palettes = {
+      common:    { top: "#9a9a9a", bot: "#4f4f4f", glow: "rgba(180,180,180,0.55)" },
+      uncommon:  { top: "#28d428", bot: "#0a6b0a", glow: "rgba(40,212,40,0.6)" },
+      rare:      { top: "#2aa0ff", bot: "#0a4f9c", glow: "rgba(42,160,255,0.62)" },
+      epic:      { top: "#b866ff", bot: "#5f1f9c", glow: "rgba(184,102,255,0.65)" },
+      legendary: { top: "#ffa030", bot: "#a85a00", glow: "rgba(255,160,48,0.68)" },
+      mythic:    { top: "#ffe030", bot: "#a88600", glow: "rgba(255,224,48,0.7)" },
+    };
+    const p = palettes[id];
+    return { ...p, border: meta.color, label: meta.label };
+  }
+
+  function drawGunChest(ctx, ch) {
+    const gun = normalizeGun(ch.gun);
+    if (!gun) return;
+    ch.gun = gun;
+    const style = getRarityDrawStyle(gun.rarity);
+    const x = ch.x;
+    const y = ch.y;
+    const w = 30;
+    const h = 24;
+
+    ctx.save();
+    ctx.shadowColor = style.glow;
+    ctx.shadowBlur = 18;
+    ctx.fillStyle = style.glow;
+    ctx.beginPath();
+    ctx.arc(x, y, 20, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+
+    const grad = ctx.createLinearGradient(x, y - h * 0.5, x, y + h * 0.5);
+    grad.addColorStop(0, style.top);
+    grad.addColorStop(1, style.bot);
+    ctx.fillStyle = grad;
+    ctx.fillRect(x - w * 0.5, y - h * 0.5, w, h);
+    ctx.strokeStyle = style.border;
+    ctx.lineWidth = 2.5;
+    ctx.strokeRect(x - w * 0.5, y - h * 0.5, w, h);
+
+    ctx.fillStyle = "rgba(0,0,0,0.28)";
+    ctx.fillRect(x - w * 0.5 + 2, y - h * 0.5 + 2, w - 4, h - 4);
+    ctx.fillStyle = "rgba(255,255,255,0.12)";
+    ctx.fillRect(x - w * 0.5 + 3, y - h * 0.5 + 3, w - 6, 5);
+
+    drawGunSprite(ctx, gun, x, y - 1, 0, 0.7, { len: 22, thick: 6 });
+
+    ctx.textAlign = "center";
+    ctx.font = "bold 9px system-ui,sans-serif";
+    ctx.strokeStyle = "rgba(0,0,0,0.9)";
+    ctx.lineWidth = 3;
+    ctx.strokeText(style.label.toUpperCase(), x, y - h * 0.5 - 5);
+    ctx.fillStyle = "#fff";
+    ctx.fillText(style.label.toUpperCase(), x, y - h * 0.5 - 5);
+
+    ctx.font = "7px system-ui,sans-serif";
+    ctx.strokeText(gun.typeLabel, x, y + h * 0.5 + 9);
+    ctx.fillText(gun.typeLabel, x, y + h * 0.5 + 9);
+  }
+
   function drawGunPickupSprite(ctx, gun, x, y, angle, scale, opts) {
     opts = opts || {};
     const len = (opts.len || 22) * (scale || 1);
     const pad = len * 0.55;
-    const rarity = gun && gun.rarity ? gun.rarity : "common";
+    const style = getRarityDrawStyle(gun && gun.rarity);
     ctx.save();
     ctx.translate(x, y);
     ctx.rotate(angle || 0);
     const grad = ctx.createLinearGradient(0, -pad, 0, pad);
-    if (rarity === "common") { grad.addColorStop(0, "#8d8d8d"); grad.addColorStop(1, "#525252"); }
-    else if (rarity === "uncommon") { grad.addColorStop(0, "#22c022"); grad.addColorStop(1, "#0a6b0a"); }
-    else if (rarity === "rare") { grad.addColorStop(0, "#1a8fe8"); grad.addColorStop(1, "#0a4f9c"); }
-    else if (rarity === "epic") { grad.addColorStop(0, "#a84de8"); grad.addColorStop(1, "#5f1f9c"); }
-    else if (rarity === "legendary") { grad.addColorStop(0, "#f09018"); grad.addColorStop(1, "#a85a00"); }
-    else { grad.addColorStop(0, "#e8c820"); grad.addColorStop(1, "#a88600"); }
+    grad.addColorStop(0, style.top);
+    grad.addColorStop(1, style.bot);
     ctx.fillStyle = grad;
     ctx.fillRect(-pad, -pad * 0.65, pad * 2, pad * 1.3);
-    ctx.strokeStyle = gun && gun.color ? gun.color : "#fff";
+    ctx.strokeStyle = style.border;
     ctx.lineWidth = 1.5;
     ctx.stroke();
     ctx.restore();
@@ -4094,7 +4153,14 @@
     }
     for (const ch of chests) {
       if (ch.open) continue;
-      mctx.fillStyle = ch.kind === "med" ? "#3d9e55" : "#8B6914";
+      if (ch.kind === "med") {
+        mctx.fillStyle = "#3d9e55";
+      } else if (ch.gun) {
+        const g = normalizeGun(ch.gun);
+        mctx.fillStyle = g ? g.color : "#8B6914";
+      } else {
+        mctx.fillStyle = "#8B6914";
+      }
       mctx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
     }
     for (const d of dots) {
@@ -4162,13 +4228,7 @@
         ctx.fillStyle = "rgba(255,255,255,0.35)";
         ctx.fillRect(ch.x - 2, ch.y - 5, 4, 3);
       } else {
-        ctx.fillStyle = "#8B4513";
-        ctx.fillRect(ch.x - 12, ch.y - 10, 24, 18);
-        ctx.fillStyle = "#daa520";
-        ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
-        if (ch.gun) {
-          drawGunPickupSprite(ctx, ch.gun, ch.x, ch.y - 4, 0, 0.55, { len: 18, thick: 6 });
-        }
+        drawGunChest(ctx, ch);
       }
     }
 

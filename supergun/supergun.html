@@ -551,6 +551,17 @@
       border-radius: 2px;
       margin-top: -8px;
     }
+    .inv-slot .gun-icon {
+      width: 36px;
+      height: 28px;
+      object-fit: contain;
+      margin-top: -4px;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85));
+    }
+    .inv-slot .gun-icon.fallback {
+      opacity: 0.55;
+    }
     .inv-slot .med-dot {
       width: 10px;
       height: 14px;
@@ -973,6 +984,8 @@
     legendary: { label: "Legendary", color: "#ff9800", dmg: [70, 110], fireMs: 180, spread: 0.04 },
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
+  const GUN_IMAGE_DIR = "guns/";
+  const GUN_IMAGE_EXTS = [".png", ".webp", ".gif"];
   const GUN_TYPES = [
     { id: "pistol", label: "Pistol", w: 0.17, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
     { id: "smg", label: "SMG", w: 0.14, dmgMul: 0.7, fireMul: 0.5, spreadMul: 1.15 },
@@ -1128,6 +1141,9 @@
   let bullets = [];
   let explosions = [];
   let groundGuns = [];
+  const gunImageCache = {};
+  const gunImageReady = {};
+  const gunImageFailed = {};
   let groundMeds = [];
   let damageTexts = [];
   let walls = [];
@@ -1712,6 +1728,108 @@
     return table[table.length - 1][0];
   }
 
+  function gunImagePaths(typeId) {
+    return GUN_IMAGE_EXTS.map((ext) => GUN_IMAGE_DIR + typeId + ext);
+  }
+
+  function gunImageUrl(typeId) {
+    const entry = gunImageCache[typeId];
+    if (entry && entry.loadedSrc) return entry.loadedSrc;
+    return gunImagePaths(typeId)[0];
+  }
+
+  function isGunImageReady(typeId) {
+    return !!gunImageReady[typeId];
+  }
+
+  function tryLoadGunImage(typeId, paths, idx) {
+    if (!paths.length) {
+      gunImageFailed[typeId] = true;
+      return;
+    }
+    const src = paths[idx];
+    const img = new Image();
+    img.onload = () => {
+      gunImageCache[typeId] = { img, loadedSrc: src };
+      gunImageReady[typeId] = true;
+      gunImageFailed[typeId] = false;
+      refreshInventoryHud();
+    };
+    img.onerror = () => {
+      if (idx + 1 < paths.length) tryLoadGunImage(typeId, paths, idx + 1);
+      else gunImageFailed[typeId] = true;
+    };
+    img.src = src;
+  }
+
+  function preloadGunImages() {
+    for (const t of GUN_TYPES) {
+      if (gunImageCache[t.id]) continue;
+      gunImageCache[t.id] = { img: null, loadedSrc: null };
+      tryLoadGunImage(t.id, gunImagePaths(t.id), 0);
+    }
+  }
+
+  function drawGunFallbackBar(ctx, x, y, angle, len, thick, color) {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+    ctx.fillStyle = color || "#888";
+    ctx.fillRect(-len * 0.5, -thick * 0.5, len, thick);
+    ctx.strokeStyle = "rgba(255,255,255,0.35)";
+    ctx.strokeRect(-len * 0.5, -thick * 0.5, len, thick);
+    ctx.restore();
+  }
+
+  function drawGunSprite(ctx, gun, x, y, angle, scale, opts) {
+    opts = opts || {};
+    const typeId = gun && gun.type ? gun.type : "assault_rifle";
+    const entry = gunImageCache[typeId];
+    const img = entry && entry.img;
+    const len = opts.len || 22;
+    const thick = opts.thick || 7;
+    if (isGunImageReady(typeId) && img && img.naturalWidth > 0) {
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const w = len * (scale || 1);
+      const h = w * aspect;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.rotate(angle);
+      ctx.drawImage(img, -w * 0.5, -h * 0.5, w, h);
+      if (gun && gun.color && opts.tintRarity !== false) {
+        ctx.globalCompositeOperation = "source-atop";
+        ctx.fillStyle = gun.color + "44";
+        ctx.fillRect(-w * 0.5, -h * 0.5, w, h);
+        ctx.globalCompositeOperation = "source-over";
+      }
+      ctx.restore();
+      return true;
+    }
+    drawGunFallbackBar(ctx, x, y, angle, len * (scale || 1), thick, gun ? gun.color : "#888");
+    return false;
+  }
+
+  function entityAimAngle(e, opts) {
+    opts = opts || {};
+    if (e.isPlayer && e.playerSlot === 1 && opts.useMouse) {
+      return Math.atan2(mouseWorldY - e.y, mouseWorldX - e.x);
+    }
+    if (e.isPlayer && e.playerSlot === 2) {
+      if (opts.useMouse && (p2ShootMouseDown || p2MouseOnPane)) {
+        return Math.atan2(mouseWorldY2 - e.y, mouseWorldX2 - e.x);
+      }
+      const ax = e.aimX ?? 1;
+      const ay = e.aimY ?? 0;
+      return Math.atan2(ay, ax);
+    }
+    if (e.aiTarget && e.aiTarget.alive) {
+      return Math.atan2(e.aiTarget.y - e.y, e.aiTarget.x - e.x);
+    }
+    const ax = e.aimX ?? 1;
+    const ay = e.aimY ?? 0;
+    return Math.atan2(ay, ax);
+  }
+
   function pickGunTypeId() {
     let r = Math.random();
     for (const t of GUN_TYPES) {
@@ -2147,19 +2265,20 @@
     slots.forEach((el, i) => {
       el.classList.toggle("active", entity.invIndex === i);
       const item = entity.inventory[i];
-      let inner = el.querySelector(".item-dot");
+      let inner = el.querySelector(".item-dot, .gun-icon");
       let typeEl = el.querySelector(".gun-type");
-      if (!inner) {
-        inner = document.createElement("div");
-        inner.className = "item-dot";
-        el.appendChild(inner);
-      }
-      if (!typeEl) {
-        typeEl = document.createElement("div");
-        typeEl.className = "gun-type";
-        el.appendChild(typeEl);
-      }
       if (item && isMedItem(item)) {
+        if (inner && inner.classList.contains("gun-icon")) inner.remove();
+        if (!inner || inner.classList.contains("gun-icon")) {
+          inner = document.createElement("div");
+          inner.className = "item-dot";
+          el.appendChild(inner);
+        }
+        if (!typeEl) {
+          typeEl = document.createElement("div");
+          typeEl.className = "gun-type";
+          el.appendChild(typeEl);
+        }
         inner.className = "item-dot med-dot";
         inner.style.background = item.color;
         inner.style.display = "block";
@@ -2169,15 +2288,32 @@
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
-        inner.className = "item-dot gun-dot";
-        inner.style.background = ng.color;
-        inner.style.display = "block";
-        typeEl.textContent = ng.typeLabel;
-        typeEl.style.display = "block";
+        if (inner && !inner.classList.contains("gun-icon")) inner.remove();
+        let imgEl = el.querySelector(".gun-icon");
+        if (!imgEl) {
+          imgEl = document.createElement("img");
+          imgEl.className = "gun-icon";
+          imgEl.alt = ng.typeLabel;
+          el.appendChild(imgEl);
+        }
+        imgEl.src = gunImageUrl(ng.type);
+        imgEl.classList.toggle("fallback", !isGunImageReady(ng.type));
+        imgEl.style.display = "block";
+        imgEl.style.boxShadow = isGunImageReady(ng.type) ? ("0 0 0 1px " + ng.color) : "none";
+        if (inner && inner.classList.contains("item-dot")) inner.style.display = "none";
+        if (!typeEl) {
+          typeEl = document.createElement("div");
+          typeEl.className = "gun-type";
+          el.appendChild(typeEl);
+        }
+        typeEl.textContent = isGunImageReady(ng.type) ? "" : ng.typeLabel;
+        typeEl.style.display = isGunImageReady(ng.type) ? "none" : "block";
         el.title = ng.label + " " + ng.typeLabel;
       } else {
-        inner.style.display = "none";
-        typeEl.style.display = "none";
+        if (inner) inner.remove();
+        const imgEl = el.querySelector(".gun-icon");
+        if (imgEl) imgEl.remove();
+        if (typeEl) typeEl.style.display = "none";
         el.title = "Empty";
       }
     });
@@ -3888,10 +4024,7 @@
         ctx.fillStyle = "#daa520";
         ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
         if (ch.gun) {
-          ctx.fillStyle = ch.gun.color;
-          ctx.beginPath();
-          ctx.arc(ch.x, ch.y - 4, 4, 0, Math.PI * 2);
-          ctx.fill();
+          drawGunSprite(ctx, ch.gun, ch.x, ch.y - 4, 0, 0.55, { len: 18, thick: 6 });
         }
       }
     }
@@ -3900,16 +4033,13 @@
       const gg = normalizeGun(g.gun);
       if (!gg) continue;
       g.gun = gg;
-      ctx.fillStyle = g.gun.color;
-      ctx.fillRect(g.x - 10, g.y - 3, 20, 6);
-      ctx.strokeStyle = "rgba(255,255,255,0.3)";
-      ctx.strokeRect(g.x - 10, g.y - 3, 20, 6);
+      const hasImg = drawGunSprite(ctx, gg, g.x, g.y, 0, 0.75, { len: 28, thick: 8 });
       const gsx = g.x - cx;
       const gsy = g.y - cy;
       const hideLabel = opts.isRightPane
         ? (gsx > vw - 260 && gsy > vh - 90)
         : (gsx < 260 && gsy > vh - 90);
-      if (!hideLabel) {
+      if (!hideLabel && !hasImg) {
         ctx.fillStyle = "#bbb";
         ctx.font = "9px system-ui";
         ctx.textAlign = "center";
@@ -4019,6 +4149,15 @@
         ctx.strokeStyle = twoPlayerTeamMode && twoPlayerMode ? "#b8f0c8" : "#fff";
         ctx.lineWidth = 2;
         ctx.stroke();
+      }
+      const heldGun = currentGun(d);
+      if (heldGun) {
+        const aimAng = entityAimAngle(d, {
+          useMouse: d.isPlayer && ((d.playerSlot === 1 && opts.p1Aim) || (d.playerSlot === 2 && opts.p2Aim)),
+        });
+        const gx = d.x + Math.cos(aimAng) * (d.radius + 2);
+        const gy = d.y + Math.sin(aimAng) * (d.radius + 2);
+        drawGunSprite(ctx, heldGun, gx, gy, aimAng, 0.65, { len: 24, thick: 7 });
       }
       if (!d.isPlayer && d.health < d.maxHealth) {
         const w = d.radius * 2;
@@ -4188,6 +4327,7 @@
   }
 
   document.getElementById("btnStart").addEventListener("click", startGame);
+  preloadGunImages();
 
   if (btnCopyShareLink && onlineShareUrl) {
     btnCopyShareLink.addEventListener("click", () => {

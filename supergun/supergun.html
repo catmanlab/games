@@ -616,20 +616,21 @@
     }
     .inv-slot .gun-type {
       position: absolute;
-      left: 1px;
-      right: 1px;
-      bottom: 2px;
-      z-index: 3;
-      font-size: 0.52rem;
-      line-height: 1.05;
+      left: 0;
+      right: 0;
+      bottom: 1px;
+      z-index: 5;
+      font-size: 0.56rem;
+      line-height: 1.1;
       text-align: center;
       color: #fff;
-      font-weight: 700;
-      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
+      font-weight: 800;
+      text-shadow: 0 1px 3px rgba(0,0,0,1);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
       pointer-events: none;
+      padding: 0 1px;
     }
     .inv-slot .gun-icon-wrap {
       z-index: 1;
@@ -1051,7 +1052,7 @@
     sniper: "sniper",
     rpg: "RPG",
   };
-  const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
+  const GUN_IMAGE_EXTS = [".jpg"];
   const GUN_TYPES = [
     { id: "pistol", label: "Pistol", w: 0.17, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
     { id: "smg", label: "SMG", w: 0.14, dmgMul: 0.7, fireMul: 0.5, spreadMul: 1.15 },
@@ -1794,17 +1795,31 @@
     return table[table.length - 1][0];
   }
 
-  function resolveGunImageSrc(relativePath) {
+  function getGunImageBaseUrl() {
+    const meta = document.querySelector('meta[name="supergun-share-url"]');
+    if (meta && meta.content) {
+      try {
+        return new URL(GUN_IMAGE_DIR, meta.content.trim()).href;
+      } catch (e) { /* fall through */ }
+    }
     try {
-      return new URL(relativePath, document.baseURI).href;
+      return new URL(GUN_IMAGE_DIR, document.baseURI).href;
     } catch (e) {
-      return relativePath;
+      return GUN_IMAGE_DIR;
     }
   }
 
+  function resolveGunImageSrc(relativePath) {
+    const base = getGunImageBaseUrl();
+    const file = relativePath.startsWith(GUN_IMAGE_DIR)
+      ? relativePath.slice(GUN_IMAGE_DIR.length)
+      : relativePath;
+    return base + file;
+  }
+
   function gunImagePaths(typeId) {
-    const base = GUN_IMAGE_NAMES[typeId] || typeId;
-    return GUN_IMAGE_EXTS.map((ext) => resolveGunImageSrc(GUN_IMAGE_DIR + encodeURIComponent(base + ext)));
+    const name = GUN_IMAGE_NAMES[typeId] || typeId;
+    return GUN_IMAGE_EXTS.map((ext) => resolveGunImageSrc(encodeURIComponent(name + ext)));
   }
 
   function gunImageUrl(typeId) {
@@ -1821,10 +1836,11 @@
   }
 
   function bindInventoryGunImage(imgEl, typeId) {
-    if (isGunImageReady(typeId) && gunImageCache[typeId] && gunImageCache[typeId].loadedSrc) {
-      const src = gunImageCache[typeId].loadedSrc;
-      if (imgEl.src !== src) imgEl.src = src;
+    const cached = gunImageCache[typeId];
+    if (isGunImageReady(typeId) && cached && cached.loadedSrc) {
+      if (imgEl.src !== cached.loadedSrc) imgEl.src = cached.loadedSrc;
       imgEl.classList.remove("fallback");
+      delete imgEl.dataset.loadingType;
       return;
     }
     if (imgEl.dataset.loadingType === typeId) return;
@@ -1835,12 +1851,18 @@
       if (pathIdx >= paths.length) {
         gunImageFailed[typeId] = true;
         imgEl.classList.add("fallback");
+        delete imgEl.dataset.loadingType;
         return;
       }
       const src = paths[pathIdx++];
       imgEl.onload = () => markGunImageReady(typeId, imgEl, src);
       imgEl.onerror = tryNext;
+      imgEl.loading = "eager";
+      imgEl.decoding = "async";
       imgEl.src = src;
+      if (imgEl.complete && imgEl.naturalWidth > 0) {
+        markGunImageReady(typeId, imgEl, src);
+      }
     }
     tryNext();
   }
@@ -1866,11 +1888,13 @@
 
   function preloadGunImages() {
     for (const t of GUN_TYPES) {
-      if (gunImageCache[t.id]) continue;
-      gunImageCache[t.id] = { img: null, loadedSrc: null };
+      if (gunImageReady[t.id]) continue;
+      if (!gunImageCache[t.id]) gunImageCache[t.id] = { img: null, loadedSrc: null };
       tryLoadGunImage(t.id, gunImagePaths(t.id), 0);
     }
   }
+
+  preloadGunImages();
 
   function drawGunFallbackBar(ctx, x, y, angle, len, thick, color) {
     ctx.save();
@@ -4437,7 +4461,6 @@
   }
 
   document.getElementById("btnStart").addEventListener("click", startGame);
-  preloadGunImages();
 
   if (btnCopyShareLink && onlineShareUrl) {
     btnCopyShareLink.addEventListener("click", () => {

@@ -2028,16 +2028,13 @@
     player2 = null;
     let nextId = 0;
     player = spawnDot({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
-    player.inventory[0] = makeGun("common");
     dots.push(player);
 
     if (twoPlayerMode) {
       player2 = spawnDot({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 });
-      player2.inventory[0] = makeGun("common");
       dots.push(player2);
     } else if (onlineMode && onlineHost) {
       player2 = spawnDot({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 });
-      player2.inventory[0] = makeGun("common");
       dots.push(player2);
     }
 
@@ -3542,7 +3539,6 @@
     walls = [];
     matchStandings = [];
     player = spawnDot({ id: 9999, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
-    player.inventory[0] = makeGun("common");
     dots.push(player);
     player2 = null;
     if (rightHud) rightHud.classList.remove("visible");

@@ -542,10 +542,41 @@
       font-size: 0.65rem;
       color: #888;
       position: relative;
+      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
+    }
+    .inv-slot.rarity-common {
+      border-color: #b4b4b4;
+      background: linear-gradient(180deg, #8d8d8d 0%, #525252 100%);
+      box-shadow: 0 0 10px rgba(180, 180, 180, 0.35), inset 0 1px 0 rgba(255,255,255,0.18);
+    }
+    .inv-slot.rarity-uncommon {
+      border-color: #3dff3d;
+      background: linear-gradient(180deg, #22c022 0%, #0a6b0a 100%);
+      box-shadow: 0 0 12px rgba(34, 192, 34, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .inv-slot.rarity-rare {
+      border-color: #5ec8ff;
+      background: linear-gradient(180deg, #1a8fe8 0%, #0a4f9c 100%);
+      box-shadow: 0 0 12px rgba(30, 143, 232, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .inv-slot.rarity-epic {
+      border-color: #d98cff;
+      background: linear-gradient(180deg, #a84de8 0%, #5f1f9c 100%);
+      box-shadow: 0 0 12px rgba(168, 77, 232, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
+    }
+    .inv-slot.rarity-legendary {
+      border-color: #ffb84d;
+      background: linear-gradient(180deg, #f09018 0%, #a85a00 100%);
+      box-shadow: 0 0 12px rgba(240, 144, 24, 0.5), inset 0 1px 0 rgba(255,255,255,0.22);
+    }
+    .inv-slot.rarity-mythic {
+      border-color: #ffe566;
+      background: linear-gradient(180deg, #e8c820 0%, #a88600 100%);
+      box-shadow: 0 0 14px rgba(232, 200, 32, 0.55), inset 0 1px 0 rgba(255,255,255,0.25);
     }
     .inv-slot.active {
-      border-color: #fff;
-      box-shadow: 0 0 8px rgba(255,255,255,0.3);
+      outline: 2px solid #fff;
+      outline-offset: 1px;
     }
     .inv-slot .gun-dot {
       width: 18px;
@@ -554,33 +585,27 @@
       margin-top: -8px;
     }
     .inv-slot .gun-icon-wrap {
-      width: 36px;
-      height: 28px;
-      margin-top: -4px;
+      width: 34px;
+      height: 22px;
+      margin-top: -7px;
       position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      border-radius: 4px;
+      border-radius: 3px;
       overflow: hidden;
-      background: #e8e8e8;
-      border: 1px solid var(--rarity-tint, #555);
-      box-shadow: 0 0 6px color-mix(in srgb, var(--rarity-tint, #555) 45%, transparent);
+      background: rgba(255, 255, 255, 0.94);
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
     }
     .inv-slot .gun-icon {
-      width: 32px;
-      height: 24px;
+      width: 30px;
+      height: 20px;
       object-fit: contain;
       display: block;
       pointer-events: none;
-      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.35));
-    }
-    .inv-slot .gun-icon.is-tinted {
-      mix-blend-mode: multiply;
-      opacity: 0.92;
     }
     .inv-slot .gun-icon.fallback {
-      opacity: 0.45;
+      opacity: 0.4;
     }
     .inv-slot .med-dot {
       width: 10px;
@@ -591,13 +616,15 @@
     }
     .inv-slot .gun-type {
       position: absolute;
-      left: 2px;
-      right: 2px;
-      bottom: 3px;
-      font-size: 0.5rem;
-      line-height: 1;
+      left: 1px;
+      right: 1px;
+      bottom: 2px;
+      font-size: 0.48rem;
+      line-height: 1.05;
       text-align: center;
-      color: #b7b7b7;
+      color: #fff;
+      font-weight: 700;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.9);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -997,13 +1024,14 @@
   const INV_SLOTS = 5;
 
   const RARITIES = {
-    common:    { label: "Common",    color: "#9e9e9e", dmg: [5, 35],   fireMs: 380, spread: 0.12 },
-    uncommon:  { label: "Uncommon",  color: "#4caf50", dmg: [30, 50],  fireMs: 320, spread: 0.09 },
-    rare:      { label: "Rare",      color: "#2196f3", dmg: [45, 65],  fireMs: 260, spread: 0.07 },
-    epic:      { label: "Epic",      color: "#9c27b0", dmg: [55, 75],  fireMs: 220, spread: 0.05 },
-    legendary: { label: "Legendary", color: "#ff9800", dmg: [70, 110], fireMs: 180, spread: 0.04 },
-    mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
+    common:    { label: "Common",    color: "#b4b4b4", dmg: [5, 35],   fireMs: 380, spread: 0.12 },
+    uncommon:  { label: "Uncommon",  color: "#3dff3d", dmg: [30, 50],  fireMs: 320, spread: 0.09 },
+    rare:      { label: "Rare",      color: "#5ec8ff", dmg: [45, 65],  fireMs: 260, spread: 0.07 },
+    epic:      { label: "Epic",      color: "#d98cff", dmg: [55, 75],  fireMs: 220, spread: 0.05 },
+    legendary: { label: "Legendary", color: "#ffb84d", dmg: [70, 110], fireMs: 180, spread: 0.04 },
+    mythic:    { label: "Mythic",    color: "#ffe566", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
+  const RARITY_CLASS_NAMES = ["rarity-common", "rarity-uncommon", "rarity-rare", "rarity-epic", "rarity-legendary", "rarity-mythic"];
   const GUN_IMAGE_DIR = "supergun_gun/";
   const GUN_IMAGE_NAMES = {
     pistol: "pistol",
@@ -1849,16 +1877,13 @@
     ctx.restore();
   }
 
-  function applyRarityTintToSprite(ctx, x, y, w, h, color) {
-    if (!color) return;
-    ctx.save();
-    ctx.globalCompositeOperation = "source-atop";
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.58;
-    ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 1;
-    ctx.globalCompositeOperation = "source-over";
-    ctx.restore();
+  function clearInvSlotRarityClass(el) {
+    for (const cls of RARITY_CLASS_NAMES) el.classList.remove(cls);
+  }
+
+  function setInvSlotRarityClass(el, rarityId) {
+    clearInvSlotRarityClass(el);
+    if (rarityId && RARITIES[rarityId]) el.classList.add("rarity-" + rarityId);
   }
 
   function drawGunSprite(ctx, gun, x, y, angle, scale, opts) {
@@ -1878,9 +1903,6 @@
       const ix = -w * 0.5;
       const iy = -h * 0.5;
       ctx.drawImage(img, ix, iy, w, h);
-      if (gun && gun.color && opts.tintRarity !== false) {
-        applyRarityTintToSprite(ctx, ix, iy, w, h, gun.color);
-      }
       ctx.restore();
       return true;
     }
@@ -1888,25 +1910,28 @@
     return false;
   }
 
-  function entityAimAngle(e, opts) {
+  function drawGunPickupSprite(ctx, gun, x, y, angle, scale, opts) {
     opts = opts || {};
-    if (e.isPlayer && e.playerSlot === 1 && opts.useMouse) {
-      return Math.atan2(mouseWorldY - e.y, mouseWorldX - e.x);
-    }
-    if (e.isPlayer && e.playerSlot === 2) {
-      if (opts.useMouse && (p2ShootMouseDown || p2MouseOnPane)) {
-        return Math.atan2(mouseWorldY2 - e.y, mouseWorldX2 - e.x);
-      }
-      const ax = e.aimX ?? 1;
-      const ay = e.aimY ?? 0;
-      return Math.atan2(ay, ax);
-    }
-    if (e.aiTarget && e.aiTarget.alive) {
-      return Math.atan2(e.aiTarget.y - e.y, e.aiTarget.x - e.x);
-    }
-    const ax = e.aimX ?? 1;
-    const ay = e.aimY ?? 0;
-    return Math.atan2(ay, ax);
+    const len = (opts.len || 22) * (scale || 1);
+    const pad = len * 0.55;
+    const rarity = gun && gun.rarity ? gun.rarity : "common";
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle || 0);
+    const grad = ctx.createLinearGradient(0, -pad, 0, pad);
+    if (rarity === "common") { grad.addColorStop(0, "#8d8d8d"); grad.addColorStop(1, "#525252"); }
+    else if (rarity === "uncommon") { grad.addColorStop(0, "#22c022"); grad.addColorStop(1, "#0a6b0a"); }
+    else if (rarity === "rare") { grad.addColorStop(0, "#1a8fe8"); grad.addColorStop(1, "#0a4f9c"); }
+    else if (rarity === "epic") { grad.addColorStop(0, "#a84de8"); grad.addColorStop(1, "#5f1f9c"); }
+    else if (rarity === "legendary") { grad.addColorStop(0, "#f09018"); grad.addColorStop(1, "#a85a00"); }
+    else { grad.addColorStop(0, "#e8c820"); grad.addColorStop(1, "#a88600"); }
+    ctx.fillStyle = grad;
+    ctx.fillRect(-pad, -pad * 0.65, pad * 2, pad * 1.3);
+    ctx.strokeStyle = gun && gun.color ? gun.color : "#fff";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    return drawGunSprite(ctx, gun, x, y, angle, scale, opts);
   }
 
   function pickGunTypeId() {
@@ -2347,6 +2372,7 @@
       let inner = el.querySelector(".item-dot, .gun-icon-wrap");
       let typeEl = el.querySelector(".gun-type");
       if (item && isMedItem(item)) {
+        clearInvSlotRarityClass(el);
         if (inner && inner.classList.contains("gun-icon-wrap")) inner.remove();
         if (!inner || inner.classList.contains("gun-icon-wrap")) {
           inner = document.createElement("div");
@@ -2367,6 +2393,7 @@
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
+        setInvSlotRarityClass(el, ng.rarity);
         if (inner && !inner.classList.contains("gun-icon-wrap")) inner.remove();
         let wrapEl = el.querySelector(".gun-icon-wrap");
         if (!wrapEl) {
@@ -2374,26 +2401,26 @@
           wrapEl.className = "gun-icon-wrap";
           el.appendChild(wrapEl);
         }
-        wrapEl.style.setProperty("--rarity-tint", ng.color);
         wrapEl.style.display = "flex";
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
           imgEl = document.createElement("img");
-          imgEl.className = "gun-icon is-tinted";
+          imgEl.className = "gun-icon";
           imgEl.alt = ng.typeLabel;
           wrapEl.appendChild(imgEl);
         }
-        imgEl.classList.add("is-tinted");
+        imgEl.classList.remove("is-tinted");
         bindInventoryGunImage(imgEl, ng.type);
         if (!typeEl) {
           typeEl = document.createElement("div");
           typeEl.className = "gun-type";
           el.appendChild(typeEl);
         }
-        typeEl.textContent = ng.label;
+        typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = ng.label + " " + ng.typeLabel;
+        el.title = ng.label + " · " + ng.typeLabel;
       } else {
+        clearInvSlotRarityClass(el);
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
         if (wrapEl) wrapEl.remove();
@@ -4107,7 +4134,7 @@
         ctx.fillStyle = "#daa520";
         ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
         if (ch.gun) {
-          drawGunSprite(ctx, ch.gun, ch.x, ch.y - 4, 0, 0.55, { len: 18, thick: 6 });
+          drawGunPickupSprite(ctx, ch.gun, ch.x, ch.y - 4, 0, 0.55, { len: 18, thick: 6 });
         }
       }
     }
@@ -4116,17 +4143,17 @@
       const gg = normalizeGun(g.gun);
       if (!gg) continue;
       g.gun = gg;
-      const hasImg = drawGunSprite(ctx, gg, g.x, g.y, 0, 0.75, { len: 28, thick: 8 });
+      drawGunPickupSprite(ctx, gg, g.x, g.y, 0, 0.75, { len: 28, thick: 8 });
       const gsx = g.x - cx;
       const gsy = g.y - cy;
       const hideLabel = opts.isRightPane
         ? (gsx > vw - 260 && gsy > vh - 90)
         : (gsx < 260 && gsy > vh - 90);
-      if (!hideLabel && !hasImg) {
-        ctx.fillStyle = "#bbb";
-        ctx.font = "9px system-ui";
+      if (!hideLabel) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 9px system-ui";
         ctx.textAlign = "center";
-        ctx.fillText(gg.typeLabel, g.x, g.y + 12);
+        ctx.fillText(gg.typeLabel, g.x, g.y + 14);
       }
     }
 
@@ -4232,15 +4259,6 @@
         ctx.strokeStyle = twoPlayerTeamMode && twoPlayerMode ? "#b8f0c8" : "#fff";
         ctx.lineWidth = 2;
         ctx.stroke();
-      }
-      const heldGun = currentGun(d);
-      if (heldGun) {
-        const aimAng = entityAimAngle(d, {
-          useMouse: d.isPlayer && ((d.playerSlot === 1 && opts.p1Aim) || (d.playerSlot === 2 && opts.p2Aim)),
-        });
-        const gx = d.x + Math.cos(aimAng) * (d.radius + 2);
-        const gy = d.y + Math.sin(aimAng) * (d.radius + 2);
-        drawGunSprite(ctx, heldGun, gx, gy, aimAng, 0.65, { len: 24, thick: 7 });
       }
       if (!d.isPlayer && d.health < d.maxHealth) {
         const w = d.radius * 2;

@@ -560,6 +560,15 @@
       background: rgba(255, 255, 255, 0.94);
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
     }
+    .inv-slot .gun-icon-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--rarity-tint, transparent);
+      mix-blend-mode: color;
+      opacity: 0.72;
+      pointer-events: none;
+    }
     .inv-slot .gun-icon {
       width: 30px;
       height: 20px;
@@ -1860,6 +1869,18 @@
     ctx.restore();
   }
 
+  function applyRarityTintToSprite(ctx, x, y, w, h, color) {
+    if (!color) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.58;
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.restore();
+  }
+
   function drawGunSprite(ctx, gun, x, y, angle, scale, opts) {
     opts = opts || {};
     const typeId = gun && gun.type ? gun.type : "assault_rifle";
@@ -1877,6 +1898,9 @@
       const ix = -w * 0.5;
       const iy = -h * 0.5;
       ctx.drawImage(img, ix, iy, w, h);
+      if (gun && gun.color && opts.tintRarity !== false) {
+        applyRarityTintToSprite(ctx, ix, iy, w, h, gun.color);
+      }
       ctx.restore();
       return true;
     }
@@ -2352,6 +2376,7 @@
           el.appendChild(wrapEl);
         }
         wrapEl.style.display = "flex";
+        wrapEl.style.setProperty("--rarity-tint", ng.color);
         wrapEl.style.boxShadow = "inset 0 0 0 2px " + ng.color;
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
@@ -2360,7 +2385,6 @@
           imgEl.alt = ng.typeLabel;
           wrapEl.appendChild(imgEl);
         }
-        imgEl.classList.remove("is-tinted");
         bindInventoryGunImage(imgEl, ng.type);
         if (!typeEl) {
           typeEl = document.createElement("div");
@@ -4087,10 +4111,7 @@
         if (ch.gun) {
           const cg = normalizeGun(ch.gun);
           ch.gun = cg;
-          ctx.fillStyle = cg.color;
-          ctx.beginPath();
-          ctx.arc(ch.x, ch.y - 4, 4, 0, Math.PI * 2);
-          ctx.fill();
+          drawGunSprite(ctx, cg, ch.x, ch.y - 4, 0, 0.55, { len: 18, thick: 6 });
         }
       }
     }

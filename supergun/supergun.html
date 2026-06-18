@@ -980,7 +980,7 @@
     { id: "famas", label: "FAMAS", w: 0.11, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.11, dmgMul: 1.4, fireMul: 0.6, spreadMul: 1.25 },
     { id: "assault_rifle", label: "Assault Rifle", w: 0.12, dmgMul: 1, fireMul: 1, spreadMul: 1 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.08, dmgMul: 2.8, fireMul: 2.4, spreadMul: 1.1 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.08, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.15 },
     { id: "scar", label: "SCAR", w: 0.07, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
     { id: "sniper", label: "Sniper", w: 0.05, dmgMul: 1.05, fireMul: 1.4, spreadMul: 0.5 },
     { id: "rpg", label: "RPG", w: 0.02, dmgMul: 1.15, fireMul: 2.0, spreadMul: 0.05 },
@@ -1756,8 +1756,8 @@
       case "scar":
         return dmg;
       case "pump_shotgun": {
-        const t = clamp(1 - distance / 180, 0, 1);
-        return dmg * (0.28 + 0.95 * t);
+        const t = clamp(1 - distance / 200, 0, 1);
+        return dmg * (0.45 + 0.55 * t);
       }
       case "sniper": {
         const t = clamp((distance - 220) / 900, 0, 1);

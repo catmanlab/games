@@ -542,47 +542,10 @@
       font-size: 0.65rem;
       color: #888;
       position: relative;
-      box-shadow: inset 0 0 0 1px rgba(0,0,0,0.35);
-    }
-    .inv-slot.rarity-common {
-      border-color: #b4b4b4;
-      background: linear-gradient(180deg, #8d8d8d 0%, #525252 100%);
-      box-shadow: 0 0 10px rgba(180, 180, 180, 0.35), inset 0 1px 0 rgba(255,255,255,0.18);
-    }
-    .inv-slot.rarity-uncommon {
-      border-color: #3dff3d;
-      background: linear-gradient(180deg, #22c022 0%, #0a6b0a 100%);
-      box-shadow: 0 0 12px rgba(34, 192, 34, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .inv-slot.rarity-rare {
-      border-color: #5ec8ff;
-      background: linear-gradient(180deg, #1a8fe8 0%, #0a4f9c 100%);
-      box-shadow: 0 0 12px rgba(30, 143, 232, 0.45), inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .inv-slot.rarity-epic {
-      border-color: #d98cff;
-      background: linear-gradient(180deg, #a84de8 0%, #5f1f9c 100%);
-      box-shadow: 0 0 12px rgba(168, 77, 232, 0.5), inset 0 1px 0 rgba(255,255,255,0.2);
-    }
-    .inv-slot.rarity-legendary {
-      border-color: #ffb84d;
-      background: linear-gradient(180deg, #f09018 0%, #a85a00 100%);
-      box-shadow: 0 0 12px rgba(240, 144, 24, 0.5), inset 0 1px 0 rgba(255,255,255,0.22);
-    }
-    .inv-slot.rarity-mythic {
-      border-color: #ffe566;
-      background: linear-gradient(180deg, #e8c820 0%, #a88600 100%);
-      box-shadow: 0 0 14px rgba(232, 200, 32, 0.55), inset 0 1px 0 rgba(255,255,255,0.25);
     }
     .inv-slot.active {
-      outline: 2px solid #fff;
-      outline-offset: 1px;
-    }
-    .inv-slot .gun-dot {
-      width: 18px;
-      height: 8px;
-      border-radius: 2px;
-      margin-top: -8px;
+      border-color: #fff;
+      box-shadow: 0 0 8px rgba(255,255,255,0.3);
     }
     .inv-slot .gun-icon-wrap {
       width: 34px;
@@ -616,27 +579,18 @@
     }
     .inv-slot .gun-type {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 1px;
-      z-index: 5;
-      font-size: 0.56rem;
-      line-height: 1.1;
+      left: 2px;
+      right: 2px;
+      bottom: 3px;
+      font-size: 0.5rem;
+      line-height: 1;
       text-align: center;
-      color: #fff;
-      font-weight: 800;
-      text-shadow: 0 1px 3px rgba(0,0,0,1);
+      color: #b7b7b7;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      pointer-events: none;
-      padding: 0 1px;
-    }
-    .inv-slot .gun-icon-wrap {
-      z-index: 1;
     }
     .inv-slot .slot-num {
-      z-index: 2;
       position: absolute;
       top: 2px;
       left: 4px;
@@ -1038,7 +992,6 @@
     legendary: { label: "Legendary", color: "#ff9800", dmg: [70, 110], fireMs: 180, spread: 0.04 },
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
-  const RARITY_CLASS_NAMES = ["rarity-common", "rarity-uncommon", "rarity-rare", "rarity-epic", "rarity-legendary", "rarity-mythic"];
   const GUN_IMAGE_DIR = "supergun_gun/";
   const GUN_IMAGE_NAMES = {
     pistol: "pistol",
@@ -1907,15 +1860,6 @@
     ctx.restore();
   }
 
-  function clearInvSlotRarityClass(el) {
-    for (const cls of RARITY_CLASS_NAMES) el.classList.remove(cls);
-  }
-
-  function setInvSlotRarityClass(el, rarityId) {
-    clearInvSlotRarityClass(el);
-    if (rarityId && RARITIES[rarityId]) el.classList.add("rarity-" + rarityId);
-  }
-
   function drawGunSprite(ctx, gun, x, y, angle, scale, opts) {
     opts = opts || {};
     const typeId = gun && gun.type ? gun.type : "assault_rifle";
@@ -1938,89 +1882,6 @@
     }
     drawGunFallbackBar(ctx, x, y, angle, len * (scale || 1), thick, gun ? gun.color : "#888");
     return false;
-  }
-
-  function getRarityDrawStyle(rarityId) {
-    const id = rarityId && RARITIES[rarityId] ? rarityId : "common";
-    const meta = RARITIES[id];
-    const palettes = {
-      common:    { top: "#9a9a9a", bot: "#4f4f4f", glow: "rgba(180,180,180,0.55)", border: "#b4b4b4" },
-      uncommon:  { top: "#28d428", bot: "#0a6b0a", glow: "rgba(40,212,40,0.6)", border: "#3dff3d" },
-      rare:      { top: "#2aa0ff", bot: "#0a4f9c", glow: "rgba(42,160,255,0.62)", border: "#5ec8ff" },
-      epic:      { top: "#b866ff", bot: "#5f1f9c", glow: "rgba(184,102,255,0.65)", border: "#d98cff" },
-      legendary: { top: "#ffa030", bot: "#a85a00", glow: "rgba(255,160,48,0.68)", border: "#ffb84d" },
-      mythic:    { top: "#ffe030", bot: "#a88600", glow: "rgba(255,224,48,0.7)", border: "#ffe566" },
-    };
-    const p = palettes[id];
-    return { ...p, label: meta.label };
-  }
-
-  function drawGunChest(ctx, ch) {
-    const gun = normalizeGun(ch.gun);
-    if (!gun) return;
-    ch.gun = gun;
-    const style = getRarityDrawStyle(gun.rarity);
-    const x = ch.x;
-    const y = ch.y;
-    const w = 30;
-    const h = 24;
-
-    ctx.save();
-    ctx.shadowColor = style.glow;
-    ctx.shadowBlur = 18;
-    ctx.fillStyle = style.glow;
-    ctx.beginPath();
-    ctx.arc(x, y, 20, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
-
-    const grad = ctx.createLinearGradient(x, y - h * 0.5, x, y + h * 0.5);
-    grad.addColorStop(0, style.top);
-    grad.addColorStop(1, style.bot);
-    ctx.fillStyle = grad;
-    ctx.fillRect(x - w * 0.5, y - h * 0.5, w, h);
-    ctx.strokeStyle = style.border;
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(x - w * 0.5, y - h * 0.5, w, h);
-
-    ctx.fillStyle = "rgba(0,0,0,0.28)";
-    ctx.fillRect(x - w * 0.5 + 2, y - h * 0.5 + 2, w - 4, h - 4);
-    ctx.fillStyle = "rgba(255,255,255,0.12)";
-    ctx.fillRect(x - w * 0.5 + 3, y - h * 0.5 + 3, w - 6, 5);
-
-    drawGunSprite(ctx, gun, x, y - 1, 0, 0.7, { len: 22, thick: 6 });
-
-    ctx.textAlign = "center";
-    ctx.font = "bold 9px system-ui,sans-serif";
-    ctx.strokeStyle = "rgba(0,0,0,0.9)";
-    ctx.lineWidth = 3;
-    ctx.strokeText(style.label.toUpperCase(), x, y - h * 0.5 - 5);
-    ctx.fillStyle = "#fff";
-    ctx.fillText(style.label.toUpperCase(), x, y - h * 0.5 - 5);
-
-    ctx.font = "7px system-ui,sans-serif";
-    ctx.strokeText(gun.typeLabel, x, y + h * 0.5 + 9);
-    ctx.fillText(gun.typeLabel, x, y + h * 0.5 + 9);
-  }
-
-  function drawGunPickupSprite(ctx, gun, x, y, angle, scale, opts) {
-    opts = opts || {};
-    const len = (opts.len || 22) * (scale || 1);
-    const pad = len * 0.55;
-    const style = getRarityDrawStyle(gun && gun.rarity);
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(angle || 0);
-    const grad = ctx.createLinearGradient(0, -pad, 0, pad);
-    grad.addColorStop(0, style.top);
-    grad.addColorStop(1, style.bot);
-    ctx.fillStyle = grad;
-    ctx.fillRect(-pad, -pad * 0.65, pad * 2, pad * 1.3);
-    ctx.strokeStyle = style.border;
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.restore();
-    return drawGunSprite(ctx, gun, x, y, angle, scale, opts);
   }
 
   function pickGunTypeId() {
@@ -2463,7 +2324,6 @@
       let inner = el.querySelector(".item-dot, .gun-icon-wrap");
       let typeEl = el.querySelector(".gun-type");
       if (item && isMedItem(item)) {
-        clearInvSlotRarityClass(el);
         if (inner && inner.classList.contains("gun-icon-wrap")) inner.remove();
         if (!inner || inner.classList.contains("gun-icon-wrap")) {
           inner = document.createElement("div");
@@ -2484,7 +2344,6 @@
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
-        setInvSlotRarityClass(el, ng.rarity);
         if (inner && !inner.classList.contains("gun-icon-wrap")) inner.remove();
         let wrapEl = el.querySelector(".gun-icon-wrap");
         if (!wrapEl) {
@@ -2493,6 +2352,7 @@
           el.appendChild(wrapEl);
         }
         wrapEl.style.display = "flex";
+        wrapEl.style.boxShadow = "inset 0 0 0 2px " + ng.color;
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
           imgEl = document.createElement("img");
@@ -2509,9 +2369,8 @@
         }
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = ng.label + " · " + ng.typeLabel;
+        el.title = ng.label + " " + ng.typeLabel;
       } else {
-        clearInvSlotRarityClass(el);
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
         if (wrapEl) wrapEl.remove();
@@ -4153,14 +4012,7 @@
     }
     for (const ch of chests) {
       if (ch.open) continue;
-      if (ch.kind === "med") {
-        mctx.fillStyle = "#3d9e55";
-      } else if (ch.gun) {
-        const g = normalizeGun(ch.gun);
-        mctx.fillStyle = g ? g.color : "#8B6914";
-      } else {
-        mctx.fillStyle = "#8B6914";
-      }
+      mctx.fillStyle = ch.kind === "med" ? "#3d9e55" : "#8B6914";
       mctx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
     }
     for (const d of dots) {
@@ -4228,7 +4080,10 @@
         ctx.fillStyle = "rgba(255,255,255,0.35)";
         ctx.fillRect(ch.x - 2, ch.y - 5, 4, 3);
       } else {
-        drawGunChest(ctx, ch);
+        ctx.fillStyle = "#8B4513";
+        ctx.fillRect(ch.x - 12, ch.y - 10, 24, 18);
+        ctx.fillStyle = "#daa520";
+        ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
       }
     }
 
@@ -4236,17 +4091,23 @@
       const gg = normalizeGun(g.gun);
       if (!gg) continue;
       g.gun = gg;
-      drawGunPickupSprite(ctx, gg, g.x, g.y, 0, 0.75, { len: 28, thick: 8 });
+      const hasImg = drawGunSprite(ctx, gg, g.x, g.y, 0, 0.75, { len: 28, thick: 8 });
+      if (!hasImg) {
+        ctx.fillStyle = gg.color;
+        ctx.fillRect(g.x - 10, g.y - 3, 20, 6);
+        ctx.strokeStyle = "rgba(255,255,255,0.3)";
+        ctx.strokeRect(g.x - 10, g.y - 3, 20, 6);
+      }
       const gsx = g.x - cx;
       const gsy = g.y - cy;
       const hideLabel = opts.isRightPane
         ? (gsx > vw - 260 && gsy > vh - 90)
         : (gsx < 260 && gsy > vh - 90);
       if (!hideLabel) {
-        ctx.fillStyle = "#fff";
-        ctx.font = "bold 9px system-ui";
+        ctx.fillStyle = "#bbb";
+        ctx.font = "9px system-ui";
         ctx.textAlign = "center";
-        ctx.fillText(gg.typeLabel, g.x, g.y + 14);
+        ctx.fillText(gg.typeLabel, g.x, g.y + 12);
       }
     }
 

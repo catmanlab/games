@@ -551,11 +551,32 @@
       border-radius: 2px;
       margin-top: -8px;
     }
-    .inv-slot .gun-icon {
+    .inv-slot .gun-icon-wrap {
       width: 36px;
       height: 28px;
-      object-fit: contain;
       margin-top: -4px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    .inv-slot .gun-icon-wrap::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: var(--rarity-tint, transparent);
+      mix-blend-mode: color;
+      opacity: 0.72;
+      pointer-events: none;
+    }
+    .inv-slot .gun-icon {
+      width: 34px;
+      height: 26px;
+      object-fit: contain;
+      position: relative;
+      z-index: 1;
       pointer-events: none;
       filter: drop-shadow(0 1px 2px rgba(0,0,0,0.85));
     }
@@ -984,8 +1005,20 @@
     legendary: { label: "Legendary", color: "#ff9800", dmg: [70, 110], fireMs: 180, spread: 0.04 },
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
-  const GUN_IMAGE_DIR = "guns/";
-  const GUN_IMAGE_EXTS = [".png", ".webp", ".gif"];
+  const GUN_IMAGE_DIR = "supergun_gun/";
+  const GUN_IMAGE_NAMES = {
+    pistol: "pistol",
+    smg: "submachine gun",
+    combat_shotgun: "combat shotgun",
+    tactical_shotgun: "tactical shotgun",
+    pump_shotgun: "pump shotgun",
+    famas: "famas",
+    assault_rifle: "assault rifle",
+    scar: "SCAR",
+    sniper: "sniper",
+    rpg: "RPG",
+  };
+  const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp", ".gif"];
   const GUN_TYPES = [
     { id: "pistol", label: "Pistol", w: 0.17, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
     { id: "smg", label: "SMG", w: 0.14, dmgMul: 0.7, fireMul: 0.5, spreadMul: 1.15 },
@@ -1729,7 +1762,8 @@
   }
 
   function gunImagePaths(typeId) {
-    return GUN_IMAGE_EXTS.map((ext) => GUN_IMAGE_DIR + typeId + ext);
+    const base = GUN_IMAGE_NAMES[typeId] || typeId;
+    return GUN_IMAGE_EXTS.map((ext) => GUN_IMAGE_DIR + encodeURIComponent(base + ext));
   }
 
   function gunImageUrl(typeId) {
@@ -1781,6 +1815,18 @@
     ctx.restore();
   }
 
+  function applyRarityTintToSprite(ctx, x, y, w, h, color) {
+    if (!color) return;
+    ctx.save();
+    ctx.globalCompositeOperation = "source-atop";
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.58;
+    ctx.fillRect(x, y, w, h);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = "source-over";
+    ctx.restore();
+  }
+
   function drawGunSprite(ctx, gun, x, y, angle, scale, opts) {
     opts = opts || {};
     const typeId = gun && gun.type ? gun.type : "assault_rifle";
@@ -1795,12 +1841,11 @@
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(angle);
-      ctx.drawImage(img, -w * 0.5, -h * 0.5, w, h);
+      const ix = -w * 0.5;
+      const iy = -h * 0.5;
+      ctx.drawImage(img, ix, iy, w, h);
       if (gun && gun.color && opts.tintRarity !== false) {
-        ctx.globalCompositeOperation = "source-atop";
-        ctx.fillStyle = gun.color + "44";
-        ctx.fillRect(-w * 0.5, -h * 0.5, w, h);
-        ctx.globalCompositeOperation = "source-over";
+        applyRarityTintToSprite(ctx, ix, iy, w, h, gun.color);
       }
       ctx.restore();
       return true;
@@ -2265,11 +2310,11 @@
     slots.forEach((el, i) => {
       el.classList.toggle("active", entity.invIndex === i);
       const item = entity.inventory[i];
-      let inner = el.querySelector(".item-dot, .gun-icon");
+      let inner = el.querySelector(".item-dot, .gun-icon-wrap");
       let typeEl = el.querySelector(".gun-type");
       if (item && isMedItem(item)) {
-        if (inner && inner.classList.contains("gun-icon")) inner.remove();
-        if (!inner || inner.classList.contains("gun-icon")) {
+        if (inner && inner.classList.contains("gun-icon-wrap")) inner.remove();
+        if (!inner || inner.classList.contains("gun-icon-wrap")) {
           inner = document.createElement("div");
           inner.className = "item-dot";
           el.appendChild(inner);
@@ -2288,19 +2333,25 @@
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
-        if (inner && !inner.classList.contains("gun-icon")) inner.remove();
-        let imgEl = el.querySelector(".gun-icon");
+        if (inner && !inner.classList.contains("gun-icon-wrap")) inner.remove();
+        let wrapEl = el.querySelector(".gun-icon-wrap");
+        if (!wrapEl) {
+          wrapEl = document.createElement("div");
+          wrapEl.className = "gun-icon-wrap";
+          el.appendChild(wrapEl);
+        }
+        wrapEl.style.setProperty("--rarity-tint", ng.color);
+        wrapEl.style.boxShadow = "inset 0 0 0 1px " + ng.color;
+        wrapEl.style.display = "flex";
+        let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
           imgEl = document.createElement("img");
           imgEl.className = "gun-icon";
           imgEl.alt = ng.typeLabel;
-          el.appendChild(imgEl);
+          wrapEl.appendChild(imgEl);
         }
         imgEl.src = gunImageUrl(ng.type);
         imgEl.classList.toggle("fallback", !isGunImageReady(ng.type));
-        imgEl.style.display = "block";
-        imgEl.style.boxShadow = isGunImageReady(ng.type) ? ("0 0 0 1px " + ng.color) : "none";
-        if (inner && inner.classList.contains("item-dot")) inner.style.display = "none";
         if (!typeEl) {
           typeEl = document.createElement("div");
           typeEl.className = "gun-type";
@@ -2311,8 +2362,8 @@
         el.title = ng.label + " " + ng.typeLabel;
       } else {
         if (inner) inner.remove();
-        const imgEl = el.querySelector(".gun-icon");
-        if (imgEl) imgEl.remove();
+        const wrapEl = el.querySelector(".gun-icon-wrap");
+        if (wrapEl) wrapEl.remove();
         if (typeEl) typeEl.style.display = "none";
         el.title = "Empty";
       }

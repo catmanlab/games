@@ -4084,6 +4084,14 @@
         ctx.fillRect(ch.x - 12, ch.y - 10, 24, 18);
         ctx.fillStyle = "#daa520";
         ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
+        if (ch.gun) {
+          const cg = normalizeGun(ch.gun);
+          ch.gun = cg;
+          ctx.fillStyle = cg.color;
+          ctx.beginPath();
+          ctx.arc(ch.x, ch.y - 4, 4, 0, Math.PI * 2);
+          ctx.fill();
+        }
       }
     }
 

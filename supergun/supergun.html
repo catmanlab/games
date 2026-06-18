@@ -866,10 +866,10 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Rifle</strong> (normal), <strong>Minigun</strong> (stronger close), <strong>Sniper</strong> (stronger far). Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> / <strong>Tactical Shotgun</strong> / <strong>Pump Shotgun</strong> (close range), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (long range), <strong>RPG</strong> (explosions, 2 hits to break walls). Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
-      Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. The ultra-rare <strong>Cat's Claw</strong> (Mythic, 90–130 dmg) only drops from bosses. Chests give Common through Epic. Be the last dot alive to win.
+      Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. Chests give Common through Epic. Be the last dot alive to win.
       The arena is <strong>huge</strong> — the view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
@@ -974,9 +974,16 @@
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
   const GUN_TYPES = [
-    { id: "rifle", label: "Rifle", w: 0.5 },
-    { id: "minigun", label: "Minigun", w: 0.3 },
-    { id: "sniper", label: "Sniper", w: 0.2 },
+    { id: "pistol", label: "Pistol", w: 0.17, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
+    { id: "smg", label: "SMG", w: 0.14, dmgMul: 0.7, fireMul: 0.5, spreadMul: 1.15 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.12, dmgMul: 1.4, fireMul: 1.1, spreadMul: 1.4, pellets: 5, pelletDmgMul: 0.38 },
+    { id: "famas", label: "FAMAS", w: 0.11, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
+    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.11, dmgMul: 1.1, fireMul: 0.6, spreadMul: 1.25, pellets: 4, pelletDmgMul: 0.42 },
+    { id: "assault_rifle", label: "Assault Rifle", w: 0.12, dmgMul: 1, fireMul: 1, spreadMul: 1 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.08, dmgMul: 1.75, fireMul: 2.4, spreadMul: 1.0, pellets: 7, pelletDmgMul: 0.36 },
+    { id: "scar", label: "SCAR", w: 0.07, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
+    { id: "sniper", label: "Sniper", w: 0.05, dmgMul: 1.05, fireMul: 1.4, spreadMul: 0.5 },
+    { id: "rpg", label: "RPG", w: 0.02, dmgMul: 1.15, fireMul: 2.0, spreadMul: 0.05 },
   ];
 
   const CHEST_DROP_WEIGHTS = [
@@ -1005,10 +1012,11 @@
     ["legendary", 0.28],
     ["mythic", 0.12],
   ];
-  const CATS_CLAW_DROP_CHANCE = 0.04;
   const WALL_MAX_CHARGES = 5;
   const WALL_RECHARGE_MS = 5000;
   const WALL_MAX_HP = 5;
+  const RPG_EXPLODE_RADIUS = 115;
+  const RPG_WALL_DMG = Math.ceil(WALL_MAX_HP / 2);
   const GRID_STEP = 80;
   const WALL_LENGTH = 100;
   const WALL_THICK = 14;
@@ -1118,6 +1126,7 @@
   let dots = [];
   let chests = [];
   let bullets = [];
+  let explosions = [];
   let groundGuns = [];
   let groundMeds = [];
   let damageTexts = [];
@@ -1709,35 +1718,64 @@
       r -= t.w;
       if (r <= 0) return t.id;
     }
-    return "rifle";
+    return "assault_rifle";
   }
 
   function getGunTypeMeta(typeId) {
-    if (typeId === "cats_claw") return { id: "cats_claw", label: "Cat's Claw" };
-    return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES[0];
+    return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
   }
 
-  function isCatsClawGun(gun) {
-    return gun && gun.type === "cats_claw";
+  function isRpgGun(gun) {
+    return gun && gun.type === "rpg";
   }
 
-  function makeCatsClawGun() {
-    const meta = getGunTypeMeta("cats_claw");
-    return {
-      rarity: "mythic",
-      color: "#ff4fa8",
-      label: "Mythic",
-      type: meta.id,
-      typeLabel: meta.label,
-      dmgMin: 90,
-      dmgMax: 130,
-      fireMs: 125,
-      spread: 0.028,
-    };
+  function getPelletCount(gun) {
+    if (!gun || isRpgGun(gun)) return 1;
+    const meta = getGunTypeMeta(gun.type);
+    return meta.pellets || 1;
+  }
+
+  function applyGunTypeDistanceModifier(type, dmg, distance) {
+    switch (type) {
+      case "pistol":
+        return dmg * 0.95;
+      case "smg": {
+        const t = clamp(1 - distance / 360, 0, 1);
+        return dmg * (0.82 + 0.22 * t);
+      }
+      case "combat_shotgun": {
+        const t = clamp(1 - distance / 260, 0, 1);
+        return dmg * (0.35 + 0.75 * t);
+      }
+      case "famas": {
+        const t = clamp((distance - 140) / 750, 0, 1);
+        return dmg * (0.92 + 0.14 * t);
+      }
+      case "tactical_shotgun": {
+        const t = clamp(1 - distance / 220, 0, 1);
+        return dmg * (0.42 + 0.68 * t);
+      }
+      case "assault_rifle":
+      case "scar":
+        return dmg;
+      case "pump_shotgun": {
+        const t = clamp(1 - distance / 180, 0, 1);
+        return dmg * (0.28 + 0.95 * t);
+      }
+      case "sniper": {
+        const t = clamp((distance - 220) / 900, 0, 1);
+        return dmg * (1 + 0.28 * t);
+      }
+      case "rpg": {
+        const t = clamp((distance - 80) / 650, 0, 1);
+        return dmg * (0.9 + 0.35 * t);
+      }
+      default:
+        return dmg;
+    }
   }
 
   function makeBossDropGun() {
-    if (Math.random() < CATS_CLAW_DROP_CHANCE) return makeCatsClawGun();
     return makeGun(pickWeighted(BOSS_DROP_WEIGHTS));
   }
 
@@ -1754,16 +1792,19 @@
   function makeGun(rarityId, forcedTypeId) {
     const r = RARITIES[rarityId];
     const typeMeta = getGunTypeMeta(forcedTypeId || pickGunTypeId());
+    const dmgMul = typeMeta.dmgMul || 1;
+    const fireMul = typeMeta.fireMul || 1;
+    const spreadMul = typeMeta.spreadMul || 1;
     return {
       rarity: rarityId,
       color: r.color,
       label: r.label,
       type: typeMeta.id,
       typeLabel: typeMeta.label,
-      dmgMin: r.dmg[0],
-      dmgMax: r.dmg[1],
-      fireMs: r.fireMs,
-      spread: r.spread,
+      dmgMin: Math.max(1, Math.round(r.dmg[0] * dmgMul)),
+      dmgMax: Math.max(1, Math.round(r.dmg[1] * dmgMul)),
+      fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
+      spread: r.spread * spreadMul,
     };
   }
 
@@ -1774,14 +1815,7 @@
   function gunDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
     let dmg = rollGunBaseDamage(g);
-    if (g.type === "minigun") {
-      const t = clamp(1 - distance / 420, 0, 1);
-      dmg *= 1 + 0.22 * t;
-    } else if (g.type === "sniper") {
-      const t = clamp((distance - 220) / 900, 0, 1);
-      dmg *= 1 + 0.28 * t;
-    }
-    return dmg;
+    return applyGunTypeDistanceModifier(g.type, dmg, distance);
   }
 
   function gunDamage(gun, distance) {
@@ -1791,14 +1825,7 @@
   function gunExpectedDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
     let dmg = (g.dmgMin + g.dmgMax) * 0.5;
-    if (g.type === "minigun") {
-      const t = clamp(1 - distance / 420, 0, 1);
-      dmg *= 1 + 0.22 * t;
-    } else if (g.type === "sniper") {
-      const t = clamp((distance - 220) / 900, 0, 1);
-      dmg *= 1 + 0.28 * t;
-    }
-    return dmg;
+    return applyGunTypeDistanceModifier(g.type, dmg, distance);
   }
 
   function aiTargetDistance(d) {
@@ -1813,7 +1840,8 @@
 
   function estimateGunPower(gun, shotDistance) {
     const g = normalizeGun(gun);
-    const dmg = gunExpectedDamageAtDistance(g, shotDistance);
+    const pellets = getPelletCount(g);
+    const dmg = gunExpectedDamageAtDistance(g, shotDistance) * pellets;
     return dmg / Math.max(g.fireMs / 1000, 0.08);
   }
 
@@ -1841,8 +1869,9 @@
     d.invIndex = bestSlot;
   }
 
-  function addGunToEntity(e, gun) {
+  function addGunToEntity(e, gun, opts) {
     gun = normalizeGun(gun);
+    if (!gun) return false;
     if (e.isBoss && !isRareOrStronger(gun.rarity)) return false;
     for (let i = 0; i < INV_SLOTS; i++) {
       if (!e.inventory[i]) {
@@ -1851,7 +1880,9 @@
         return true;
       }
     }
-    groundGuns.push({ x: e.x, y: e.y, gun, life: null });
+    if (!opts || opts.dropIfFull !== false) {
+      groundGuns.push({ x: e.x, y: e.y, gun, life: null });
+    }
     return false;
   }
 
@@ -1968,6 +1999,7 @@
     dots = [];
     chests = [];
     bullets = [];
+    explosions = [];
     groundGuns = [];
     groundMeds = [];
     damageTexts = [];
@@ -2148,7 +2180,7 @@
         inner.style.display = "block";
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = isCatsClawGun(ng) ? "Cat's Claw (Mythic, 90–130)" : ng.label + " " + ng.typeLabel;
+        el.title = ng.label + " " + ng.typeLabel;
       } else {
         inner.style.display = "none";
         typeEl.style.display = "none";
@@ -2237,19 +2269,39 @@
       const err = (1 - accuracy) * 0.78;
       ang += rand(-err, err);
     }
-    const spd = 520;
-    bullets.push({
-      x: e.x + Math.cos(ang) * (e.radius + 4),
-      y: e.y + Math.sin(ang) * (e.radius + 4),
-      ox: e.x,
-      oy: e.y,
-      vx: Math.cos(ang) * spd,
-      vy: Math.sin(ang) * spd,
-      ownerId: e.id,
-      gun,
-      color: gun.color,
-      life: 2.4,
-    });
+    const explosive = isRpgGun(gun);
+    const spd = explosive ? 420 : 520;
+    const pellets = getPelletCount(gun);
+    const meta = getGunTypeMeta(gun.type);
+    const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
+    for (let pi = 0; pi < pellets; pi++) {
+      let pelletAng = ang;
+      if (pellets > 1) {
+        pelletAng += rand(-gun.spread * 1.8, gun.spread * 1.8);
+      } else {
+        pelletAng += rand(-gun.spread, gun.spread);
+      }
+      const pelletGun = pellets > 1
+        ? {
+            ...gun,
+            dmgMin: Math.max(1, Math.round(gun.dmgMin * pelletDmgMul)),
+            dmgMax: Math.max(1, Math.round(gun.dmgMax * pelletDmgMul)),
+          }
+        : gun;
+      bullets.push({
+        x: e.x + Math.cos(pelletAng) * (e.radius + 4),
+        y: e.y + Math.sin(pelletAng) * (e.radius + 4),
+        ox: e.x,
+        oy: e.y,
+        vx: Math.cos(pelletAng) * spd,
+        vy: Math.sin(pelletAng) * spd,
+        ownerId: e.id,
+        gun: pelletGun,
+        explosive,
+        color: explosive ? "#ff6b35" : gun.color,
+        life: explosive ? 3.2 : 2.4,
+      });
+    }
   }
 
   function canPickupGroundGun(e, g, now) {
@@ -2362,6 +2414,49 @@
     const lx = (b.x - w.x) * cos - (b.y - w.y) * sin;
     const ly = (b.x - w.x) * sin + (b.y - w.y) * cos;
     return Math.abs(lx) <= w.len * 0.5 && Math.abs(ly) <= w.thick * 0.5;
+  }
+
+  function triggerRpgExplosion(b, shotOwner) {
+    const hitDist = dist(b.ox, b.oy, b.x, b.y);
+    const centerDmg = gunDamage(b.gun, hitDist);
+    explosions.push({ x: b.x, y: b.y, life: 0.35, maxLife: 0.35, radius: RPG_EXPLODE_RADIUS });
+
+    for (let w = walls.length - 1; w >= 0; w--) {
+      const wall = walls[w];
+      if (dist(b.x, b.y, wall.x, wall.y) > RPG_EXPLODE_RADIUS + wallExtentRadius(wall)) continue;
+      wall.hp -= RPG_WALL_DMG;
+      damageTexts.push({
+        x: wall.x + rand(-6, 6),
+        y: wall.y - wallExtentRadius(wall) - 4,
+        text: wall.hp > 0 ? String(wall.hp) : "×",
+        color: "#ffb347",
+        life: 0.5,
+        maxLife: 0.5,
+        big: false,
+      });
+      if (wall.hp <= 0) walls.splice(w, 1);
+    }
+
+    for (const d of dots) {
+      if (!d.alive) continue;
+      if (shotOwner && (d.id === shotOwner.id || areTeammates(shotOwner, d))) continue;
+      const dDist = dist(b.x, b.y, d.x, d.y);
+      if (dDist > RPG_EXPLODE_RADIUS + d.radius) continue;
+      const falloff = 1 - dDist / (RPG_EXPLODE_RADIUS + d.radius);
+      const dmg = Math.max(1, Math.round(centerDmg * falloff * 0.85));
+      d.health -= dmg;
+      const playerHit = shotOwner && shotOwner.isPlayer;
+      damageTexts.push({
+        x: d.x + rand(-12, 12),
+        y: d.y - d.radius - (d.isPlayer ? 14 : 28),
+        text: String(dmg),
+        color: playerHit ? "#ffb347" : "#ff6b35",
+        life: playerHit ? 1.35 : 0.9,
+        maxLife: playerHit ? 1.35 : 0.9,
+        big: playerHit,
+      });
+      if (d.health <= 0) killEntity(shotOwner, d);
+    }
   }
 
   function pushEntityOutOfWall(e, w) {
@@ -2527,7 +2622,7 @@
     return { itemKind: "med", id, label: p.label, color: p.color, heal: p.heal };
   }
 
-  function addMedToEntity(e, potion) {
+  function addMedToEntity(e, potion, opts) {
     if (!e || !potion) return false;
     const item = isMedItem(potion) ? { ...potion } : { ...potion, itemKind: "med" };
     for (let i = 0; i < INV_SLOTS; i++) {
@@ -2538,7 +2633,9 @@
         return true;
       }
     }
-    groundMeds.push({ x: e.x, y: e.y, potion: item, life: null });
+    if (!opts || opts.dropIfFull !== false) {
+      groundMeds.push({ x: e.x, y: e.y, potion: item, life: null });
+    }
     return false;
   }
 
@@ -2724,15 +2821,14 @@
       const g = groundGuns[i];
       if (!canPickupGroundGun(e, g, now)) continue;
       if (dist(e.x, e.y, g.x, g.y) < e.radius + 14) {
-        addGunToEntity(e, g.gun);
-        groundGuns.splice(i, 1);
+        if (addGunToEntity(e, g.gun, { dropIfFull: false })) groundGuns.splice(i, 1);
       }
     }
 
     for (let i = groundMeds.length - 1; i >= 0; i--) {
       const m = groundMeds[i];
       if (dist(e.x, e.y, m.x, m.y) < e.radius + 14) {
-        if (addMedToEntity(e, m.potion)) groundMeds.splice(i, 1);
+        if (addMedToEntity(e, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
       }
     }
   }
@@ -3442,6 +3538,7 @@
     dots = [];
     chests = [];
     bullets = [];
+    explosions = [];
     groundGuns = [];
     groundMeds = [];
     damageTexts = [];
@@ -3586,17 +3683,19 @@
     for (let i = groundGuns.length - 1; i >= 0; i--) {
       const g = groundGuns[i];
       if (!canPickupGroundGun(d, g, now)) continue;
-      if (d.isBoss && !isRareOrStronger(g.gun.rarity)) continue;
+      if (d.isBoss && (!g.gun || !isRareOrStronger(g.gun.rarity))) continue;
       if (dist(d.x, d.y, g.x, g.y) < d.radius + 14) {
-        if (addGunToEntity(d, g.gun)) aiSelectWeapon(d);
-        groundGuns.splice(i, 1);
+        if (addGunToEntity(d, g.gun, { dropIfFull: false })) {
+          aiSelectWeapon(d);
+          groundGuns.splice(i, 1);
+        }
       }
     }
     for (let i = groundMeds.length - 1; i >= 0; i--) {
       const m = groundMeds[i];
       if (d.isBoss) continue;
       if (dist(d.x, d.y, m.x, m.y) < d.radius + 14) {
-        if (addMedToEntity(d, m.potion)) groundMeds.splice(i, 1);
+        if (addMedToEntity(d, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
       }
     }
 
@@ -3629,17 +3728,21 @@
       for (let w = walls.length - 1; w >= 0; w--) {
         const wall = walls[w];
         if (!bulletHitsWall(b, wall)) continue;
-        wall.hp--;
-        damageTexts.push({
-          x: wall.x + rand(-6, 6),
-          y: wall.y - wallExtentRadius(wall) - 4,
-          text: wall.hp > 0 ? String(wall.hp) : "×",
-          color: "#bbb",
-          life: 0.5,
-          maxLife: 0.5,
-          big: false,
-        });
-        if (wall.hp <= 0) walls.splice(w, 1);
+        if (b.explosive) {
+          triggerRpgExplosion(b, shotOwner);
+        } else {
+          wall.hp--;
+          damageTexts.push({
+            x: wall.x + rand(-6, 6),
+            y: wall.y - wallExtentRadius(wall) - 4,
+            text: wall.hp > 0 ? String(wall.hp) : "×",
+            color: "#bbb",
+            life: 0.5,
+            maxLife: 0.5,
+            big: false,
+          });
+          if (wall.hp <= 0) walls.splice(w, 1);
+        }
         bullets.splice(i, 1);
         hitWall = true;
         break;
@@ -3649,6 +3752,11 @@
         if (!d.alive || d.id === b.ownerId) continue;
         if (shotOwner && areTeammates(shotOwner, d)) continue;
         if (dist(b.x, b.y, d.x, d.y) < d.radius + 3) {
+          if (b.explosive) {
+            triggerRpgExplosion(b, shotOwner);
+            bullets.splice(i, 1);
+            break;
+          }
           const hitDist = dist(b.ox, b.oy, b.x, b.y);
           const dmg = gunDamage(b.gun, hitDist);
           d.health -= dmg;
@@ -3658,7 +3766,7 @@
             x: d.x + rand(-12, 12),
             y: dmgFloatY,
             text: String(dmg),
-            color: playerHit ? (isCatsClawGun(b.gun) ? "#ffe566" : "#fff") : b.color,
+            color: playerHit ? "#fff" : b.color,
             life: playerHit ? 1.35 : 0.9,
             maxLife: playerHit ? 1.35 : 0.9,
             big: playerHit,
@@ -3674,6 +3782,10 @@
   }
 
   function updateGround(dt) {
+    for (let i = explosions.length - 1; i >= 0; i--) {
+      explosions[i].life -= dt;
+      if (explosions[i].life <= 0) explosions.splice(i, 1);
+    }
     for (let i = groundGuns.length - 1; i >= 0; i--) {
       const life = groundGuns[i].life;
       if (life == null || life < 0) continue;
@@ -3793,6 +3905,7 @@
 
     for (const g of groundGuns) {
       const gg = normalizeGun(g.gun);
+      if (!gg) continue;
       g.gun = gg;
       ctx.fillStyle = g.gun.color;
       ctx.fillRect(g.x - 10, g.y - 3, 20, 6);
@@ -3854,8 +3967,25 @@
     for (const b of bullets) {
       ctx.fillStyle = b.color;
       ctx.beginPath();
-      ctx.arc(b.x, b.y, 3, 0, Math.PI * 2);
+      ctx.arc(b.x, b.y, b.explosive ? 4.5 : 3, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    for (const ex of explosions) {
+      const alpha = clamp(ex.life / ex.maxLife, 0, 1);
+      const r = ex.radius * (1 - alpha * 0.35);
+      ctx.globalAlpha = alpha * 0.55;
+      ctx.strokeStyle = "#ff8c42";
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.globalAlpha = alpha * 0.25;
+      ctx.fillStyle = "#ff4500";
+      ctx.beginPath();
+      ctx.arc(ex.x, ex.y, r * 0.65, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
     }
 
     for (const t of damageTexts) {

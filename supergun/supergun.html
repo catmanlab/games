@@ -1305,11 +1305,23 @@
     spectateTargetId = alive[idx].id;
   }
 
+  function clearMovementKeys() {
+    keys["w"] = false;
+    keys["a"] = false;
+    keys["s"] = false;
+    keys["d"] = false;
+    keys["arrowup"] = false;
+    keys["arrowdown"] = false;
+    keys["arrowleft"] = false;
+    keys["arrowright"] = false;
+  }
+
   function clearSpectateMode() {
     spectateMode = false;
     spectateTargetId = null;
     if (endOverlay) endOverlay.classList.remove("spectate-left");
     if (wrapEl) wrapEl.classList.remove("spectate-mode");
+    clearMovementKeys();
   }
 
   function enterSpectateDefeatOverlay(opts) {
@@ -2306,6 +2318,10 @@
     matchStandings = [];
     clearSpectateMode();
     defeatStatsRecorded = false;
+    clearMovementKeys();
+    shootMouseDown = false;
+    p2ShootMouseDown = false;
+    p2ShootHeld = false;
     if (endOverlay) endOverlay.hidden = true;
     onlineMode = !!opts.onlineMode;
     onlineHost = !!opts.onlineHost;
@@ -3998,6 +4014,34 @@
     lastInputSentAt = now;
   }
 
+  function aiNearestEnemy(d, maxDist) {
+    let best = null;
+    let bestDist = maxDist != null ? maxDist : Infinity;
+    for (const x of dots) {
+      if (!x.alive || x.id === d.id) continue;
+      if (areTeammates(d, x)) continue;
+      const dd = dist(d.x, d.y, x.x, x.y);
+      if (dd < bestDist) {
+        bestDist = dd;
+        best = x;
+      }
+    }
+    return best;
+  }
+
+  function aiPickHuntTarget(d, tune) {
+    const humans = [];
+    if (player && player.alive) humans.push(player);
+    if (twoPlayerMode && player2 && player2.alive) humans.push(player2);
+    if (onlineMode && onlineHost && player2 && player2.alive) humans.push(player2);
+    if (humans.length && Math.random() < tune.targetPlayerChance) {
+      return humans[Math.floor(Math.random() * humans.length)];
+    }
+    const foes = dots.filter((x) => x.alive && x.id !== d.id && !areTeammates(d, x))
+      .sort((a, b) => dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
+    return foes[0] || null;
+  }
+
   function updateAIMovement(d, dt, now) {
     if (!d.alive) return;
     const tune = aiTune;
@@ -4008,7 +4052,10 @@
 
     if (now >= d.aiRetargetAt) {
       d.aiRetargetAt = now + rand(tune.retargetMin, tune.retargetMax) * 1000;
-      const enemies = dots.filter(x => x.alive && x.id !== d.id);
+      const enemies = dots.filter((x) => x.alive && x.id !== d.id && !areTeammates(d, x));
+      const nearestFoe = aiNearestEnemy(d);
+      const foeDist = nearestFoe ? dist(d.x, d.y, nearestFoe.x, nearestFoe.y) : Infinity;
+      const inCombat = foeDist < 520;
       const medChestNear = chests.filter(c => !c.open && c.kind === "med").sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
       const gunChestNear = chests.filter(c => !c.open && c.kind === "gun").sort((a, b) =>
@@ -4016,10 +4063,12 @@
       const gunNear = groundGuns.sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
 
-      if (gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 320) {
+      if (!inCombat && gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 300) {
         d.aiWanderX = gunNear.x;
         d.aiWanderY = gunNear.y;
+        d.aiTarget = null;
       } else if (
+        !inCombat &&
         !d.isBoss &&
         d.health < d.maxHealth * 0.55 &&
         medChestNear &&
@@ -4027,31 +4076,34 @@
       ) {
         d.aiWanderX = medChestNear.x;
         d.aiWanderY = medChestNear.y;
-      } else if (!d.isBoss && gunChestNear && dist(d.x, d.y, gunChestNear.x, gunChestNear.y) < 520 && !currentGun(d)) {
+        d.aiTarget = null;
+      } else if (!inCombat && !d.isBoss && gunChestNear && dist(d.x, d.y, gunChestNear.x, gunChestNear.y) < 520 && !currentGun(d)) {
         d.aiWanderX = gunChestNear.x;
         d.aiWanderY = gunChestNear.y;
-      } else if (enemies.length && Math.random() < 0.7) {
-        let tgt = null;
-        const humans = [];
-        if (player && player.alive) humans.push(player);
-        if (twoPlayerMode && player2 && player2.alive) humans.push(player2);
-        if (onlineMode && onlineHost && player2 && player2.alive) humans.push(player2);
-        if (humans.length && Math.random() < tune.targetPlayerChance) {
-          tgt = humans[Math.floor(Math.random() * humans.length)];
-        } else {
-          const sorted = enemies.slice().sort((a, b) =>
-            dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
-          tgt = sorted[0] || enemies[Math.floor(Math.random() * enemies.length)];
-        }
+        d.aiTarget = null;
+      } else if (enemies.length) {
+        const tgt = aiPickHuntTarget(d, tune) || nearestFoe;
         d.aiTarget = tgt;
-        d.aiWanderX = tgt.x;
-        d.aiWanderY = tgt.y;
+        if (tgt) {
+          d.aiWanderX = tgt.x;
+          d.aiWanderY = tgt.y;
+        }
       } else {
         d.aiWanderX = rand(d.radius, WORLD_W - d.radius);
         d.aiWanderY = rand(d.radius, WORLD_H - d.radius);
         d.aiTarget = null;
       }
       aiSelectWeapon(d);
+    }
+
+    const chaseFoe = aiNearestEnemy(d, 1500);
+    if (chaseFoe && currentGun(d)) {
+      const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
+      if (chaseDist < 1500) {
+        d.aiTarget = chaseFoe;
+        d.aiWanderX = chaseFoe.x;
+        d.aiWanderY = chaseFoe.y;
+      }
     }
 
     let tx = d.aiWanderX, ty = d.aiWanderY;
@@ -4107,7 +4159,7 @@
           .sort((a, b) => dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
         aim = foes[0];
       }
-      if (aim && dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < 0.82) {
+      if (aim && dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < 0.92) {
         tryShoot(d, aim.x, aim.y, now, tune.accuracy);
       }
     }
@@ -4601,6 +4653,7 @@
       alert("Log in or register first to play.");
       return;
     }
+    const wasRunning = running;
     onlineMode = false;
     onlineHost = false;
     saveProfileFromMenu();
@@ -4612,7 +4665,7 @@
     endLeaderboard.hidden = true;
     running = true;
     lastTs = 0;
-    requestAnimationFrame(loop);
+    if (!wasRunning) requestAnimationFrame(loop);
   }
 
   function toMainMenu() {
@@ -4810,7 +4863,6 @@
 
   window.addEventListener("keydown", (e) => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
-    keys[k] = true;
     if (spectateMode && running && !e.repeat) {
       if (e.code === "ArrowLeft" || e.code === "ArrowUp") {
         e.preventDefault();
@@ -4823,6 +4875,7 @@
         return;
       }
     }
+    keys[k] = true;
     if (twoPlayerMode && running && (k === "enter" || e.code === "NumpadEnter")) {
       p2ShootHeld = true;
       e.preventDefault();

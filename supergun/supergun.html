@@ -618,6 +618,21 @@
       backdrop-filter: blur(4px);
     }
     .go-overlay[hidden] { display: none !important; }
+    #wrap.spectate-mode #leftHud,
+    #wrap.spectate-mode #inventoryHud {
+      display: none;
+    }
+    #wrap.spectate-mode #endOverlay.spectate-left {
+      inset: 0 auto 0 0;
+      width: 50%;
+      background: rgba(0, 0, 0, 0.92);
+      justify-content: center;
+      align-items: center;
+    }
+    #wrap.spectate-mode #minimap {
+      right: 8px;
+      left: auto;
+    }
     .go-card {
       width: min(440px, 100%);
       background: #141414;
@@ -1156,6 +1171,9 @@
   let p2ShootMouseDown = false;
   let keys = {};
   let running = false;
+  let spectateMode = false;
+  let spectateTargetId = null;
+  let defeatStatsRecorded = false;
   let lastTs = 0;
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
@@ -1247,7 +1265,77 @@
   }
 
   function viewHalfW() {
-    return twoPlayerMode ? VIEW_W * 0.5 : VIEW_W;
+    return (twoPlayerMode || spectateMode) ? VIEW_W * 0.5 : VIEW_W;
+  }
+
+  function getAliveSpectateTargets() {
+    return dots.filter((d) => d.alive);
+  }
+
+  function getSpectateTarget() {
+    return dots.find((d) => d.id === spectateTargetId && d.alive) || null;
+  }
+
+  function pickRandomSpectateTarget() {
+    const alive = getAliveSpectateTargets();
+    if (!alive.length) {
+      spectateTargetId = null;
+      return null;
+    }
+    const pick = alive[randInt(0, alive.length - 1)];
+    spectateTargetId = pick.id;
+    return pick;
+  }
+
+  function ensureSpectateTarget() {
+    if (!spectateMode) return null;
+    if (!getSpectateTarget()) return pickRandomSpectateTarget();
+    return getSpectateTarget();
+  }
+
+  function cycleSpectateTarget(delta) {
+    const alive = getAliveSpectateTargets();
+    if (!alive.length) {
+      spectateTargetId = null;
+      return;
+    }
+    let idx = alive.findIndex((d) => d.id === spectateTargetId);
+    if (idx < 0) idx = 0;
+    idx = (idx + delta + alive.length) % alive.length;
+    spectateTargetId = alive[idx].id;
+  }
+
+  function clearSpectateMode() {
+    spectateMode = false;
+    spectateTargetId = null;
+    if (endOverlay) endOverlay.classList.remove("spectate-left");
+    if (wrapEl) wrapEl.classList.remove("spectate-mode");
+  }
+
+  function enterSpectateDefeatOverlay(opts) {
+    const title = opts.title || "Eliminated";
+    const place = opts.place;
+    const summary = opts.summary || "";
+    spectateMode = true;
+    pickRandomSpectateTarget();
+    if (endOverlay) {
+      endOverlay.classList.add("spectate-left");
+      endOverlay.hidden = false;
+    }
+    if (wrapEl) wrapEl.classList.add("spectate-mode");
+    endTitle.textContent = title;
+    if (place != null) {
+      endPlacement.textContent = placementLabel(place);
+      endPlacement.hidden = false;
+    } else {
+      endPlacement.hidden = true;
+    }
+    endSummary.textContent = summary + " Use ← → arrow keys to switch who you watch.";
+    renderEndLeaderboard();
+    if (opts.record !== false && player) {
+      recordGameResult(false, player.kills | 0);
+      defeatStatsRecorded = true;
+    }
   }
 
   function areTeammates(a, b) {
@@ -1596,6 +1684,7 @@
     const title = opts.title || "Game over";
     const place = opts.place;
     const summary = opts.summary || "";
+    clearSpectateMode();
     running = false;
     endTitle.textContent = title;
     if (place != null) {
@@ -1621,7 +1710,9 @@
       });
     }
     if (opts.record !== false && player) {
-      recordGameResult(!!opts.won, player.kills | 0);
+      if (opts.won || !defeatStatsRecorded) {
+        recordGameResult(!!opts.won, player.kills | 0);
+      }
     }
   }
 
@@ -1702,6 +1793,14 @@
   function updateCameras() {
     const vw = viewHalfW();
     const vh = VIEW_H;
+    if (spectateMode) {
+      const tgt = ensureSpectateTarget();
+      if (tgt) {
+        camX2 = clamp(tgt.x - vw * 0.5, 0, Math.max(0, WORLD_W - vw));
+        camY2 = clamp(tgt.y - vh * 0.5, 0, Math.max(0, WORLD_H - vh));
+      }
+      return;
+    }
     if (player && player.alive) {
       camX = clamp(player.x - vw * 0.5, 0, Math.max(0, WORLD_W - vw));
       camY = clamp(player.y - vh * 0.5, 0, Math.max(0, WORLD_H - vh));
@@ -2205,6 +2304,9 @@
     damageTexts = [];
     walls = [];
     matchStandings = [];
+    clearSpectateMode();
+    defeatStatsRecorded = false;
+    if (endOverlay) endOverlay.hidden = true;
     onlineMode = !!opts.onlineMode;
     onlineHost = !!opts.onlineHost;
     if (onlineMode) {
@@ -3051,6 +3153,7 @@
           place: player ? player.finishPlace : null,
           summary,
           won: false,
+          record: !defeatStatsRecorded,
         });
         return;
       }
@@ -3090,6 +3193,7 @@
           place: player ? player.finishPlace : null,
           summary,
           won: false,
+          record: !defeatStatsRecorded,
         });
       }
       return;
@@ -4138,6 +4242,9 @@
     if (twoPlayerMode) {
       mctx.strokeStyle = "rgba(253,203,110,0.85)";
       mctx.strokeRect(camX2 * sx, camY2 * sy, vw * sx, VIEW_H * sy);
+    } else if (spectateMode) {
+      mctx.strokeStyle = "rgba(255,255,255,0.85)";
+      mctx.strokeRect(camX2 * sx, camY2 * sy, vw * sx, VIEW_H * sy);
     }
   }
 
@@ -4337,6 +4444,13 @@
       ctx.font = "10px system-ui";
       ctx.textAlign = "center";
       ctx.fillText(d.name, d.x, d.y + d.radius + 12);
+      if (opts.spectateHighlightId != null && d.id === opts.spectateHighlightId) {
+        ctx.strokeStyle = "rgba(255,255,255,0.95)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius + 5, 0, Math.PI * 2);
+        ctx.stroke();
+      }
     }
 
     if (opts.p1Aim && player && player.alive && shootMouseDown && currentGun(player)) {
@@ -4367,7 +4481,25 @@
     ctx.fillStyle = "#050508";
     ctx.fillRect(0, 0, VIEW_W, VIEW_H);
 
-    if (twoPlayerMode) {
+    if (spectateMode) {
+      const half = VIEW_W * 0.5;
+      ctx.fillStyle = "#050508";
+      ctx.fillRect(0, 0, half, VIEW_H);
+      const tgt = getSpectateTarget();
+      paintViewport(camX2, camY2, half, 0, half, VIEW_H, {
+        isRightPane: true,
+        spectateHighlightId: tgt ? tgt.id : null,
+      });
+      ctx.fillStyle = "#333";
+      ctx.fillRect(half - 1, 0, 2, VIEW_H);
+      ctx.fillStyle = "rgba(255,255,255,0.9)";
+      ctx.font = "bold 11px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText(tgt ? "Spectating: " + tgt.name : "Spectating…", half + half * 0.5, 16);
+      ctx.fillStyle = "#888";
+      ctx.font = "10px system-ui";
+      ctx.fillText("← → switch target", half + half * 0.5, VIEW_H - 8);
+    } else if (twoPlayerMode) {
       const half = VIEW_W * 0.5;
       paintViewport(camX, camY, 0, 0, half, VIEW_H, { p1Aim: true, p1WallPreview: true, isRightPane: false });
       paintViewport(camX2, camY2, half, 0, half, VIEW_H, { p2Aim: true, p2WallPreview: p2MouseOnPane, isRightPane: true });
@@ -4449,12 +4581,11 @@
             won: false,
           });
         }
-      } else if (player && !player.alive && !onlineMode) {
-        showEndOverlay({
+      } else if (player && !player.alive && !onlineMode && !spectateMode) {
+        enterSpectateDefeatOverlay({
           title: "Eliminated",
           place: player.finishPlace,
           summary: "Kills: " + player.kills + ".",
-          won: false,
         });
       }
     }
@@ -4486,6 +4617,7 @@
 
   function toMainMenu() {
     running = false;
+    clearSpectateMode();
     if (onlineMatchId) sendOnline({ type: "leave_match", matchId: onlineMatchId });
     onlineMode = false;
     onlineHost = false;
@@ -4627,6 +4759,7 @@
     const sx = (e.clientX - rect.left) * (VIEW_W / rect.width);
     updateMouseFromEvent(e);
     if (!running) return;
+    if (spectateMode) return;
 
     if (onlineMode && !onlineHost) {
       if (!player) return;
@@ -4678,6 +4811,18 @@
   window.addEventListener("keydown", (e) => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
     keys[k] = true;
+    if (spectateMode && running && !e.repeat) {
+      if (e.code === "ArrowLeft" || e.code === "ArrowUp") {
+        e.preventDefault();
+        cycleSpectateTarget(-1);
+        return;
+      }
+      if (e.code === "ArrowRight" || e.code === "ArrowDown") {
+        e.preventDefault();
+        cycleSpectateTarget(1);
+        return;
+      }
+    }
     if (twoPlayerMode && running && (k === "enter" || e.code === "NumpadEnter")) {
       p2ShootHeld = true;
       e.preventDefault();

@@ -1988,11 +1988,11 @@
     const dmgMul = typeMeta.dmgMul || 1;
     const fireMul = typeMeta.fireMul || 1;
     const spreadMul = typeMeta.spreadMul || 1;
-    let dmgMin = Math.max(1, Math.round(r.dmg[0] * dmgMul));
-    let dmgMax = Math.max(1, Math.round(r.dmg[1] * dmgMul));
-    if (rarityId === "common" && typeMeta.id === "rpg") {
-      dmgMin = 22;
-      dmgMax = 40;
+    let dmgLo = r.dmg[0];
+    let dmgHi = r.dmg[1];
+    if (typeMeta.id === "rpg" && rarityId === "common") {
+      dmgLo = 14;
+      dmgHi = 40;
     }
     return {
       rarity: rarityId,
@@ -2000,8 +2000,8 @@
       label: r.label,
       type: typeMeta.id,
       typeLabel: typeMeta.label,
-      dmgMin,
-      dmgMax,
+      dmgMin: Math.max(1, Math.round(dmgLo * dmgMul)),
+      dmgMax: Math.max(1, Math.round(dmgHi * dmgMul)),
       fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
       spread: r.spread * spreadMul,
     };

@@ -4025,13 +4025,25 @@
 
   function aiShouldChaseGroundGun(d, g, now) {
     if (!g || !g.gun || !canPickupGroundGun(d, g, now)) return false;
+    if (!aiHasInventorySpace(d)) return false;
     const gun = normalizeGun(g.gun);
     if (!gun) return false;
     if (d.isBoss && !isRareOrStronger(gun.rarity)) return false;
-    const cur = currentGun(d);
-    if (!cur) return true;
-    if (aiHasInventorySpace(d)) return true;
-    return estimateGunPower(gun, 280) > estimateGunPower(cur, 280) * 1.12;
+    return true;
+  }
+
+  function aiNearestChaseableGroundGun(d, now, maxDist) {
+    let best = null;
+    let bestDist = maxDist != null ? maxDist : Infinity;
+    for (const g of groundGuns) {
+      if (!aiShouldChaseGroundGun(d, g, now)) continue;
+      const dd = dist(d.x, d.y, g.x, g.y);
+      if (dd < bestDist) {
+        bestDist = dd;
+        best = g;
+      }
+    }
+    return best;
   }
 
   function aiNearestEnemy(d, maxDist) {
@@ -4105,10 +4117,9 @@
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
       const gunChestNear = chests.filter(c => !c.open && c.kind === "gun").sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
-      const gunNear = groundGuns.sort((a, b) =>
-        dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
+      const gunNear = aiNearestChaseableGroundGun(d, now, 320);
 
-      if (!inCombat && gunNear && aiShouldChaseGroundGun(d, gunNear, now) && dist(d.x, d.y, gunNear.x, gunNear.y) < 260) {
+      if (!inCombat && gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 260) {
         d.aiWanderX = gunNear.x;
         d.aiWanderY = gunNear.y;
         d.aiTarget = null;
@@ -4146,6 +4157,18 @@
       d.aiTarget = chaseFoe;
       d.aiWanderX = chaseFoe.x;
       d.aiWanderY = chaseFoe.y;
+    }
+
+    for (const g of groundGuns) {
+      if (dist(d.x, d.y, g.x, g.y) >= d.radius + 16) continue;
+      if (aiShouldChaseGroundGun(d, g, now)) continue;
+      const fleeFoe = aiNearestEnemy(d, 1400);
+      if (fleeFoe) {
+        d.aiTarget = fleeFoe;
+        d.aiWanderX = fleeFoe.x;
+        d.aiWanderY = fleeFoe.y;
+      }
+      break;
     }
 
     let tx = d.aiWanderX, ty = d.aiWanderY;

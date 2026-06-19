@@ -909,7 +909,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (long range), <strong>RPG</strong> (explosions, 2 hits to break walls). Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>Burst AR</strong> (5-round fast bursts) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (long range), <strong>RPG</strong> (explosions, 2 hits to break walls). Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. Chests give Common through Epic. Be the last dot alive to win.
@@ -1025,22 +1025,27 @@
     pump_shotgun: "pump shotgun",
     famas: "famas",
     assault_rifle: "assault rifle",
+    burst_assault_rifle: "burst assualt rifle",
     scar: "SCAR",
     sniper: "sniper",
+    revolver: "revolver",
     rpg: "RPG",
   };
   const GUN_IMAGE_EXTS = [".jpg"];
   const GUN_TYPES = [
-    { id: "pistol", label: "Pistol", w: 0.17, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
-    { id: "smg", label: "SMG", w: 0.14, dmgMul: 0.7, fireMul: 1.1, spreadMul: 1.15 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.12, dmgMul: 1.4, fireMul: 1.1, spreadMul: 1.3 },
-    { id: "famas", label: "FAMAS", w: 0.11, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
-    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.11, dmgMul: 1.4, fireMul: 0.6, spreadMul: 1.25 },
-    { id: "assault_rifle", label: "Assault Rifle", w: 0.12, dmgMul: 1, fireMul: 1, spreadMul: 1 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.08, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.15 },
-    { id: "scar", label: "SCAR", w: 0.07, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
-    { id: "sniper", label: "Sniper", w: 0.05, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5 },
-    { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05 },
+    // TEMP: revolver + burst AR only (50/50) for testing — revert weights after
+    { id: "pistol", label: "Pistol", w: 0, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
+    { id: "revolver", label: "Revolver", w: 0.5, dmgMul: 1.2, fireMul: 1.55, spreadMul: 0.65 },
+    { id: "smg", label: "SMG", w: 0, dmgMul: 0.7, fireMul: 1.1, spreadMul: 1.15 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: 0, dmgMul: 1.4, fireMul: 1.1, spreadMul: 1.3 },
+    { id: "famas", label: "FAMAS", w: 0, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
+    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0, dmgMul: 1.4, fireMul: 0.6, spreadMul: 1.25 },
+    { id: "assault_rifle", label: "Assault Rifle", w: 0, dmgMul: 1, fireMul: 1, spreadMul: 1 },
+    { id: "burst_assault_rifle", label: "Burst AR", w: 0.5, dmgMul: 0.98, fireMul: 1, spreadMul: 0.92, burstSize: 5, burstShotMs: 52, burstPauseMs: 220 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: 0, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.15 },
+    { id: "scar", label: "SCAR", w: 0, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
+    { id: "sniper", label: "Sniper", w: 0, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5 },
+    { id: "rpg", label: "RPG", w: 0, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05 },
   ];
 
   const CHEST_DROP_WEIGHTS = [
@@ -1871,17 +1876,16 @@
   }
 
   function getGunImageBaseUrl() {
+    try {
+      return new URL(GUN_IMAGE_DIR, document.baseURI).href;
+    } catch (e) { /* fall through */ }
     const meta = document.querySelector('meta[name="supergun-share-url"]');
     if (meta && meta.content) {
       try {
         return new URL(GUN_IMAGE_DIR, meta.content.trim()).href;
-      } catch (e) { /* fall through */ }
+      } catch (e2) { /* fall through */ }
     }
-    try {
-      return new URL(GUN_IMAGE_DIR, document.baseURI).href;
-    } catch (e) {
-      return GUN_IMAGE_DIR;
-    }
+    return GUN_IMAGE_DIR;
   }
 
   function resolveGunImageSrc(relativePath) {
@@ -2048,6 +2052,10 @@
     switch (type) {
       case "pistol":
         return dmg * 0.95;
+      case "revolver": {
+        const t = clamp(1 - Math.abs(distance - 280) / 420, 0, 1);
+        return dmg * (0.88 + 0.18 * t);
+      }
       case "smg": {
         const t = clamp(1 - distance / 360, 0, 1);
         return dmg * (0.82 + 0.22 * t);
@@ -2062,6 +2070,7 @@
         return dmg * (0.92 + 0.14 * t);
       }
       case "assault_rifle":
+      case "burst_assault_rifle":
       case "scar":
         return dmg;
       case "pump_shotgun": {
@@ -2148,8 +2157,15 @@
 
   function estimateGunPower(gun, shotDistance) {
     const g = normalizeGun(gun);
+    const meta = getGunTypeMeta(g.type);
     const pellets = getPelletCount(g);
     const dmg = gunExpectedDamageAtDistance(g, shotDistance) * pellets;
+    if (meta.burstSize > 1) {
+      const burstShotMs = meta.burstShotMs || 55;
+      const burstPauseMs = meta.burstPauseMs || 220;
+      const cycleMs = meta.burstSize * burstShotMs + burstPauseMs;
+      return (dmg * meta.burstSize) / Math.max(cycleMs / 1000, 0.08);
+    }
     return dmg / Math.max(g.fireMs / 1000, 0.08);
   }
 
@@ -2265,6 +2281,9 @@
       inventory: [null, null, null, null, null],
       invIndex: 0,
       lastShot: 0,
+      burstShotsLeft: 0,
+      burstPauseUntil: 0,
+      burstGunType: null,
       aiTarget: null,
       aiWanderX: rand(pad, WORLD_W - pad),
       aiWanderY: rand(pad, WORLD_H - pad),
@@ -2598,8 +2617,31 @@
 
   function tryShoot(e, aimX, aimY, now, accuracy) {
     const gun = currentGun(e);
-    if (!gun || now - e.lastShot < gun.fireMs) return;
+    if (!gun) return;
+    const meta = getGunTypeMeta(gun.type);
+    const burstSize = meta.burstSize || 0;
+    if (e.burstGunType !== gun.type) {
+      e.burstShotsLeft = 0;
+      e.burstPauseUntil = 0;
+      e.burstGunType = gun.type;
+    }
+    if (burstSize > 1) {
+      if (e.burstShotsLeft <= 0) {
+        if (now < e.burstPauseUntil) return;
+        e.burstShotsLeft = burstSize;
+      } else if (now - e.lastShot < (meta.burstShotMs || 55)) {
+        return;
+      }
+    } else if (now - e.lastShot < gun.fireMs) {
+      return;
+    }
     e.lastShot = now;
+    if (burstSize > 1) {
+      e.burstShotsLeft--;
+      if (e.burstShotsLeft <= 0) {
+        e.burstPauseUntil = now + (meta.burstPauseMs || 220);
+      }
+    }
     let ang = Math.atan2(aimY - e.y, aimX - e.x);
     if (e.isAI) {
       const err = (1 - accuracy) * 0.78;
@@ -2608,7 +2650,6 @@
     const explosive = isRpgGun(gun);
     const spd = explosive ? 420 : 520;
     const pellets = getPelletCount(gun);
-    const meta = getGunTypeMeta(gun.type);
     const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
     for (let pi = 0; pi < pellets; pi++) {
       let pelletAng = ang;

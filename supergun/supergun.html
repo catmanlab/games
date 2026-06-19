@@ -2729,6 +2729,79 @@
     }
   }
 
+  function separateDotPair(a, b) {
+    if (!a || !b || !a.alive || !b.alive || a.id === b.id) return false;
+    let dx = b.x - a.x;
+    let dy = b.y - a.y;
+    let d = Math.hypot(dx, dy);
+    const minDist = a.radius + b.radius;
+    if (d >= minDist - 0.01) return false;
+
+    let nx, ny;
+    if (d > 1e-6) {
+      nx = dx / d;
+      ny = dy / d;
+    } else {
+      const ang = ((a.id * 17 + b.id * 31) % 628) / 100;
+      nx = Math.cos(ang);
+      ny = Math.sin(ang);
+      d = 0;
+    }
+    const overlap = minDist - d;
+    const half = overlap * 0.5;
+    a.x -= nx * half;
+    a.y -= ny * half;
+    b.x += nx * half;
+    b.y += ny * half;
+    return true;
+  }
+
+  function resolveAllDotCollisions() {
+    const alive = dots.filter((d) => d.alive);
+    for (let iter = 0; iter < 5; iter++) {
+      let moved = false;
+      for (let i = 0; i < alive.length; i++) {
+        for (let j = i + 1; j < alive.length; j++) {
+          if (separateDotPair(alive[i], alive[j])) moved = true;
+        }
+      }
+      for (const d of alive) {
+        d.x = clamp(d.x, d.radius, WORLD_W - d.radius);
+        d.y = clamp(d.y, d.radius, WORLD_H - d.radius);
+      }
+      if (!moved) break;
+    }
+    for (const d of alive) resolveEntityWallCollisions(d);
+  }
+
+  function pushDotsAwayFromPoint(x, y, gap, excludeId) {
+    for (const d of dots) {
+      if (!d.alive || d.id === excludeId) continue;
+      let dx = d.x - x;
+      let dy = d.y - y;
+      let distToPoint = Math.hypot(dx, dy);
+      const minDist = d.radius + gap;
+      if (distToPoint >= minDist) continue;
+
+      let nx, ny;
+      if (distToPoint > 1e-6) {
+        nx = dx / distToPoint;
+        ny = dy / distToPoint;
+      } else {
+        const ang = d.id * 0.9;
+        nx = Math.cos(ang);
+        ny = Math.sin(ang);
+        distToPoint = 0;
+      }
+      const push = minDist - distToPoint;
+      d.x += nx * push;
+      d.y += ny * push;
+      d.x = clamp(d.x, d.radius, WORLD_W - d.radius);
+      d.y = clamp(d.y, d.radius, WORLD_H - d.radius);
+      resolveEntityWallCollisions(d);
+    }
+  }
+
   function drawWallShape(w, fill, stroke, hpPct) {
     ctx.save();
     ctx.translate(w.x, w.y);
@@ -2927,6 +3000,7 @@
       if (killer.isAI) aiSelectWeapon(killer);
     }
     dropVictimLoot(victim);
+    pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
     if (victim.isBoss) {
       dropItemOnGround(victim.x, victim.y, makeBossDropGun());
     }
@@ -3076,7 +3150,6 @@
     applyEntityMovement(player, mx, my, dt);
 
     if (shootMouseDown && currentGun(player)) tryShoot(player, mouseWorldX, mouseWorldY, now, 1);
-    updateEntityWorldInteractions(player, now);
   }
 
   function updatePlayer2(dt, now) {
@@ -3092,7 +3165,6 @@
       const aim = getP2ShootTarget();
       tryShoot(player2, aim.x, aim.y, now, 1);
     }
-    updateEntityWorldInteractions(player2, now);
   }
 
   function updateOnlineRemotePlayer(dt, now) {
@@ -3106,7 +3178,6 @@
     if (ri.build) tryPlaceWallForEntity(player2, ri.aimX, ri.aimY, now);
     if (ri.drop) dropCurrentWeapon(player2);
     if (typeof ri.invIndex === "number") player2.invIndex = clamp(ri.invIndex | 0, 0, INV_SLOTS - 1);
-    updateEntityWorldInteractions(player2, now);
   }
 
   function serializeInvSlot(item) {
@@ -3817,7 +3888,7 @@
     lastInputSentAt = now;
   }
 
-  function updateAI(d, dt, now) {
+  function updateAIMovement(d, dt, now) {
     if (!d.alive) return;
     const tune = aiTune;
     sanitizeBossInventory(d);
@@ -3887,6 +3958,11 @@
     d.x = clamp(d.x, d.radius, WORLD_W - d.radius);
     d.y = clamp(d.y, d.radius, WORLD_H - d.radius);
     resolveEntityWallCollisions(d);
+  }
+
+  function updateAIInteractions(d, now) {
+    if (!d.alive) return;
+    const tune = aiTune;
 
     for (const ch of chests) {
       if (d.isBoss) continue;
@@ -4340,7 +4416,14 @@
     if (twoPlayerMode) updatePlayer2(dt, now);
     else if (onlineMode && onlineHost) updateOnlineRemotePlayer(dt, now);
     for (const d of dots) {
-      if (d.isAI) updateAI(d, dt, now);
+      if (d.isAI) updateAIMovement(d, dt, now);
+    }
+    resolveAllDotCollisions();
+    if (player && player.alive) updateEntityWorldInteractions(player, now);
+    if (twoPlayerMode && player2 && player2.alive) updateEntityWorldInteractions(player2, now);
+    else if (onlineMode && onlineHost && player2 && player2.alive) updateEntityWorldInteractions(player2, now);
+    for (const d of dots) {
+      if (d.isAI) updateAIInteractions(d, now);
     }
     updateBullets(dt, now);
     updateGround(dt);

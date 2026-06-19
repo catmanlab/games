@@ -1171,6 +1171,7 @@
   let p2ShootMouseDown = false;
   let keys = {};
   let running = false;
+  let loopGeneration = 0;
   let spectateMode = false;
   let spectateTargetId = null;
   let defeatStatsRecorded = false;
@@ -1698,6 +1699,7 @@
     const summary = opts.summary || "";
     clearSpectateMode();
     running = false;
+    loopGeneration++;
     endTitle.textContent = title;
     if (place != null) {
       endPlacement.textContent = placementLabel(place);
@@ -3992,7 +3994,7 @@
       onlineGuestSynced = false;
       initOnlineGuestGame(cfg);
     }
-    if (!resumeSameMatch) requestAnimationFrame(loop);
+    if (!resumeSameMatch) beginLoop();
   }
 
   function maybeSendOnlineState(now) {
@@ -4012,6 +4014,24 @@
     if (now - lastInputSentAt < minGap) return;
     sendOnline({ type: "player_input", matchId: onlineMatchId, input: collectGuestOnlineInput() });
     lastInputSentAt = now;
+  }
+
+  function aiHasInventorySpace(d) {
+    for (let i = 0; i < INV_SLOTS; i++) {
+      if (!d.inventory[i]) return true;
+    }
+    return false;
+  }
+
+  function aiShouldChaseGroundGun(d, g, now) {
+    if (!g || !g.gun || !canPickupGroundGun(d, g, now)) return false;
+    const gun = normalizeGun(g.gun);
+    if (!gun) return false;
+    if (d.isBoss && !isRareOrStronger(gun.rarity)) return false;
+    const cur = currentGun(d);
+    if (!cur) return true;
+    if (aiHasInventorySpace(d)) return true;
+    return estimateGunPower(gun, 280) > estimateGunPower(cur, 280) * 1.12;
   }
 
   function aiNearestEnemy(d, maxDist) {
@@ -4047,6 +4067,31 @@
     const tune = aiTune;
     sanitizeBossInventory(d);
 
+    if (spectateMode) {
+      const nearestFoe = aiNearestEnemy(d);
+      if (nearestFoe) {
+        d.aiTarget = nearestFoe;
+        d.aiWanderX = nearestFoe.x;
+        d.aiWanderY = nearestFoe.y;
+      }
+      let tx = d.aiWanderX;
+      let ty = d.aiWanderY;
+      if (d.aiTarget && d.aiTarget.alive) {
+        tx = d.aiTarget.x;
+        ty = d.aiTarget.y;
+      }
+      const dx = tx - d.x;
+      const dy = ty - d.y;
+      const len = Math.hypot(dx, dy) || 1;
+      const moveSpd = d.speed * tune.speedMult;
+      d.x += (dx / len) * moveSpd * dt;
+      d.y += (dy / len) * moveSpd * dt;
+      d.x = clamp(d.x, d.radius, WORLD_W - d.radius);
+      d.y = clamp(d.y, d.radius, WORLD_H - d.radius);
+      resolveEntityWallCollisions(d);
+      return;
+    }
+
     aiTryBuildWall(d, now, tune);
     aiTryUseMed(d, now);
 
@@ -4063,7 +4108,7 @@
       const gunNear = groundGuns.sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
 
-      if (!inCombat && gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 300) {
+      if (!inCombat && gunNear && aiShouldChaseGroundGun(d, gunNear, now) && dist(d.x, d.y, gunNear.x, gunNear.y) < 260) {
         d.aiWanderX = gunNear.x;
         d.aiWanderY = gunNear.y;
         d.aiTarget = null;
@@ -4096,14 +4141,11 @@
       aiSelectWeapon(d);
     }
 
-    const chaseFoe = aiNearestEnemy(d, 1500);
-    if (chaseFoe && currentGun(d)) {
-      const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
-      if (chaseDist < 1500) {
-        d.aiTarget = chaseFoe;
-        d.aiWanderX = chaseFoe.x;
-        d.aiWanderY = chaseFoe.y;
-      }
+    const chaseFoe = aiNearestEnemy(d, spectateMode ? Infinity : 1800);
+    if (chaseFoe) {
+      d.aiTarget = chaseFoe;
+      d.aiWanderX = chaseFoe.x;
+      d.aiWanderY = chaseFoe.y;
     }
 
     let tx = d.aiWanderX, ty = d.aiWanderY;
@@ -4126,28 +4168,29 @@
     if (!d.alive) return;
     const tune = aiTune;
 
-    for (const ch of chests) {
-      if (d.isBoss) continue;
-      if (!ch.open && dist(d.x, d.y, ch.x, ch.y) < d.radius + 16) {
-        openChestForEntity(d, ch);
-      }
-    }
-    for (let i = groundGuns.length - 1; i >= 0; i--) {
-      const g = groundGuns[i];
-      if (!canPickupGroundGun(d, g, now)) continue;
-      if (d.isBoss && (!g.gun || !isRareOrStronger(g.gun.rarity))) continue;
-      if (dist(d.x, d.y, g.x, g.y) < d.radius + 14) {
-        if (addGunToEntity(d, g.gun, { dropIfFull: false })) {
-          aiSelectWeapon(d);
-          groundGuns.splice(i, 1);
+    if (!spectateMode) {
+      for (const ch of chests) {
+        if (d.isBoss) continue;
+        if (!ch.open && dist(d.x, d.y, ch.x, ch.y) < d.radius + 16) {
+          openChestForEntity(d, ch);
         }
       }
-    }
-    for (let i = groundMeds.length - 1; i >= 0; i--) {
-      const m = groundMeds[i];
-      if (d.isBoss) continue;
-      if (dist(d.x, d.y, m.x, m.y) < d.radius + 14) {
-        if (addMedToEntity(d, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
+      for (let i = groundGuns.length - 1; i >= 0; i--) {
+        const g = groundGuns[i];
+        if (!aiShouldChaseGroundGun(d, g, now)) continue;
+        if (dist(d.x, d.y, g.x, g.y) < d.radius + 14) {
+          if (addGunToEntity(d, g.gun, { dropIfFull: false })) {
+            aiSelectWeapon(d);
+            groundGuns.splice(i, 1);
+          }
+        }
+      }
+      for (let i = groundMeds.length - 1; i >= 0; i--) {
+        const m = groundMeds[i];
+        if (d.isBoss) continue;
+        if (dist(d.x, d.y, m.x, m.y) < d.radius + 14) {
+          if (addMedToEntity(d, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
+        }
       }
     }
 
@@ -4155,12 +4198,16 @@
     if (gun) {
       let aim = d.aiTarget;
       if (!aim || !aim.alive) {
-        const foes = dots.filter(x => x.alive && x.id !== d.id)
+        const foes = dots.filter(x => x.alive && x.id !== d.id && !areTeammates(d, x))
           .sort((a, b) => dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
         aim = foes[0];
       }
-      if (aim && dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < 0.92) {
-        tryShoot(d, aim.x, aim.y, now, tune.accuracy);
+      if (aim) {
+        d.aiTarget = aim;
+        const shootChance = spectateMode ? 0.98 : 0.92;
+        if (dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < shootChance) {
+          tryShoot(d, aim.x, aim.y, now, spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy);
+        }
       }
     }
   }
@@ -4572,8 +4619,8 @@
     drawMinimap();
   }
 
-  function loop(ts) {
-    if (!running) return;
+  function loop(ts, gen) {
+    if (!running || gen !== loopGeneration) return;
     const dt = Math.min(0.05, (ts - lastTs) / 1000 || 0.016);
     lastTs = ts;
     const now = ts;
@@ -4591,7 +4638,7 @@
         ctx.textAlign = "center";
         ctx.fillText("Syncing with host…", VIEW_W * 0.5, VIEW_H * 0.5);
       }
-      requestAnimationFrame(loop);
+      requestAnimationFrame((ts2) => loop(ts2, gen));
       return;
     }
 
@@ -4645,7 +4692,15 @@
     updateHud();
     draw();
     maybeSendOnlineState(now);
-    requestAnimationFrame(loop);
+    requestAnimationFrame((ts2) => loop(ts2, gen));
+  }
+
+  function beginLoop() {
+    loopGeneration++;
+    const gen = loopGeneration;
+    running = true;
+    lastTs = performance.now();
+    requestAnimationFrame((ts) => loop(ts, gen));
   }
 
   function startGame() {
@@ -4653,7 +4708,8 @@
       alert("Log in or register first to play.");
       return;
     }
-    const wasRunning = running;
+    loopGeneration++;
+    running = false;
     onlineMode = false;
     onlineHost = false;
     saveProfileFromMenu();
@@ -4663,13 +4719,12 @@
     endOverlay.hidden = true;
     endPlacement.hidden = true;
     endLeaderboard.hidden = true;
-    running = true;
-    lastTs = 0;
-    if (!wasRunning) requestAnimationFrame(loop);
+    beginLoop();
   }
 
   function toMainMenu() {
     running = false;
+    loopGeneration++;
     clearSpectateMode();
     if (onlineMatchId) sendOnline({ type: "leave_match", matchId: onlineMatchId });
     onlineMode = false;

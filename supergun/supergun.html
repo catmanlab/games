@@ -237,6 +237,12 @@
     }
     #wallChargesHud.recharging { color: #c9a227; }
     #wallChargesHud.empty { color: #a66; }
+    #ammoHud, #ammoHudP2 {
+      font-size: 0.72rem;
+      color: #ccc;
+      text-shadow: 0 1px 4px #000;
+    }
+    #ammoHud.empty, #ammoHudP2.empty { color: #c66; }
     #healthBarWrap {
       position: relative;
       width: 100%;
@@ -931,7 +937,7 @@
     <p id="help">
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
-      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
+      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
       Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 0.45s reload), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>Burst AR</strong> (3-round fast bursts) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls), <strong>Cat's Claw</strong> (very rare, Legendary/Mythic only, large blast). Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
@@ -987,6 +993,7 @@
           <span id="healthLabel">200 / 200</span>
         </div>
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
+        <div id="ammoHud">Ammo: —</div>
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
@@ -995,6 +1002,7 @@
           <span id="healthLabelP2">200 / 200</span>
         </div>
         <div id="wallChargesHudP2">Walls: 5 · Right-click or Shift to build</div>
+        <div id="ammoHudP2">Ammo: —</div>
       </div>
       <div id="inventoryHud"></div>
       <div id="inventoryHudP2"></div>
@@ -1028,6 +1036,8 @@
   const BOSS_R = 18;
   const CHEST_COUNT = 40;
   const MED_CHEST_COUNT = 28;
+  const AMMO_BASKET_COUNT = 24;
+  const GUN_START_AMMO = 50;
   const DOT_SPEED = 200;
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
@@ -1107,6 +1117,16 @@
     carton: { label: "Carton", color: "#4caf50", heal: 50 },
     glugger: { label: "Big Glugger Pot", color: "#2196f3", heal: 75 },
   };
+  const AMMO_PICKUP_WEIGHTS = [
+    ["common", 0.50],
+    ["uncommon", 0.30],
+    ["rare", 0.20],
+  ];
+  const AMMO_PICKUP_AMOUNTS = {
+    common: 10,
+    uncommon: 15,
+    rare: 20,
+  };
   const BOSS_DROP_WEIGHTS = [
     ["legendary", 0.55],
     ["mythic", 0.45],
@@ -1143,6 +1163,7 @@
   const healthBarFill = document.getElementById("healthBarFill");
   const healthLabel = document.getElementById("healthLabel");
   const wallChargesHud = document.getElementById("wallChargesHud");
+  const ammoHud = document.getElementById("ammoHud");
   const inventoryHud = document.getElementById("inventoryHud");
   const inventoryHudP2 = document.getElementById("inventoryHudP2");
   const twoPlayerCheck = document.getElementById("twoPlayerCheck");
@@ -1157,6 +1178,7 @@
   const healthBarFillP2 = document.getElementById("healthBarFillP2");
   const healthLabelP2 = document.getElementById("healthLabelP2");
   const wallChargesHudP2 = document.getElementById("wallChargesHudP2");
+  const ammoHudP2 = document.getElementById("ammoHudP2");
   const endOverlay = document.getElementById("endOverlay");
   const endTitle = document.getElementById("endTitle");
   const endPlacement = document.getElementById("endPlacement");
@@ -2201,11 +2223,40 @@
   function normalizeGun(gun) {
     if (!gun || typeof gun !== "object") return gun;
     const meta = getGunTypeMeta(gun.type);
+    const ammo = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
     return {
       ...gun,
       type: meta.id,
       typeLabel: meta.label,
+      ammo,
     };
+  }
+
+  function getGunAmmo(gun) {
+    if (!gun || !isGunItem(gun)) return 0;
+    return typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+  }
+
+  function consumeGunAmmo(e, amount) {
+    const i = e.invIndex;
+    if (i < 0 || i >= INV_SLOTS) return false;
+    const item = e.inventory[i];
+    if (!item || !isGunItem(item)) return false;
+    item.ammo = Math.max(0, getGunAmmo(item) - amount);
+    e.inventory[i] = normalizeGun(item);
+    return true;
+  }
+
+  function applyAmmoPackToCurrentGun(e, pack) {
+    if (!e || !pack || !pack.amount) return false;
+    const i = e.invIndex;
+    if (i < 0 || i >= INV_SLOTS) return false;
+    const item = e.inventory[i];
+    if (!item || !isGunItem(item)) return false;
+    item.ammo = getGunAmmo(item) + pack.amount;
+    e.inventory[i] = normalizeGun(item);
+    if (e.isPlayer) refreshInventoryHud();
+    return true;
   }
 
   function makeGun(rarityId, forcedTypeId) {
@@ -2231,6 +2282,7 @@
       dmgMax: Math.max(1, Math.round(dmgHi * dmgMulHi)),
       fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
       spread: r.spread * spreadMul,
+      ammo: GUN_START_AMMO,
     };
   }
 
@@ -2574,6 +2626,17 @@
       chests.push({ x, y, open: false, kind: "med", potion: makeMedChestPotion() });
     }
 
+    for (let c = 0; c < AMMO_BASKET_COUNT; c++) {
+      let x, y, tries = 0;
+      do {
+        x = rand(80, WORLD_W - 80);
+        y = rand(80, WORLD_H - 80);
+        tries++;
+      } while (!farEnough(x, y, 180) && tries < 120);
+      used.push({ x, y });
+      chests.push({ x, y, open: false, kind: "ammo", ammoPack: makeAmmoBasket() });
+    }
+
     const vw = viewHalfW();
     camX = clamp(player.x - vw * 0.5, 0, Math.max(0, WORLD_W - vw));
     camY = clamp(player.y - VIEW_H * 0.5, 0, Math.max(0, WORLD_H - VIEW_H));
@@ -2672,7 +2735,7 @@
         }
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = ng.label + " " + ng.typeLabel;
+        el.title = ng.label + " " + ng.typeLabel + " · " + getGunAmmo(ng) + " ammo";
       } else {
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
@@ -2703,6 +2766,19 @@
     }
   }
 
+  function updateAmmoHud(entity, hudEl) {
+    if (!hudEl || !entity) return;
+    const gun = currentGun(entity);
+    hudEl.classList.remove("empty");
+    if (!gun) {
+      hudEl.textContent = "Ammo: —";
+      return;
+    }
+    const ammo = getGunAmmo(gun);
+    hudEl.textContent = "Ammo: " + ammo;
+    if (ammo <= 0) hudEl.classList.add("empty");
+  }
+
   function updateHud() {
     if (!player) return;
     const pct = clamp(player.health / MAX_HEALTH, 0, 1) * 100;
@@ -2718,6 +2794,7 @@
       '<div class="hud-line">Alive <strong>' + alive + "</strong> / " + TOTAL_DOTS +
       " · Kills <strong>" + player.kills + "</strong>" + modeTag + "</div>";
     updateWallChargesHud(player, wallChargesHud);
+    updateAmmoHud(player, ammoHud);
 
     if (twoPlayerMode && player2 && hudP2) {
       const pct2 = clamp(player2.health / MAX_HEALTH, 0, 1) * 100;
@@ -2727,6 +2804,7 @@
         '<div class="hud-name">' + player2Name + " (P2)</div>" +
         '<div class="hud-line">Kills <strong>' + player2.kills + "</strong></div>";
       updateWallChargesHud(player2, wallChargesHudP2);
+      updateAmmoHud(player2, ammoHudP2);
     } else if (onlineMode && !onlineHost && player2 && hud) {
       hud.innerHTML =
         '<div class="hud-name">' + playerName + "</div>" +
@@ -2773,7 +2851,10 @@
     } else if (now - e.lastShot < gun.fireMs) {
       return;
     }
+    if (getGunAmmo(gun) <= 0) return;
     e.lastShot = now;
+    consumeGunAmmo(e, 1);
+    if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     if (burstSize > 1) {
       e.burstShotsLeft--;
       if (e.burstShotsLeft <= 0) {
@@ -3217,6 +3298,17 @@
     return { itemKind: "med", id, label: p.label, color: p.color, heal: p.heal };
   }
 
+  function makeAmmoBasket() {
+    const rarity = pickWeighted(AMMO_PICKUP_WEIGHTS);
+    const r = RARITIES[rarity];
+    return {
+      rarity,
+      color: r.color,
+      label: r.label,
+      amount: AMMO_PICKUP_AMOUNTS[rarity],
+    };
+  }
+
   function addMedToEntity(e, potion, opts) {
     if (!e || !potion) return false;
     const item = isMedItem(potion) ? { ...potion } : { ...potion, itemKind: "med" };
@@ -3287,11 +3379,16 @@
 
   function openChestForEntity(e, ch) {
     if (!ch || ch.open || !e || !e.alive) return;
+    if (ch.kind === "ammo") {
+      if (!applyAmmoPackToCurrentGun(e, ch.ammoPack)) return;
+    }
     ch.open = true;
     if (ch.kind === "med") {
       addMedToEntity(e, ch.potion);
     } else if (ch.kind === "gun") {
       if (ch.gun && addGunToEntity(e, ch.gun) && e.isAI) aiSelectWeapon(e);
+    } else if (ch.kind === "ammo" && e.isPlayer) {
+      updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     }
   }
 
@@ -3508,6 +3605,7 @@
         spread: g.spread,
         dmgMin: g.dmgMin,
         dmgMax: g.dmgMax,
+        ammo: g.ammo,
       };
     }
     return null;
@@ -4526,7 +4624,13 @@
     }
     for (const ch of chests) {
       if (ch.open) continue;
-      mctx.fillStyle = ch.kind === "med" ? "#3d9e55" : "#8B6914";
+      if (ch.kind === "med") {
+        mctx.fillStyle = "#3d9e55";
+      } else if (ch.kind === "ammo") {
+        mctx.fillStyle = "#111";
+      } else {
+        mctx.fillStyle = "#8B6914";
+      }
       mctx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
     }
     for (const d of dots) {
@@ -4596,6 +4700,23 @@
         ctx.fillRect(ch.x - 3, ch.y - 6, 6, 10);
         ctx.fillStyle = "rgba(255,255,255,0.35)";
         ctx.fillRect(ch.x - 2, ch.y - 5, 4, 3);
+      } else if (ch.kind === "ammo") {
+        const pack = ch.ammoPack;
+        ctx.fillStyle = "#111";
+        ctx.fillRect(ch.x - 12, ch.y - 10, 24, 18);
+        ctx.fillStyle = "#1a1a1a";
+        ctx.fillRect(ch.x - 10, ch.y - 12, 20, 6);
+        ctx.strokeStyle = "#333";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(ch.x - 12, ch.y - 10, 24, 18);
+        if (pack) {
+          ctx.fillStyle = pack.color;
+          ctx.fillRect(ch.x - 8, ch.y - 3, 16, 5);
+        }
+        ctx.fillStyle = "#ccc";
+        ctx.font = "8px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("+" + (pack ? pack.amount : "?"), ch.x, ch.y + 14);
       } else {
         ctx.fillStyle = "#8B4513";
         ctx.fillRect(ch.x - 12, ch.y - 10, 24, 18);

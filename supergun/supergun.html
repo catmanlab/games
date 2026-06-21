@@ -33,6 +33,25 @@
       font-weight: 600;
       letter-spacing: 0.04em;
     }
+    #testModeBanner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #1a1028;
+      background: linear-gradient(90deg, #e056fd, #c77dff);
+      box-shadow: 0 2px 12px rgba(192, 125, 255, 0.45);
+      pointer-events: none;
+    }
+    body.test-cats-claw #testModeBanner { display: block; }
+    body.test-cats-claw { padding-top: 34px; }
     #menuScreen {
       width: 100%;
       max-width: 440px;
@@ -547,6 +566,9 @@
       border-color: #fff;
       box-shadow: 0 0 8px rgba(255,255,255,0.3);
     }
+    .inv-slot .gun-icon-wrap.art-sprite::after {
+      display: none;
+    }
     .inv-slot .gun-icon-wrap {
       width: 34px;
       height: 22px;
@@ -800,6 +822,7 @@
   </style>
 </head>
 <body>
+  <div id="testModeBanner">TEST BUILD — Cat's Claw only (local file, not GitHub)</div>
   <h1 class="page-title">Supergun</h1>
 
   <div id="menuScreen">
@@ -909,7 +932,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>Burst AR</strong> (3-round fast bursts) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 0.45s reload), <strong>FAMAS</strong> (range), <strong>Assault Rifle</strong> / <strong>Burst AR</strong> (3-round fast bursts) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls), <strong>Cat's Claw</strong> (very rare, Legendary/Mythic only, large blast). Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. Chests give Common through Epic. Be the last dot alive to win.
@@ -1026,6 +1049,7 @@
     combat_shotgun: "combat shotgun",
     tactical_shotgun: "tactical shotgun",
     pump_shotgun: "pump shotgun",
+    drum_shotgun: "drum shotgun",
     famas: "famas",
     assault_rifle: "assault rifle",
     burst_assault_rifle: "burst assualt rifle",
@@ -1033,8 +1057,13 @@
     sniper: "sniper",
     revolver: "revolver",
     rpg: "RPG",
+    cats_claw: "cats claw",
   };
-  const GUN_IMAGE_EXTS = [".jpg"];
+  const GUN_IMAGE_ALT_NAMES = {
+    cats_claw: ["cats claw", "cat's claw", "Cat's Claw", "cats_claw", "Cats Claw", "cats claw.jpg.png"],
+    drum_shotgun: ["drum shotgun", "Drum Shotgun", "drum_shotgun"],
+  };
+  const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png"];
   const GUN_TYPES = [
     { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
     { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65 },
@@ -1045,10 +1074,22 @@
     { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1 },
     { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.78, fireMul: 1, spreadMul: 0.92, burstSize: 3, burstShotMs: 79, burstPauseMs: 330 },
     { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.15 },
+    { id: "drum_shotgun", label: "Drum Shotgun", w: 0.055, dmgMul: 41 / 45, dmgMulHi: 58 / 65, fireMul: 1, spreadMul: 1.05, pellets: 1, burstSize: 8, burstShotMs: 48, burstPauseMs: 450 },
     { id: "scar", label: "SCAR", w: 0.06, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
     { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5 },
     { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05 },
+    { id: "cats_claw", label: "Cat's Claw", w: 0.002, dmgMul: 120 / 45, dmgMulHi: 168 / 65, fireMul: 1, spreadMul: 0.06 },
   ];
+
+  const TEST_CATS_CLAW_ONLY = false;
+
+  function syncTestModeUi() {
+    document.body.classList.toggle("test-cats-claw", TEST_CATS_CLAW_ONLY);
+    document.title = TEST_CATS_CLAW_ONLY ? "Supergun [TEST Cat's Claw]" : "Supergun";
+    const banner = document.getElementById("testModeBanner");
+    if (banner) banner.style.display = TEST_CATS_CLAW_ONLY ? "block" : "none";
+  }
+  syncTestModeUi();
 
   const CHEST_DROP_WEIGHTS = [
     ["common", 0.22],
@@ -1070,6 +1111,10 @@
     ["legendary", 0.55],
     ["mythic", 0.45],
   ];
+  const CATS_CLAW_RARITY_WEIGHTS = [
+    ["legendary", 0.55],
+    ["mythic", 0.45],
+  ];
   const BOSS_WEAPON_WEIGHTS = [
     ["rare", 0.22],
     ["epic", 0.38],
@@ -1080,6 +1125,7 @@
   const WALL_RECHARGE_MS = 5000;
   const WALL_MAX_HP = 5;
   const RPG_EXPLODE_RADIUS = 115;
+  const CATS_CLAW_EXPLODE_RADIUS = Math.round(RPG_EXPLODE_RADIUS * 1.15);
   const RPG_WALL_DMG = Math.ceil(WALL_MAX_HP / 2);
   const GRID_STEP = 80;
   const WALL_LENGTH = 100;
@@ -1899,8 +1945,14 @@
   }
 
   function gunImagePaths(typeId) {
-    const name = GUN_IMAGE_NAMES[typeId] || typeId;
-    return GUN_IMAGE_EXTS.map((ext) => resolveGunImageSrc(encodeURIComponent(name + ext)));
+    const names = GUN_IMAGE_ALT_NAMES[typeId] || [GUN_IMAGE_NAMES[typeId] || typeId];
+    const paths = [];
+    for (const name of names) {
+      for (const ext of GUN_IMAGE_EXTS) {
+        paths.push(resolveGunImageSrc(encodeURIComponent(name + ext)));
+      }
+    }
+    return paths;
   }
 
   function gunImageUrl(typeId) {
@@ -1909,17 +1961,57 @@
     return gunImagePaths(typeId)[0];
   }
 
-  function markGunImageReady(typeId, img, src) {
-    gunImageCache[typeId] = { img, loadedSrc: src };
+  function stripNearWhiteBackground(img) {
+    const w = img.naturalWidth || img.width;
+    const h = img.naturalHeight || img.height;
+    if (!w || !h) return img;
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    ctx.drawImage(img, 0, 0, w, h);
+    const imageData = ctx.getImageData(0, 0, w, h);
+    const data = imageData.data;
+    const threshold = 240;
+    for (let i = 0; i < data.length; i += 4) {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      if (r >= threshold && g >= threshold && b >= threshold) {
+        data[i + 3] = 0;
+      }
+    }
+    ctx.putImageData(imageData, 0, 0);
+    const out = new Image();
+    out.src = canvas.toDataURL("image/png");
+    return out;
+  }
+
+  function finalizeGunImageReady(typeId, img, src) {
+    const useImg = (typeId === "cats_claw") ? stripNearWhiteBackground(img) : img;
+    gunImageCache[typeId] = { img: useImg, loadedSrc: src };
     gunImageReady[typeId] = true;
     gunImageFailed[typeId] = false;
     refreshInventoryHud();
   }
 
+  function markGunImageReady(typeId, img, src) {
+    if (typeId === "cats_claw") {
+      const processed = stripNearWhiteBackground(img);
+      if (processed.complete && processed.naturalWidth > 0) {
+        finalizeGunImageReady(typeId, processed, src);
+        return;
+      }
+      processed.onload = () => finalizeGunImageReady(typeId, processed, src);
+      return;
+    }
+    finalizeGunImageReady(typeId, img, src);
+  }
+
   function bindInventoryGunImage(imgEl, typeId) {
     const cached = gunImageCache[typeId];
-    if (isGunImageReady(typeId) && cached && cached.loadedSrc) {
-      if (imgEl.src !== cached.loadedSrc) imgEl.src = cached.loadedSrc;
+    if (isGunImageReady(typeId) && cached && cached.img) {
+      if (imgEl.src !== cached.img.src) imgEl.src = cached.img.src;
       imgEl.classList.remove("fallback");
       delete imgEl.dataset.loadingType;
       return;
@@ -2017,7 +2109,7 @@
       const ix = -w * 0.5;
       const iy = -h * 0.5;
       ctx.drawImage(img, ix, iy, w, h);
-      if (gun && gun.color && opts.tintRarity !== false) {
+      if (gun && gun.color && opts.tintRarity !== false && typeId !== "cats_claw") {
         applyRarityTintToSprite(ctx, ix, iy, w, h, gun.color);
       }
       ctx.restore();
@@ -2040,12 +2132,21 @@
     return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
   }
 
+  function isExplosiveGun(gun) {
+    return gun && (gun.type === "rpg" || gun.type === "cats_claw");
+  }
+
   function isRpgGun(gun) {
     return gun && gun.type === "rpg";
   }
 
+  function getExplodeRadius(gunType) {
+    if (gunType === "cats_claw") return CATS_CLAW_EXPLODE_RADIUS;
+    return RPG_EXPLODE_RADIUS;
+  }
+
   function getPelletCount(gun) {
-    if (!gun || isRpgGun(gun)) return 1;
+    if (!gun || isExplosiveGun(gun)) return 1;
     const meta = getGunTypeMeta(gun.type);
     return meta.pellets || 1;
   }
@@ -2063,7 +2164,8 @@
         return dmg * (0.82 + 0.22 * t);
       }
       case "combat_shotgun":
-      case "tactical_shotgun": {
+      case "tactical_shotgun":
+      case "drum_shotgun": {
         const t = clamp(1 - distance / 260, 0, 1);
         return dmg * (0.35 + 0.75 * t);
       }
@@ -2080,6 +2182,10 @@
         return dmg * (0.45 + 0.55 * t);
       }
       case "rpg": {
+        const t = clamp((distance - 80) / 650, 0, 1);
+        return dmg * (0.9 + 0.35 * t);
+      }
+      case "cats_claw": {
         const t = clamp((distance - 80) / 650, 0, 1);
         return dmg * (0.9 + 0.35 * t);
       }
@@ -2103,8 +2209,12 @@
   }
 
   function makeGun(rarityId, forcedTypeId) {
+    const typeId = forcedTypeId || pickGunTypeId();
+    const typeMeta = getGunTypeMeta(typeId);
+    if (typeMeta.id === "cats_claw") {
+      rarityId = pickWeighted(CATS_CLAW_RARITY_WEIGHTS);
+    }
     const r = RARITIES[rarityId];
-    const typeMeta = getGunTypeMeta(forcedTypeId || pickGunTypeId());
     const dmgMul = typeMeta.dmgMul || 1;
     const dmgMulHi = typeMeta.dmgMulHi ?? dmgMul;
     const fireMul = typeMeta.fireMul || 1;
@@ -2544,7 +2654,8 @@
           el.appendChild(wrapEl);
         }
         wrapEl.style.display = "flex";
-        wrapEl.style.setProperty("--rarity-tint", ng.color);
+        wrapEl.classList.toggle("art-sprite", ng.type === "cats_claw");
+        wrapEl.style.setProperty("--rarity-tint", ng.type === "cats_claw" ? "transparent" : ng.color);
         wrapEl.style.boxShadow = "inset 0 0 0 2px " + ng.color;
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
@@ -2674,7 +2785,7 @@
       const err = (1 - accuracy) * 0.78;
       ang += rand(-err, err);
     }
-    const explosive = isRpgGun(gun);
+    const explosive = isExplosiveGun(gun);
     const spd = explosive ? 420 : 520;
     const pellets = getPelletCount(gun);
     const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
@@ -2702,7 +2813,7 @@
         ownerId: e.id,
         gun: pelletGun,
         explosive,
-        color: explosive ? "#ff6b35" : gun.color,
+        color: explosive ? (gun.type === "cats_claw" ? gun.color : "#ff6b35") : gun.color,
         life: explosive ? 3.2 : 2.4,
       });
     }
@@ -2820,20 +2931,26 @@
     return Math.abs(lx) <= w.len * 0.5 && Math.abs(ly) <= w.thick * 0.5;
   }
 
-  function triggerRpgExplosion(b, shotOwner) {
+  function triggerExplosion(b, shotOwner) {
+    const gun = b.gun;
+    const gunType = gun && gun.type ? gun.type : "rpg";
+    const radius = getExplodeRadius(gunType);
+    const isCatsClaw = gunType === "cats_claw";
+    const clawFxColor = gun && gun.color ? gun.color : "#ff9800";
     const hitDist = dist(b.ox, b.oy, b.x, b.y);
-    const centerDmg = gunDamage(b.gun, hitDist);
-    explosions.push({ x: b.x, y: b.y, life: 0.35, maxLife: 0.35, radius: RPG_EXPLODE_RADIUS });
+    const centerDmg = gunDamage(gun, hitDist);
+    explosions.push({ x: b.x, y: b.y, life: 0.35, maxLife: 0.35, radius });
 
     for (let w = walls.length - 1; w >= 0; w--) {
       const wall = walls[w];
-      if (dist(b.x, b.y, wall.x, wall.y) > RPG_EXPLODE_RADIUS + wallExtentRadius(wall)) continue;
-      wall.hp -= RPG_WALL_DMG;
+      if (dist(b.x, b.y, wall.x, wall.y) > radius + wallExtentRadius(wall)) continue;
+      const wallDmg = isCatsClaw ? rollGunBaseDamage(gun) : RPG_WALL_DMG;
+      wall.hp -= wallDmg;
       damageTexts.push({
         x: wall.x + rand(-6, 6),
         y: wall.y - wallExtentRadius(wall) - 4,
         text: wall.hp > 0 ? String(wall.hp) : "×",
-        color: "#ffb347",
+        color: isCatsClaw ? clawFxColor : "#ffb347",
         life: 0.5,
         maxLife: 0.5,
         big: false,
@@ -2845,16 +2962,17 @@
       if (!d.alive) continue;
       if (shotOwner && (d.id === shotOwner.id || areTeammates(shotOwner, d))) continue;
       const dDist = dist(b.x, b.y, d.x, d.y);
-      if (dDist > RPG_EXPLODE_RADIUS + d.radius) continue;
-      const falloff = 1 - dDist / (RPG_EXPLODE_RADIUS + d.radius);
-      const dmg = Math.max(1, Math.round(centerDmg * falloff * 0.85));
+      if (dDist > radius + d.radius) continue;
+      const dmg = isCatsClaw
+        ? rollGunBaseDamage(gun)
+        : Math.max(1, Math.round(centerDmg * (1 - dDist / (radius + d.radius)) * 0.85));
       d.health -= dmg;
       const playerHit = shotOwner && shotOwner.isPlayer;
       damageTexts.push({
         x: d.x + rand(-12, 12),
         y: d.y - d.radius - (d.isPlayer ? 14 : 28),
         text: String(dmg),
-        color: playerHit ? "#ffb347" : "#ff6b35",
+        color: playerHit ? "#ffb347" : (isCatsClaw ? clawFxColor : "#ff6b35"),
         life: playerHit ? 1.35 : 0.9,
         maxLife: playerHit ? 1.35 : 0.9,
         big: playerHit,
@@ -3172,8 +3290,8 @@
     ch.open = true;
     if (ch.kind === "med") {
       addMedToEntity(e, ch.potion);
-    } else if (ch.gun) {
-      if (addGunToEntity(e, ch.gun) && e.isAI) aiSelectWeapon(e);
+    } else if (ch.kind === "gun") {
+      if (ch.gun && addGunToEntity(e, ch.gun) && e.isAI) aiSelectWeapon(e);
     }
   }
 
@@ -4315,7 +4433,7 @@
         const wall = walls[w];
         if (!bulletHitsWall(b, wall)) continue;
         if (b.explosive) {
-          triggerRpgExplosion(b, shotOwner);
+          triggerExplosion(b, shotOwner);
         } else {
           wall.hp--;
           damageTexts.push({
@@ -4339,7 +4457,7 @@
         if (shotOwner && areTeammates(shotOwner, d)) continue;
         if (dist(b.x, b.y, d.x, d.y) < d.radius + 3) {
           if (b.explosive) {
-            triggerRpgExplosion(b, shotOwner);
+            triggerExplosion(b, shotOwner);
             bullets.splice(i, 1);
             break;
           }

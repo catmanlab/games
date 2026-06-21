@@ -238,55 +238,12 @@
     #wallChargesHud.recharging { color: #c9a227; }
     #wallChargesHud.empty { color: #a66; }
     #ammoHud, #ammoHudP2 {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-width: 44px;
-      height: 44px;
-      padding: 0 8px;
-      border: 2px solid #333;
-      border-radius: 6px;
-      background: rgba(0, 0, 0, 0.72);
       font-size: 0.72rem;
       color: #ccc;
       text-shadow: 0 1px 4px #000;
-      line-height: 1.1;
-      white-space: nowrap;
     }
-    #ammoHud .ammo-count, #ammoHudP2 .ammo-count {
-      font-size: 1rem;
-      font-weight: 700;
-      color: #eee;
-    }
-    #ammoHud .ammo-label, #ammoHudP2 .ammo-label {
-      font-size: 0.5rem;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    #ammoHud.empty .ammo-count, #ammoHudP2.empty .ammo-count { color: #c66; }
-    #ammoHud.empty, #ammoHudP2.empty { border-color: #633; }
-    .inventory-row {
-      position: absolute;
-      bottom: 12px;
-      display: flex;
-      align-items: flex-end;
-      gap: 8px;
-      pointer-events: none;
-      z-index: 16;
-    }
-    #inventoryRow { left: 12px; }
-    #inventoryRowP2 {
-      right: 12px;
-      display: none;
-    }
-    #inventoryRowP2.visible { display: flex; }
-    #inventoryHud {
-      display: flex;
-      gap: 6px;
-      pointer-events: none;
-    }
+    #ammoHud.empty, #ammoHudP2.empty { color: #c66; }
+    #healthBarWrap {
       position: relative;
       width: 100%;
       height: 18px;
@@ -318,7 +275,16 @@
       z-index: 1;
       pointer-events: none;
     }
-    #healthBarWrap {
+    #inventoryHud {
+      position: absolute;
+      left: 12px;
+      bottom: 12px;
+      display: flex;
+      gap: 6px;
+      pointer-events: none;
+      z-index: 16;
+    }
+    #rightHud {
       position: absolute;
       right: 12px;
       top: 10px;
@@ -372,10 +338,15 @@
     #rightHud .hud-line { font-size: 0.75rem; color: #aaa; text-shadow: 0 1px 4px #000; }
     #rightHud .hud-line strong { color: #ddd; }
     #inventoryHudP2 {
-      display: flex;
+      position: absolute;
+      right: 12px;
+      bottom: 12px;
+      display: none;
       gap: 6px;
       pointer-events: none;
+      z-index: 16;
     }
+    #inventoryHudP2.visible { display: flex; }
     .menu-two-player {
       margin-top: 10px;
       padding: 10px 12px;
@@ -415,7 +386,7 @@
     .p2-mode-fields label.check-row { margin-bottom: 0; align-items: flex-start; }
     .p2-mode-fields label.check-row span { line-height: 1.35; font-size: 0.78rem; }
     #wrap.split-two-player #leftHud { max-width: calc(50% - 24px); }
-    #wrap.split-two-player #inventoryRow { max-width: calc(50% - 24px); }
+    #wrap.split-two-player #inventoryHud { max-width: calc(50% - 24px); }
     #wrap.split-two-player #minimap { right: auto; left: 8px; }
     .menu-online {
       margin-top: 10px;
@@ -676,7 +647,7 @@
     }
     .go-overlay[hidden] { display: none !important; }
     #wrap.spectate-mode #leftHud,
-    #wrap.spectate-mode #inventoryRow {
+    #wrap.spectate-mode #inventoryHud {
       display: none;
     }
     #wrap.spectate-mode #endOverlay.spectate-left {
@@ -1022,6 +993,7 @@
           <span id="healthLabel">200 / 200</span>
         </div>
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
+        <div id="ammoHud">Ammo: —</div>
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
@@ -1030,15 +1002,10 @@
           <span id="healthLabelP2">200 / 200</span>
         </div>
         <div id="wallChargesHudP2">Walls: 5 · Right-click or Shift to build</div>
+        <div id="ammoHudP2">Ammo: —</div>
       </div>
-      <div id="inventoryRow">
-        <div id="inventoryHud"></div>
-        <div id="ammoHud"><span class="ammo-count">—</span><span class="ammo-label">ammo</span></div>
-      </div>
-      <div id="inventoryRowP2">
-        <div id="inventoryHudP2"></div>
-        <div id="ammoHudP2"><span class="ammo-count">—</span><span class="ammo-label">ammo</span></div>
-      </div>
+      <div id="inventoryHud"></div>
+      <div id="inventoryHudP2"></div>
       <div id="endOverlay" class="go-overlay" hidden>
         <div class="go-card">
           <h2 id="endTitle">Victory!</h2>
@@ -1071,6 +1038,8 @@
   const MED_CHEST_COUNT = 28;
   const AMMO_BASKET_COUNT = 24;
   const GUN_START_AMMO = 50;
+  const AI_AMMO_LOW = 18;
+  const AI_AMMO_CRITICAL = 6;
   const DOT_SPEED = 200;
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
@@ -1199,7 +1168,6 @@
   const ammoHud = document.getElementById("ammoHud");
   const inventoryHud = document.getElementById("inventoryHud");
   const inventoryHudP2 = document.getElementById("inventoryHudP2");
-  const inventoryRowP2 = document.getElementById("inventoryRowP2");
   const twoPlayerCheck = document.getElementById("twoPlayerCheck");
   const p2Fields = document.getElementById("p2Fields");
   const p2ModeFields = document.getElementById("p2ModeFields");
@@ -2378,6 +2346,73 @@
     return tgt ? dist(d.x, d.y, tgt.x, tgt.y) : 350;
   }
 
+  function aiGetLowestAmmoGunSlot(d) {
+    let best = -1;
+    let lowest = Infinity;
+    for (let i = 0; i < INV_SLOTS; i++) {
+      const item = d.inventory[i];
+      if (!item || !isGunItem(item)) continue;
+      const ammo = getGunAmmo(item);
+      if (ammo < lowest) {
+        lowest = ammo;
+        best = i;
+      }
+    }
+    return best;
+  }
+
+  function aiAmmoRefillInfo(d) {
+    if (!d || d.isBoss) return { needs: false, critical: false, slot: -1, ammo: 0 };
+    const slot = aiGetLowestAmmoGunSlot(d);
+    if (slot < 0) return { needs: false, critical: false, slot: -1, ammo: 0 };
+    const gun = normalizeGun(d.inventory[slot]);
+    const meta = getGunTypeMeta(gun.type);
+    const burstSize = meta.burstSize || 0;
+    const lowThreshold = burstSize > 1 ? burstSize * 2 : AI_AMMO_LOW;
+    const critThreshold = burstSize > 1 ? burstSize : AI_AMMO_CRITICAL;
+    const ammo = getGunAmmo(gun);
+    return {
+      needs: ammo <= lowThreshold,
+      critical: ammo <= critThreshold,
+      slot,
+      ammo,
+    };
+  }
+
+  function aiNearestAmmoBasket(d, maxDist) {
+    let best = null;
+    let bestDist = maxDist != null ? maxDist : Infinity;
+    for (const ch of chests) {
+      if (ch.open || ch.kind !== "ammo") continue;
+      const dd = dist(d.x, d.y, ch.x, ch.y);
+      if (dd < bestDist) {
+        bestDist = dd;
+        best = ch;
+      }
+    }
+    return best;
+  }
+
+  function aiPrepareForAmmoPickup(d) {
+    const info = aiAmmoRefillInfo(d);
+    if (!info.needs || info.slot < 0) return false;
+    d.invIndex = info.slot;
+    return true;
+  }
+
+  function aiShouldDeferChaseForAmmo(d, foe, foeDist) {
+    if (!foe || d.isBoss) return false;
+    const info = aiAmmoRefillInfo(d);
+    if (!info.needs) return false;
+    const basket = aiNearestAmmoBasket(d, info.critical ? 760 : 620);
+    if (!basket) return false;
+    const basketDist = dist(d.x, d.y, basket.x, basket.y);
+    if (info.critical) {
+      return basketDist < foeDist * 0.9 || foeDist > 420;
+    }
+    return foeDist > 520 && basketDist < 480;
+  }
+
   function estimateGunPower(gun, shotDistance) {
     const g = normalizeGun(gun);
     const meta = getGunTypeMeta(g.type);
@@ -2398,16 +2433,20 @@
       if (d.inventory[i] && isGunItem(d.inventory[i])) slots.push(i);
     }
     if (!slots.length) return;
+    const armedSlots = slots.filter((i) => getGunAmmo(d.inventory[i]) > 0);
+    const pickFrom = armedSlots.length ? armedSlots : slots;
     if (Math.random() > 0.75) {
-      d.invIndex = slots[randInt(0, slots.length - 1)];
+      d.invIndex = pickFrom[randInt(0, pickFrom.length - 1)];
       return;
     }
     const shotDist = aiTargetDistance(d);
-    let bestSlot = slots[0];
+    let bestSlot = pickFrom[0];
     let bestScore = estimateGunPower(d.inventory[bestSlot], shotDist);
-    for (let j = 1; j < slots.length; j++) {
-      const slot = slots[j];
-      const score = estimateGunPower(d.inventory[slot], shotDist);
+    if (getGunAmmo(d.inventory[bestSlot]) <= 0) bestScore *= 0.02;
+    for (let j = 1; j < pickFrom.length; j++) {
+      const slot = pickFrom[j];
+      let score = estimateGunPower(d.inventory[slot], shotDist);
+      if (getGunAmmo(d.inventory[slot]) <= 0) score *= 0.02;
       if (score > bestScore) {
         bestScore = score;
         bestSlot = slot;
@@ -2624,7 +2663,7 @@
     }
 
     if (rightHud) rightHud.classList.toggle("visible", twoPlayerMode);
-    if (inventoryRowP2) inventoryRowP2.classList.toggle("visible", twoPlayerMode);
+    if (inventoryHudP2) inventoryHudP2.classList.toggle("visible", twoPlayerMode);
     if (wrapEl) wrapEl.classList.toggle("split-two-player", twoPlayerMode);
 
     const used = [];
@@ -2803,15 +2842,13 @@
   function updateAmmoHud(entity, hudEl) {
     if (!hudEl || !entity) return;
     const gun = currentGun(entity);
-    const countEl = hudEl.querySelector(".ammo-count");
     hudEl.classList.remove("empty");
-    if (!countEl) return;
     if (!gun) {
-      countEl.textContent = "—";
+      hudEl.textContent = "Ammo: —";
       return;
     }
     const ammo = getGunAmmo(gun);
-    countEl.textContent = String(ammo);
+    hudEl.textContent = "Ammo: " + ammo;
     if (ammo <= 0) hudEl.classList.add("empty");
   }
 
@@ -3416,6 +3453,7 @@
   function openChestForEntity(e, ch) {
     if (!ch || ch.open || !e || !e.alive) return;
     if (ch.kind === "ammo") {
+      if (e.isAI) aiPrepareForAmmoPickup(e);
       if (!applyAmmoPackToCurrentGun(e, ch.ammoPack)) return;
     }
     ch.open = true;
@@ -4277,7 +4315,7 @@
     dots.push(player);
     player2 = null;
     if (rightHud) rightHud.classList.remove("visible");
-    if (inventoryRowP2) inventoryRowP2.classList.remove("visible");
+    if (inventoryHudP2) inventoryHudP2.classList.remove("visible");
     if (wrapEl) wrapEl.classList.remove("split-two-player");
     buildInventoryHud();
     refreshInventoryHud();
@@ -4433,6 +4471,13 @@
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
       const gunChestNear = chests.filter(c => !c.open && c.kind === "gun").sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
+      const ammoInfo = aiAmmoRefillInfo(d);
+      const ammoSeekRange = ammoInfo.critical ? 720 : 620;
+      const ammoBasketNear = ammoInfo.needs ? aiNearestAmmoBasket(d, ammoSeekRange) : null;
+      const ammoBasketDist = ammoBasketNear
+        ? dist(d.x, d.y, ammoBasketNear.x, ammoBasketNear.y)
+        : Infinity;
+      const ammoSafeToSeek = !inCombat || (ammoInfo.critical && foeDist > 280);
       const gunNear = aiNearestChaseableGroundGun(d, now, 320);
 
       if (!inCombat && gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 260) {
@@ -4449,6 +4494,17 @@
         d.aiWanderX = medChestNear.x;
         d.aiWanderY = medChestNear.y;
         d.aiTarget = null;
+      } else if (
+        !d.isBoss &&
+        ammoInfo.needs &&
+        ammoBasketNear &&
+        ammoSafeToSeek &&
+        ammoBasketDist < ammoSeekRange
+      ) {
+        d.aiWanderX = ammoBasketNear.x;
+        d.aiWanderY = ammoBasketNear.y;
+        d.aiTarget = null;
+        aiPrepareForAmmoPickup(d);
       } else if (!inCombat && !d.isBoss && gunChestNear && dist(d.x, d.y, gunChestNear.x, gunChestNear.y) < 520 && !currentGun(d)) {
         d.aiWanderX = gunChestNear.x;
         d.aiWanderY = gunChestNear.y;
@@ -4470,9 +4526,12 @@
 
     const chaseFoe = aiNearestEnemy(d, spectateMode ? Infinity : 1800);
     if (chaseFoe) {
-      d.aiTarget = chaseFoe;
-      d.aiWanderX = chaseFoe.x;
-      d.aiWanderY = chaseFoe.y;
+      const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
+      if (!aiShouldDeferChaseForAmmo(d, chaseFoe, chaseDist)) {
+        d.aiTarget = chaseFoe;
+        d.aiWanderX = chaseFoe.x;
+        d.aiWanderY = chaseFoe.y;
+      }
     }
 
     for (const g of groundGuns) {

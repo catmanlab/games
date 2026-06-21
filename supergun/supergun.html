@@ -238,12 +238,55 @@
     #wallChargesHud.recharging { color: #c9a227; }
     #wallChargesHud.empty { color: #a66; }
     #ammoHud, #ammoHudP2 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-width: 44px;
+      height: 44px;
+      padding: 0 8px;
+      border: 2px solid #333;
+      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.72);
       font-size: 0.72rem;
       color: #ccc;
       text-shadow: 0 1px 4px #000;
+      line-height: 1.1;
+      white-space: nowrap;
     }
-    #ammoHud.empty, #ammoHudP2.empty { color: #c66; }
-    #healthBarWrap {
+    #ammoHud .ammo-count, #ammoHudP2 .ammo-count {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #eee;
+    }
+    #ammoHud .ammo-label, #ammoHudP2 .ammo-label {
+      font-size: 0.5rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    #ammoHud.empty .ammo-count, #ammoHudP2.empty .ammo-count { color: #c66; }
+    #ammoHud.empty, #ammoHudP2.empty { border-color: #633; }
+    .inventory-row {
+      position: absolute;
+      bottom: 12px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      pointer-events: none;
+      z-index: 16;
+    }
+    #inventoryRow { left: 12px; }
+    #inventoryRowP2 {
+      right: 12px;
+      display: none;
+    }
+    #inventoryRowP2.visible { display: flex; }
+    #inventoryHud {
+      display: flex;
+      gap: 6px;
+      pointer-events: none;
+    }
       position: relative;
       width: 100%;
       height: 18px;
@@ -275,16 +318,7 @@
       z-index: 1;
       pointer-events: none;
     }
-    #inventoryHud {
-      position: absolute;
-      left: 12px;
-      bottom: 12px;
-      display: flex;
-      gap: 6px;
-      pointer-events: none;
-      z-index: 16;
-    }
-    #rightHud {
+    #healthBarWrap {
       position: absolute;
       right: 12px;
       top: 10px;
@@ -338,15 +372,10 @@
     #rightHud .hud-line { font-size: 0.75rem; color: #aaa; text-shadow: 0 1px 4px #000; }
     #rightHud .hud-line strong { color: #ddd; }
     #inventoryHudP2 {
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      display: none;
+      display: flex;
       gap: 6px;
       pointer-events: none;
-      z-index: 16;
     }
-    #inventoryHudP2.visible { display: flex; }
     .menu-two-player {
       margin-top: 10px;
       padding: 10px 12px;
@@ -386,7 +415,7 @@
     .p2-mode-fields label.check-row { margin-bottom: 0; align-items: flex-start; }
     .p2-mode-fields label.check-row span { line-height: 1.35; font-size: 0.78rem; }
     #wrap.split-two-player #leftHud { max-width: calc(50% - 24px); }
-    #wrap.split-two-player #inventoryHud { max-width: calc(50% - 24px); }
+    #wrap.split-two-player #inventoryRow { max-width: calc(50% - 24px); }
     #wrap.split-two-player #minimap { right: auto; left: 8px; }
     .menu-online {
       margin-top: 10px;
@@ -647,7 +676,7 @@
     }
     .go-overlay[hidden] { display: none !important; }
     #wrap.spectate-mode #leftHud,
-    #wrap.spectate-mode #inventoryHud {
+    #wrap.spectate-mode #inventoryRow {
       display: none;
     }
     #wrap.spectate-mode #endOverlay.spectate-left {
@@ -993,7 +1022,6 @@
           <span id="healthLabel">200 / 200</span>
         </div>
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
-        <div id="ammoHud">Ammo: —</div>
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
@@ -1002,10 +1030,15 @@
           <span id="healthLabelP2">200 / 200</span>
         </div>
         <div id="wallChargesHudP2">Walls: 5 · Right-click or Shift to build</div>
-        <div id="ammoHudP2">Ammo: —</div>
       </div>
-      <div id="inventoryHud"></div>
-      <div id="inventoryHudP2"></div>
+      <div id="inventoryRow">
+        <div id="inventoryHud"></div>
+        <div id="ammoHud"><span class="ammo-count">—</span><span class="ammo-label">ammo</span></div>
+      </div>
+      <div id="inventoryRowP2">
+        <div id="inventoryHudP2"></div>
+        <div id="ammoHudP2"><span class="ammo-count">—</span><span class="ammo-label">ammo</span></div>
+      </div>
       <div id="endOverlay" class="go-overlay" hidden>
         <div class="go-card">
           <h2 id="endTitle">Victory!</h2>
@@ -1166,6 +1199,7 @@
   const ammoHud = document.getElementById("ammoHud");
   const inventoryHud = document.getElementById("inventoryHud");
   const inventoryHudP2 = document.getElementById("inventoryHudP2");
+  const inventoryRowP2 = document.getElementById("inventoryRowP2");
   const twoPlayerCheck = document.getElementById("twoPlayerCheck");
   const p2Fields = document.getElementById("p2Fields");
   const p2ModeFields = document.getElementById("p2ModeFields");
@@ -2590,7 +2624,7 @@
     }
 
     if (rightHud) rightHud.classList.toggle("visible", twoPlayerMode);
-    if (inventoryHudP2) inventoryHudP2.classList.toggle("visible", twoPlayerMode);
+    if (inventoryRowP2) inventoryRowP2.classList.toggle("visible", twoPlayerMode);
     if (wrapEl) wrapEl.classList.toggle("split-two-player", twoPlayerMode);
 
     const used = [];
@@ -2769,13 +2803,15 @@
   function updateAmmoHud(entity, hudEl) {
     if (!hudEl || !entity) return;
     const gun = currentGun(entity);
+    const countEl = hudEl.querySelector(".ammo-count");
     hudEl.classList.remove("empty");
+    if (!countEl) return;
     if (!gun) {
-      hudEl.textContent = "Ammo: —";
+      countEl.textContent = "—";
       return;
     }
     const ammo = getGunAmmo(gun);
-    hudEl.textContent = "Ammo: " + ammo;
+    countEl.textContent = String(ammo);
     if (ammo <= 0) hudEl.classList.add("empty");
   }
 
@@ -4241,7 +4277,7 @@
     dots.push(player);
     player2 = null;
     if (rightHud) rightHud.classList.remove("visible");
-    if (inventoryHudP2) inventoryHudP2.classList.remove("visible");
+    if (inventoryRowP2) inventoryRowP2.classList.remove("visible");
     if (wrapEl) wrapEl.classList.remove("split-two-player");
     buildInventoryHud();
     refreshInventoryHud();

@@ -2362,7 +2362,7 @@
   }
 
   function aiAmmoRefillInfo(d) {
-    if (!d || d.isBoss) return { needs: false, critical: false, slot: -1, ammo: 0 };
+    if (!d) return { needs: false, critical: false, slot: -1, ammo: 0 };
     const slot = aiGetLowestAmmoGunSlot(d);
     if (slot < 0) return { needs: false, critical: false, slot: -1, ammo: 0 };
     const gun = normalizeGun(d.inventory[slot]);
@@ -2401,7 +2401,7 @@
   }
 
   function aiShouldDeferChaseForAmmo(d, foe, foeDist) {
-    if (!foe || d.isBoss) return false;
+    if (!foe) return false;
     const info = aiAmmoRefillInfo(d);
     if (!info.needs) return false;
     const basket = aiNearestAmmoBasket(d, info.critical ? 760 : 620);
@@ -4495,7 +4495,6 @@
         d.aiWanderY = medChestNear.y;
         d.aiTarget = null;
       } else if (
-        !d.isBoss &&
         ammoInfo.needs &&
         ammoBasketNear &&
         ammoSafeToSeek &&
@@ -4568,7 +4567,7 @@
 
     if (!spectateMode) {
       for (const ch of chests) {
-        if (d.isBoss) continue;
+        if (d.isBoss && ch.kind !== "ammo") continue;
         if (!ch.open && dist(d.x, d.y, ch.x, ch.y) < d.radius + 16) {
           openChestForEntity(d, ch);
         }

@@ -1090,7 +1090,7 @@
     { id: "scar", label: "SCAR", w: 0.06, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95 },
     { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5 },
     { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05 },
-    { id: "cats_claw", label: "Cat's Claw", w: 0.002, dmgMul: 120 / 45, dmgMulHi: 168 / 65, fireMul: 1, spreadMul: 0.06 },
+    { id: "cats_claw", label: "Cat's Claw", w: 0.012, dmgMul: 120 / 45, dmgMulHi: 168 / 65, fireMul: 1, spreadMul: 0.06 },
   ];
 
   const TEST_CATS_CLAW_ONLY = false;
@@ -1134,8 +1134,9 @@
     ["mythic", 0.45],
   ];
   const CATS_CLAW_RARITY_WEIGHTS = [
-    ["legendary", 0.55],
-    ["mythic", 0.45],
+    ["epic", 0.30],
+    ["legendary", 0.45],
+    ["mythic", 0.25],
   ];
   const BOSS_WEAPON_WEIGHTS = [
     ["rare", 0.22],

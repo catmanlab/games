@@ -1161,10 +1161,12 @@
   const WALL_THICK = 14;
   const WALL_PLACE_MAX_DIST = 400;
   const MED_USE_MS = 450;
-  const BLOOM_SHOT_ADD = 0.055;
-  const BLOOM_SHOT_PER_POINT = 0.00145;
-  const BLOOM_DECAY_PER_SEC = 0.65;
+  const BLOOM_SHOT_ADD = 0.038;
+  const BLOOM_SHOT_PER_POINT = 0.0011;
+  const BLOOM_DECAY_PER_SEC = 0.9;
   const BLOOM_SPREAD_FACTOR = 2.4;
+  const BLOOM_GRACE_SHOTS = 6;
+  const BLOOM_STREAK_BREAK_MS = 320;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -2180,7 +2182,14 @@
     return gun.spread * (1 + level * bloomScale * BLOOM_SPREAD_FACTOR);
   }
 
-  function addBloomOnShot(e, gun) {
+  function addBloomOnShot(e, gun, now) {
+    if (!e.bloomStreakAt || now - e.bloomStreakAt > BLOOM_STREAK_BREAK_MS) {
+      e.bloomStreak = 0;
+    }
+    e.bloomStreakAt = now;
+    e.bloomStreak = (e.bloomStreak || 0) + 1;
+    if (e.bloomStreak <= BLOOM_GRACE_SHOTS) return;
+
     const bloomStat = getGunBloomStat(gun.type);
     const add = BLOOM_SHOT_ADD + bloomStat * BLOOM_SHOT_PER_POINT;
     e.bloomLevel = clamp((e.bloomLevel || 0) + add, 0, 1);
@@ -2188,7 +2197,11 @@
 
   function updateEntityBloomDecay(e, dt, now) {
     if (!e || !e.alive) return;
-    if (now - e.lastShot < 60) return;
+    const sinceShot = now - (e.lastShot || 0);
+    if (sinceShot > BLOOM_STREAK_BREAK_MS) {
+      e.bloomStreak = 0;
+    }
+    if (sinceShot < 60) return;
     const gun = currentGun(e);
     const bloomStat = gun ? getGunBloomStat(gun.type) : 18;
     const decay = BLOOM_DECAY_PER_SEC * (0.65 + 0.35 * (1 - bloomStat / 100));
@@ -2614,6 +2627,8 @@
       aimY: 0,
       bloomLevel: 0,
       bloomGunType: null,
+      bloomStreak: 0,
+      bloomStreakAt: 0,
     };
   }
 
@@ -2983,10 +2998,12 @@
     if (e.bloomGunType !== gun.type) {
       e.bloomLevel = 0;
       e.bloomGunType = gun.type;
+      e.bloomStreak = 0;
+      e.bloomStreakAt = 0;
     }
     e.lastShot = now;
     consumeGunAmmo(e, 1);
-    addBloomOnShot(e, gun);
+    addBloomOnShot(e, gun, now);
     if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     if (burstSize > 1) {
       e.burstShotsLeft--;

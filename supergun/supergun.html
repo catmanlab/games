@@ -1060,6 +1060,7 @@
     smg: "submachine gun",
     combat_shotgun: "combat shotgun",
     tactical_shotgun: "tactical shotgun",
+    strike_shotgun: "strike shotgun",
     pump_shotgun: "pump shotgun",
     drum_shotgun: "drum shotgun",
     famas: "famas",
@@ -1074,6 +1075,7 @@
   const GUN_IMAGE_ALT_NAMES = {
     cats_claw: ["cats claw", "cat's claw", "Cat's Claw", "cats_claw", "Cats Claw", "cats claw.jpg.png"],
     drum_shotgun: ["drum shotgun", "Drum Shotgun", "drum_shotgun"],
+    strike_shotgun: ["strike shotgun", "Strike Shotgun", "strike_shotgun"],
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png"];
   const GUN_TYPES = [
@@ -1083,6 +1085,7 @@
     { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95 },
     { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 0.90, dmgMulHi: 0.94, fireMul: 0.58, spreadMul: 1.35 },
+    { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45 },
     { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1 },
     { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.78, fireMul: 1, spreadMul: 0.92, burstSize: 3, burstShotMs: 79, burstPauseMs: 330 },
     { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.4 },
@@ -2195,6 +2198,10 @@
       case "tactical_shotgun": {
         const t = clamp(1 - distance / 300, 0, 1);
         return dmg * (0.38 + 0.62 * t);
+      }
+      case "strike_shotgun": {
+        const t = clamp(1 - distance / VIEW_W, 0, 1);
+        return dmg * (7 / 29 + (22 / 29) * t);
       }
       case "drum_shotgun": {
         const t = clamp(1 - distance / 260, 0, 1);

@@ -1081,10 +1081,10 @@
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png"];
   const GUN_TYPES = [
-    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3, bloom: 23 },
-    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65, bloom: 15 },
-    { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.7, fireMul: 0.82, spreadMul: 1.15 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95 },
+    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3, bloomPerShot: 4 },
+    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65, bloomPerShot: 2 },
+    { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.7, fireMul: 0.82, spreadMul: 1.15, bloomPerShot: 5 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95, bloomPerShot: 3 },
     { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 0.90, dmgMulHi: 0.94, fireMul: 0.58, spreadMul: 1.35 },
     { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45 },
@@ -1161,12 +1161,8 @@
   const WALL_THICK = 14;
   const WALL_PLACE_MAX_DIST = 400;
   const MED_USE_MS = 450;
-  const BLOOM_SHOT_ADD = 0.038;
-  const BLOOM_SHOT_PER_POINT = 0.0011;
-  const BLOOM_DECAY_PER_SEC = 0.9;
-  const BLOOM_SPREAD_FACTOR = 2.4;
-  const BLOOM_GRACE_SHOTS = 6;
-  const BLOOM_STREAK_BREAK_MS = 320;
+  const BLOOM_DECAY_PER_SEC = 55;
+  const BLOOM_SPREAD_FACTOR = 2;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -2169,43 +2165,26 @@
     return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
   }
 
-  function getGunBloomStat(typeId) {
+  function getGunBloomPerShot(typeId) {
     const meta = getGunTypeMeta(typeId);
-    if (typeof meta.bloom === "number") return clamp(meta.bloom, 0, 100);
-    return clamp(Math.round((meta.spreadMul || 1) * 17), 0, 100);
+    return typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : 0;
   }
 
   function getEffectiveSpread(e, gun) {
-    const bloomStat = getGunBloomStat(gun.type);
-    const level = e.bloomLevel || 0;
-    const bloomScale = bloomStat / 100;
-    return gun.spread * (1 + level * bloomScale * BLOOM_SPREAD_FACTOR);
+    const bloomPct = e.bloomLevel || 0;
+    return gun.spread * (1 + (bloomPct / 100) * BLOOM_SPREAD_FACTOR);
   }
 
-  function addBloomOnShot(e, gun, now) {
-    if (!e.bloomStreakAt || now - e.bloomStreakAt > BLOOM_STREAK_BREAK_MS) {
-      e.bloomStreak = 0;
-    }
-    e.bloomStreakAt = now;
-    e.bloomStreak = (e.bloomStreak || 0) + 1;
-    if (e.bloomStreak <= BLOOM_GRACE_SHOTS) return;
-
-    const bloomStat = getGunBloomStat(gun.type);
-    const add = BLOOM_SHOT_ADD + bloomStat * BLOOM_SHOT_PER_POINT;
-    e.bloomLevel = clamp((e.bloomLevel || 0) + add, 0, 1);
+  function addBloomOnShot(e, gun) {
+    const add = getGunBloomPerShot(gun.type);
+    if (add <= 0) return;
+    e.bloomLevel = clamp((e.bloomLevel || 0) + add, 0, 100);
   }
 
   function updateEntityBloomDecay(e, dt, now) {
     if (!e || !e.alive) return;
-    const sinceShot = now - (e.lastShot || 0);
-    if (sinceShot > BLOOM_STREAK_BREAK_MS) {
-      e.bloomStreak = 0;
-    }
-    if (sinceShot < 60) return;
-    const gun = currentGun(e);
-    const bloomStat = gun ? getGunBloomStat(gun.type) : 18;
-    const decay = BLOOM_DECAY_PER_SEC * (0.65 + 0.35 * (1 - bloomStat / 100));
-    e.bloomLevel = Math.max(0, (e.bloomLevel || 0) - decay * dt);
+    if (now - (e.lastShot || 0) < 60) return;
+    e.bloomLevel = Math.max(0, (e.bloomLevel || 0) - BLOOM_DECAY_PER_SEC * dt);
   }
 
   function isExplosiveGun(gun) {
@@ -2627,8 +2606,6 @@
       aimY: 0,
       bloomLevel: 0,
       bloomGunType: null,
-      bloomStreak: 0,
-      bloomStreakAt: 0,
     };
   }
 
@@ -2998,12 +2975,10 @@
     if (e.bloomGunType !== gun.type) {
       e.bloomLevel = 0;
       e.bloomGunType = gun.type;
-      e.bloomStreak = 0;
-      e.bloomStreakAt = 0;
     }
     e.lastShot = now;
     consumeGunAmmo(e, 1);
-    addBloomOnShot(e, gun, now);
+    addBloomOnShot(e, gun);
     if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     if (burstSize > 1) {
       e.burstShotsLeft--;

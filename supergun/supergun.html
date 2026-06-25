@@ -1081,8 +1081,8 @@
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png"];
   const GUN_TYPES = [
-    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3 },
-    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65 },
+    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3, bloom: 23 },
+    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65, bloom: 15 },
     { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.7, fireMul: 0.82, spreadMul: 1.15 },
     { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95 },
     { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.9, fireMul: 0.88, spreadMul: 0.92 },
@@ -1161,6 +1161,10 @@
   const WALL_THICK = 14;
   const WALL_PLACE_MAX_DIST = 400;
   const MED_USE_MS = 450;
+  const BLOOM_SHOT_ADD = 0.055;
+  const BLOOM_SHOT_PER_POINT = 0.00145;
+  const BLOOM_DECAY_PER_SEC = 0.65;
+  const BLOOM_SPREAD_FACTOR = 2.4;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -2163,6 +2167,34 @@
     return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
   }
 
+  function getGunBloomStat(typeId) {
+    const meta = getGunTypeMeta(typeId);
+    if (typeof meta.bloom === "number") return clamp(meta.bloom, 0, 100);
+    return clamp(Math.round((meta.spreadMul || 1) * 17), 0, 100);
+  }
+
+  function getEffectiveSpread(e, gun) {
+    const bloomStat = getGunBloomStat(gun.type);
+    const level = e.bloomLevel || 0;
+    const bloomScale = bloomStat / 100;
+    return gun.spread * (1 + level * bloomScale * BLOOM_SPREAD_FACTOR);
+  }
+
+  function addBloomOnShot(e, gun) {
+    const bloomStat = getGunBloomStat(gun.type);
+    const add = BLOOM_SHOT_ADD + bloomStat * BLOOM_SHOT_PER_POINT;
+    e.bloomLevel = clamp((e.bloomLevel || 0) + add, 0, 1);
+  }
+
+  function updateEntityBloomDecay(e, dt, now) {
+    if (!e || !e.alive) return;
+    if (now - e.lastShot < 60) return;
+    const gun = currentGun(e);
+    const bloomStat = gun ? getGunBloomStat(gun.type) : 18;
+    const decay = BLOOM_DECAY_PER_SEC * (0.65 + 0.35 * (1 - bloomStat / 100));
+    e.bloomLevel = Math.max(0, (e.bloomLevel || 0) - decay * dt);
+  }
+
   function isExplosiveGun(gun) {
     return gun && (gun.type === "rpg" || gun.type === "cats_claw");
   }
@@ -2580,6 +2612,8 @@
       playerSlot: opts.playerSlot || 0,
       aimX: 1,
       aimY: 0,
+      bloomLevel: 0,
+      bloomGunType: null,
     };
   }
 
@@ -2946,8 +2980,13 @@
       return;
     }
     if (getGunAmmo(gun) <= 0) return;
+    if (e.bloomGunType !== gun.type) {
+      e.bloomLevel = 0;
+      e.bloomGunType = gun.type;
+    }
     e.lastShot = now;
     consumeGunAmmo(e, 1);
+    addBloomOnShot(e, gun);
     if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     if (burstSize > 1) {
       e.burstShotsLeft--;
@@ -2964,12 +3003,13 @@
     const spd = explosive ? 420 : 520;
     const pellets = getPelletCount(gun);
     const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
+    const shotSpread = getEffectiveSpread(e, gun);
     for (let pi = 0; pi < pellets; pi++) {
       let pelletAng = ang;
       if (pellets > 1) {
-        pelletAng += rand(-gun.spread * 1.8, gun.spread * 1.8);
+        pelletAng += rand(-shotSpread * 1.8, shotSpread * 1.8);
       } else {
-        pelletAng += rand(-gun.spread, gun.spread);
+        pelletAng += rand(-shotSpread, shotSpread);
       }
       const pelletGun = pellets > 1
         ? {
@@ -5088,6 +5128,9 @@
     else if (onlineMode && onlineHost) updateOnlineRemotePlayer(dt, now);
     for (const d of dots) {
       if (d.isAI) updateAIMovement(d, dt, now);
+    }
+    for (const d of dots) {
+      if (d.alive) updateEntityBloomDecay(d, dt, now);
     }
     resolveAllDotCollisions();
     if (player && player.alive) updateEntityWorldInteractions(player, now);

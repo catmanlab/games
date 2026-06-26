@@ -864,7 +864,7 @@
       </div>
       <p id="accountStats" class="account-stats"></p>
       <h1>Supergun</h1>
-      <p class="menu-tag">16-dot arena · chests · guns · last dot wins</p>
+      <p class="menu-tag">23-dot arena · chests · guns · last dot wins</p>
       <div class="menu-preview-row">
         <span id="menuDotPreview" aria-hidden="true"></span>
       </div>
@@ -1043,7 +1043,7 @@
   const DOT_SPEED = 200;
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
-  const TOTAL_DOTS = 16;
+  const TOTAL_DOTS = 23;
   const INV_SLOTS = 5;
 
   const RARITIES = {
@@ -2279,6 +2279,10 @@
     };
   }
 
+  function hasInfiniteAmmo(e) {
+    return !!(e && (e.isAI || e.isBoss));
+  }
+
   function getGunAmmo(gun) {
     if (!gun || !isGunItem(gun)) return 0;
     return typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
@@ -2407,7 +2411,7 @@
   }
 
   function aiAmmoRefillInfo(d) {
-    if (!d) return { needs: false, critical: false, slot: -1, ammo: 0 };
+    if (!d || d.isAI) return { needs: false, critical: false, slot: -1, ammo: 0 };
     const slot = aiGetLowestAmmoGunSlot(d);
     if (slot < 0) return { needs: false, critical: false, slot: -1, ammo: 0 };
     const gun = normalizeGun(d.inventory[slot]);
@@ -3506,7 +3510,7 @@
   function openChestForEntity(e, ch) {
     if (!ch || ch.open || !e || !e.alive) return;
     if (ch.kind === "ammo") {
-      if (e.isAI) aiPrepareForAmmoPickup(e);
+      if (e.isAI) return;
       if (!applyAmmoPackToCurrentGun(e, ch.ammoPack)) return;
     }
     ch.open = true;

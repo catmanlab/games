@@ -938,7 +938,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls), <strong>Cat's Claw</strong> (very rare, Legendary/Mythic only, large blast). Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls), <strong>Cat's Claw</strong> (very rare, Legendary/Mythic only, large blast). Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. Chests give Common through Epic. Be the last dot alive to win.
@@ -1069,6 +1069,7 @@
     assault_rifle: "assault rifle",
     scoped_assault_rifle: "scoped ar",
     thermal_scoped_assault_rifle: "thermal scoped assault rifle",
+    suppressed_assault_rifle: "suppresed assault rifle",
     sweep_assault_rifle: "sweep assault rifle",
     burst_assault_rifle: "burst assualt rifle",
     scar: "SCAR",
@@ -1084,6 +1085,7 @@
     sweep_assault_rifle: ["sweep ar", "sweep assault rifle", "Sweep Assault Rifle", "sweep_assault_rifle"],
     scoped_assault_rifle: ["scoped ar", "scoped assault rifle", "Scoped AR", "Scoped Assault Rifle", "scoped_assault_rifle"],
     thermal_scoped_assault_rifle: ["thermal scoped assault rifle", "thermal scoped ar", "Thermal Scoped AR", "thermal_scoped_assault_rifle"],
+    suppressed_assault_rifle: ["suppressed assault rifle", "suppresed assault rifle", "suppressed ar", "Suppressed AR", "suppressed_assault_rifle"],
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png"];
   const GUN_TYPES = [
@@ -1095,6 +1097,7 @@
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 0.90, dmgMulHi: 0.94, fireMul: 0.58, spreadMul: 1.35, bloomPerShot: 24 },
     { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45, bloomPerShot: 11 },
     { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1, bloomPerShot: 13 },
+    { id: "suppressed_assault_rifle", label: "Suppressed AR", w: 0.085, dmgMul: 0.94, dmgMulHi: 0.98, fireMul: 0.74, spreadMul: 0.9, bloomPerShot: 10 },
     { id: "sweep_assault_rifle", label: "Sweep Assault Rifle", w: 0.09, dmgMul: 0.72, dmgMulHi: 0.75, fireMul: 0.66, spreadMul: 1.12, bloomPerShot: 14 },
     { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.78, fireMul: 1, spreadMul: 0.92, bloomPerShot: 6, burstSize: 3, burstShotMs: 79, burstPauseMs: 330 },
     { id: "scoped_assault_rifle", label: "Scoped AR", w: 0.075, dmgMul: 1.06, dmgMulHi: 1.1, fireMul: 1, spreadMul: 0.72, bloomPerShot: 7, burstSize: 3, burstShotMs: 76, burstPauseMs: 360 },
@@ -2271,6 +2274,11 @@
       case "thermal_scoped_assault_rifle": {
         const t = clamp((distance - 80) / 580, 0, 1);
         return dmg * (0.72 + 0.48 * t);
+      }
+      case "suppressed_assault_rifle": {
+        const close = clamp(1 - distance / 250, 0, 1) * 0.06;
+        const far = clamp((distance - 200) / 500, 0, 1) * 0.08;
+        return dmg * (0.9 + close + far);
       }
       case "assault_rifle":
       case "burst_assault_rifle":

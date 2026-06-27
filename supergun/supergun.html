@@ -1038,7 +1038,6 @@
   const MED_CHEST_COUNT = 28;
   const AMMO_BASKET_COUNT = 24;
   const GUN_START_AMMO = 50;
-  const GAME_WARMUP_MS = 12000;
   const SPAWN_MIN_DIST = 280;
   const AI_AMMO_LOW = 18;
   const AI_AMMO_CRITICAL = 6;
@@ -2732,14 +2731,6 @@
   function spawnDotSpread(opts, dots) {
     const pt = pickSpreadSpawnPoint(dots, opts);
     return spawnDot({ ...opts, x: pt.x, y: pt.y });
-  }
-
-  function isMatchWarmup(now) {
-    return now - gameStartTime < GAME_WARMUP_MS;
-  }
-
-  function getMatchWarmupLeft(now) {
-    return Math.max(0, GAME_WARMUP_MS - (now - gameStartTime));
   }
 
   function initGame(opts) {
@@ -4692,7 +4683,7 @@
     }
 
     const chaseFoe = aiNearestEnemy(d, spectateMode ? Infinity : 1800);
-    if (chaseFoe && !isMatchWarmup(now)) {
+    if (chaseFoe) {
       const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
       if (!aiShouldDeferChaseForAmmo(d, chaseFoe, chaseDist)) {
         d.aiTarget = chaseFoe;
@@ -4731,7 +4722,6 @@
 
   function updateAIInteractions(d, now) {
     if (!d.alive) return;
-    if (isMatchWarmup(now)) return;
     const tune = aiTune;
 
     if (!spectateMode) {
@@ -5206,15 +5196,6 @@
       paintViewport(camX, camY, 0, 0, VIEW_W, VIEW_H, { p1Aim: true, p1WallPreview: true, isRightPane: false });
     }
     drawMinimap();
-    if (running && isMatchWarmup(performance.now())) {
-      const left = Math.ceil(getMatchWarmupLeft(performance.now()) / 1000);
-      ctx.fillStyle = "rgba(5,5,8,0.4)";
-      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
-      ctx.fillStyle = "#eee";
-      ctx.font = "600 17px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText("Warm-up — bots won't shoot (" + left + "s)", VIEW_W * 0.5, VIEW_H * 0.46);
-    }
   }
 
   function loop(ts, gen) {

@@ -1115,6 +1115,14 @@
     ["rare", 0.32],
     ["epic", 0.18],
   ];
+  const BOT_GUN_RARITY_WEIGHTS = [
+    ["common", 0.45],
+    ["uncommon", 0.45],
+    ["rare", 0.07],
+    ["epic", 0.03],
+  ];
+  const BOT_SPAWN_EXTRA_RARE_CHANCE = 0.12;
+  const BOT_SPAWN_EXTRA_EPIC_CHANCE = 0.05;
   const MED_POTION_WEIGHTS = [
     ["bottle", 0.40],
     ["carton", 0.40],
@@ -2337,6 +2345,36 @@
     };
   }
 
+  function makeBotGun(forcedTypeId) {
+    const typeId = forcedTypeId || pickGunTypeId();
+    const typeMeta = getGunTypeMeta(typeId);
+    if (typeMeta.id === "cats_claw") {
+      return makeGun(Math.random() < 0.35 ? "epic" : "rare", "cats_claw");
+    }
+    return makeGun(pickWeighted(BOT_GUN_RARITY_WEIGHTS), typeId);
+  }
+
+  function fitGunForRegularBot(gun) {
+    gun = normalizeGun(gun);
+    if (!gun) return makeBotGun();
+    if (isBossOnlyRarity(gun.rarity)) {
+      return makeBotGun(gun.type);
+    }
+    return gun;
+  }
+
+  function equipBotSpawnLoadout(bot) {
+    bot.inventory[0] = makeGun("common");
+    bot.inventory[1] = makeGun("uncommon");
+    const extraRoll = Math.random();
+    if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE) {
+      bot.inventory[2] = makeGun("epic");
+    } else if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE + BOT_SPAWN_EXTRA_RARE_CHANCE) {
+      bot.inventory[2] = makeGun("rare");
+    }
+    bot.invIndex = randInt(0, 1);
+  }
+
   function rollGunBaseDamage(g) {
     return randInt(g.dmgMin, g.dmgMax);
   }
@@ -2507,6 +2545,7 @@
   function addGunToEntity(e, gun, opts) {
     gun = normalizeGun(gun);
     if (!gun) return false;
+    if (e.isAI && !e.isBoss) gun = fitGunForRegularBot(gun);
     if (e.isBoss && !isRareOrStronger(gun.rarity)) return false;
     for (let i = 0; i < INV_SLOTS; i++) {
       if (!e.inventory[i]) {
@@ -2693,12 +2732,14 @@
     const regularAiCount = TOTAL_DOTS - BOSS_COUNT - 1 - humanExtra;
     const usedBotNames = new Set();
     for (let i = 0; i < regularAiCount; i++) {
-      dots.push(spawnDot({
+      const bot = spawnDot({
         id: nextId++,
         name: makeBotName(usedBotNames),
         color: AI_COLORS[i % AI_COLORS.length],
         isAI: true,
-      }));
+      });
+      equipBotSpawnLoadout(bot);
+      dots.push(bot);
     }
     for (let b = 0; b < BOSS_COUNT; b++) {
       const boss = spawnDot({
@@ -2975,13 +3016,13 @@
     } else if (now - e.lastShot < gun.fireMs) {
       return;
     }
-    if (getGunAmmo(gun) <= 0) return;
+    if (!hasInfiniteAmmo(e) && getGunAmmo(gun) <= 0) return;
     if (e.bloomGunType !== gun.type) {
       e.bloomLevel = 0;
       e.bloomGunType = gun.type;
     }
     e.lastShot = now;
-    consumeGunAmmo(e, 1);
+    if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
     addBloomOnShot(e, gun);
     if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
     if (burstSize > 1) {

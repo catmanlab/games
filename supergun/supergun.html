@@ -1038,6 +1038,8 @@
   const MED_CHEST_COUNT = 28;
   const AMMO_BASKET_COUNT = 24;
   const GUN_START_AMMO = 50;
+  const GAME_WARMUP_MS = 12000;
+  const SPAWN_MIN_DIST = 280;
   const AI_AMMO_LOW = 18;
   const AI_AMMO_CRITICAL = 6;
   const DOT_SPEED = 200;
@@ -1270,6 +1272,7 @@
   let spectateTargetId = null;
   let defeatStatsRecorded = false;
   let lastTs = 0;
+  let gameStartTime = 0;
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
   let playerName = "You";
@@ -2613,11 +2616,13 @@
 
   function spawnDot(opts) {
     const pad = opts.isBoss ? BOSS_R + 8 : DOT_R + 8;
+    const x = typeof opts.x === "number" ? opts.x : rand(pad, WORLD_W - pad);
+    const y = typeof opts.y === "number" ? opts.y : rand(pad, WORLD_H - pad);
     return {
       id: opts.id,
       name: opts.name,
-      x: rand(pad, WORLD_W - pad),
-      y: rand(pad, WORLD_H - pad),
+      x,
+      y,
       vx: 0, vy: 0,
       color: opts.color,
       isPlayer: !!opts.isPlayer,
@@ -2674,6 +2679,37 @@
     return getEntityAimWorld(player2);
   }
 
+  function pickSpreadSpawnPoint(dots, opts) {
+    const pad = (opts.isBoss ? BOSS_R : DOT_R) + 8;
+    const minDist = opts.isBoss ? 340 : SPAWN_MIN_DIST;
+    for (let t = 0; t < 160; t++) {
+      const x = rand(pad, WORLD_W - pad);
+      const y = rand(pad, WORLD_H - pad);
+      let ok = true;
+      for (const d of dots) {
+        if (dist(x, y, d.x, d.y) < minDist) {
+          ok = false;
+          break;
+        }
+      }
+      if (ok) return { x, y };
+    }
+    return { x: rand(pad, WORLD_W - pad), y: rand(pad, WORLD_H - pad) };
+  }
+
+  function spawnDotSpread(opts, dots) {
+    const pt = pickSpreadSpawnPoint(dots, opts);
+    return spawnDot({ ...opts, x: pt.x, y: pt.y });
+  }
+
+  function isMatchWarmup(now) {
+    return now - gameStartTime < GAME_WARMUP_MS;
+  }
+
+  function getMatchWarmupLeft(now) {
+    return Math.max(0, GAME_WARMUP_MS - (now - gameStartTime));
+  }
+
   function initGame(opts) {
     opts = opts || {};
     dots = [];
@@ -2717,14 +2753,15 @@
 
     player2 = null;
     let nextId = 0;
-    player = spawnDot({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
+    dots = [];
+    player = spawnDotSpread({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 }, dots);
     dots.push(player);
 
     if (twoPlayerMode) {
-      player2 = spawnDot({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 });
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
       dots.push(player2);
     } else if (onlineMode && onlineHost) {
-      player2 = spawnDot({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 });
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
       dots.push(player2);
     }
 
@@ -2732,23 +2769,23 @@
     const regularAiCount = TOTAL_DOTS - BOSS_COUNT - 1 - humanExtra;
     const usedBotNames = new Set();
     for (let i = 0; i < regularAiCount; i++) {
-      const bot = spawnDot({
+      const bot = spawnDotSpread({
         id: nextId++,
         name: makeBotName(usedBotNames),
         color: AI_COLORS[i % AI_COLORS.length],
         isAI: true,
-      });
+      }, dots);
       equipBotSpawnLoadout(bot);
       dots.push(bot);
     }
     for (let b = 0; b < BOSS_COUNT; b++) {
-      const boss = spawnDot({
+      const boss = spawnDotSpread({
         id: nextId++,
         name: "Boss " + (b + 1),
         color: "#e74c3c",
         isAI: true,
         isBoss: true,
-      });
+      }, dots);
       boss.inventory[0] = pickBossWeapon();
       boss.invIndex = 0;
       dots.push(boss);
@@ -2814,6 +2851,7 @@
     buildInventoryHudP2();
     refreshInventoryHud();
     updateHud();
+    gameStartTime = performance.now();
   }
 
   function buildInventoryHudP2() {
@@ -4622,7 +4660,7 @@
     }
 
     const chaseFoe = aiNearestEnemy(d, spectateMode ? Infinity : 1800);
-    if (chaseFoe) {
+    if (chaseFoe && !isMatchWarmup(now)) {
       const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
       if (!aiShouldDeferChaseForAmmo(d, chaseFoe, chaseDist)) {
         d.aiTarget = chaseFoe;
@@ -4661,6 +4699,7 @@
 
   function updateAIInteractions(d, now) {
     if (!d.alive) return;
+    if (isMatchWarmup(now)) return;
     const tune = aiTune;
 
     if (!spectateMode) {
@@ -4699,7 +4738,7 @@
       }
       if (aim) {
         d.aiTarget = aim;
-        const shootChance = spectateMode ? 0.98 : 0.92;
+        const shootChance = spectateMode ? 0.98 : 0.48;
         if (dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < shootChance) {
           tryShoot(d, aim.x, aim.y, now, spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy);
         }
@@ -5135,6 +5174,15 @@
       paintViewport(camX, camY, 0, 0, VIEW_W, VIEW_H, { p1Aim: true, p1WallPreview: true, isRightPane: false });
     }
     drawMinimap();
+    if (running && isMatchWarmup(performance.now())) {
+      const left = Math.ceil(getMatchWarmupLeft(performance.now()) / 1000);
+      ctx.fillStyle = "rgba(5,5,8,0.4)";
+      ctx.fillRect(0, 0, VIEW_W, VIEW_H);
+      ctx.fillStyle = "#eee";
+      ctx.font = "600 17px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("Warm-up — bots won't shoot (" + left + "s)", VIEW_W * 0.5, VIEW_H * 0.46);
+    }
   }
 
   function loop(ts, gen) {

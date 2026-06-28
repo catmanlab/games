@@ -37,42 +37,6 @@
       font-weight: 600;
       letter-spacing: 0.04em;
     }
-    #devBuildBanner {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      padding: 8px 12px;
-      text-align: center;
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      color: #1a1028;
-      background: linear-gradient(90deg, #ffe066, #ffd700);
-      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.45);
-      pointer-events: none;
-    }
-    body.dev-build-visible #devBuildBanner { display: block; }
-    body.dev-build-visible { padding-top: 34px; }
-    #testModeBanner {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 9999;
-      padding: 8px 12px;
-      text-align: center;
-      font-size: 0.82rem;
-      font-weight: 700;
-      letter-spacing: 0.04em;
-      color: #1a1028;
-      background: linear-gradient(90deg, #e056fd, #c77dff);
-      box-shadow: 0 2px 12px rgba(192, 125, 255, 0.45);
-      pointer-events: none;
-    }
     #menuScreen {
       width: 100%;
       max-width: 440px;
@@ -849,7 +813,6 @@
   </style>
 </head>
 <body>
-  <div id="devBuildBanner"></div>
   <h1 class="page-title">Supergun</h1>
 
   <div id="menuScreen">
@@ -1069,18 +1032,6 @@
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
   const SIGNATURE_BOSS_COLOR = "#ffd700";
-  const TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP = true;
-
-  function syncDevBuildUi() {
-    const build = (document.querySelector('meta[name="supergun-build"]') || {}).content || "unknown";
-    document.body.classList.toggle("dev-build-visible", TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP);
-    const banner = document.getElementById("devBuildBanner");
-    if (banner) {
-      banner.textContent = "LOCAL BUILD " + build + " · map " + WORLD_W + "×" + WORLD_H + " · ~" + MAP_CROSS_SECONDS + "s to cross · yellow hunters on minimap";
-    }
-    document.title = TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP ? "Supergun [dev minimap]" : "Supergun";
-  }
-  syncDevBuildUi();
 
   const TOTAL_DOTS = 16 + SIGNATURE_BOSS_COUNT;
   const SIGNATURE_BOSSES = [
@@ -2939,7 +2890,7 @@
         isAI: true,
         isBoss: true,
         isSignatureBoss: true,
-        hideOnMinimap: !TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP,
+        hideOnMinimap: true,
         signatureBossGun: def.gunId,
       }, dots);
       hunter.inventory[0] = makeSignatureBossGun(def.gunId);

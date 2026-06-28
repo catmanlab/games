@@ -3,6 +3,10 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+  <meta http-equiv="Pragma" content="no-cache" />
+  <meta http-equiv="Expires" content="0" />
+  <meta name="supergun-build" content="local-2026-06-27d" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <title>Supergun</title>
@@ -33,6 +37,25 @@
       font-weight: 600;
       letter-spacing: 0.04em;
     }
+    #devBuildBanner {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 9999;
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      color: #1a1028;
+      background: linear-gradient(90deg, #ffe066, #ffd700);
+      box-shadow: 0 2px 12px rgba(255, 215, 0, 0.45);
+      pointer-events: none;
+    }
+    body.dev-build-visible #devBuildBanner { display: block; }
+    body.dev-build-visible { padding-top: 34px; }
     #testModeBanner {
       display: none;
       position: fixed;
@@ -50,8 +73,6 @@
       box-shadow: 0 2px 12px rgba(192, 125, 255, 0.45);
       pointer-events: none;
     }
-    body.test-cats-claw #testModeBanner { display: block; }
-    body.test-cats-claw { padding-top: 34px; }
     #menuScreen {
       width: 100%;
       max-width: 440px;
@@ -828,7 +849,7 @@
   </style>
 </head>
 <body>
-  <div id="testModeBanner">TEST BUILD — Cat's Claw only (local file, not GitHub)</div>
+  <div id="devBuildBanner"></div>
   <h1 class="page-title">Supergun</h1>
 
   <div id="menuScreen">
@@ -864,7 +885,7 @@
       </div>
       <p id="accountStats" class="account-stats"></p>
       <h1>Supergun</h1>
-      <p class="menu-tag">16-dot arena · chests · guns · last dot wins</p>
+      <p class="menu-tag">16-dot arena · 7 hidden hunters · ~50s to cross the map · chests · guns · last dot wins</p>
       <div class="menu-preview-row">
         <span id="menuDotPreview" aria-hidden="true"></span>
       </div>
@@ -938,11 +959,11 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls), <strong>Cat's Claw</strong> (very rare, Legendary/Mythic only, large blast). Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
-      Defeat <strong>5 bosses</strong> for <strong>Legendary</strong> or <strong>Mythic</strong> guns. Chests give Common through Epic. Be the last dot alive to win.
-      The arena is <strong>huge</strong> — the view follows you; use the corner <strong>minimap</strong> to see the whole map.
+      Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 yellow signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
+      The arena is <strong>huge</strong> — about <strong>50 seconds</strong> to run left to right at full speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
   </div>
@@ -1028,23 +1049,49 @@
   const SNIPER_RARE_CLOSE_DMG = 25;
   const SNIPER_RARE_FAR_DMG = 102;
   const SNIPER_CLOSE_RANGE = 110;
-  const WORLD_W = 7200;
-  const WORLD_H = 4500;
+  const DOT_SPEED = 200;
+  const MAP_CROSS_SECONDS = 50;
+  const WORLD_W = DOT_SPEED * MAP_CROSS_SECONDS;
+  const WORLD_H = Math.round(WORLD_W * (4500 / 7200));
+  const MAP_SCALE = WORLD_W / 7200;
   const MAX_HEALTH = 200;
   const KILL_HEAL = 50;
   const DOT_R = 10;
   const BOSS_R = 18;
-  const CHEST_COUNT = 40;
-  const MED_CHEST_COUNT = 28;
-  const AMMO_BASKET_COUNT = 24;
+  const CHEST_COUNT = Math.round(40 * MAP_SCALE);
+  const MED_CHEST_COUNT = Math.round(28 * MAP_SCALE);
+  const AMMO_BASKET_COUNT = Math.round(24 * MAP_SCALE);
   const GUN_START_AMMO = 50;
-  const SPAWN_MIN_DIST = 280;
+  const SPAWN_MIN_DIST = Math.round(280 * MAP_SCALE);
   const AI_AMMO_LOW = 18;
   const AI_AMMO_CRITICAL = 6;
-  const DOT_SPEED = 200;
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
-  const TOTAL_DOTS = 16;
+  const SIGNATURE_BOSS_COUNT = 7;
+  const SIGNATURE_BOSS_COLOR = "#ffd700";
+  const TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP = true;
+
+  function syncDevBuildUi() {
+    const build = (document.querySelector('meta[name="supergun-build"]') || {}).content || "unknown";
+    document.body.classList.toggle("dev-build-visible", TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP);
+    const banner = document.getElementById("devBuildBanner");
+    if (banner) {
+      banner.textContent = "LOCAL BUILD " + build + " · map " + WORLD_W + "×" + WORLD_H + " · ~" + MAP_CROSS_SECONDS + "s to cross · yellow hunters on minimap";
+    }
+    document.title = TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP ? "Supergun [dev minimap]" : "Supergun";
+  }
+  syncDevBuildUi();
+
+  const TOTAL_DOTS = 16 + SIGNATURE_BOSS_COUNT;
+  const SIGNATURE_BOSSES = [
+    { name: "Dogshot", gunId: "dogshot_smash_pistol" },
+    { name: "Snowstorm", gunId: "snowstorm_smg" },
+    { name: "Swift", gunId: "swift_burst_assault_rifle" },
+    { name: "Crackshot", gunId: "crackshot_shotgun" },
+    { name: "Zeus", gunId: "zeus_drum_sg" },
+    { name: "Foxly", gunId: "foxly_assault_rifle" },
+    { name: "Meowie", gunId: "meowie_rpg" },
+  ];
   const INV_SLOTS = 5;
 
   const RARITIES = {
@@ -1075,10 +1122,22 @@
     sniper: "sniper",
     revolver: "revolver",
     rpg: "RPG",
-    cats_claw: "cats claw",
+    dogshot_smash_pistol: "dogshot's smash pistol",
+    snowstorm_smg: "snowstorm's smg",
+    swift_burst_assault_rifle: "swift's burst ar",
+    crackshot_shotgun: "crackshot's shotgun",
+    zeus_drum_sg: "zeus's drum shotgun",
+    foxly_assault_rifle: "foxly's assault rifle",
+    meowie_rpg: "meowie rpg",
   };
   const GUN_IMAGE_ALT_NAMES = {
-    cats_claw: ["cats claw", "cat's claw", "Cat's Claw", "cats_claw", "Cats Claw", "cats claw.jpg.png"],
+    dogshot_smash_pistol: ["dogshot's smash pistol", "dogshots smash pistol", "Dogshot's Smash Pistol"],
+    snowstorm_smg: ["snowstorm's smg", "snowstorms smg", "Snowstorm's SMG"],
+    swift_burst_assault_rifle: ["swift's burst ar", "swifts burst ar", "Swift's Burst AR"],
+    crackshot_shotgun: ["crackshot's shotgun", "crackshots shotgun", "Crackshot's Shotgun"],
+    zeus_drum_sg: ["zeus's drum shotgun", "zeus drum shotgun", "Zeus' Drum SG", "zues's drum shotgun"],
+    foxly_assault_rifle: ["foxly's assault rifle", "foxlys assault rifle", "Foxly's Assault Rifle"],
+    meowie_rpg: ["meowie rpg", "Meowie's RPG", "meowie_rpg", "cats claw", "cat's claw", "Cat's Claw", "cats_claw", "Cats Claw", "cats claw.jpg.png", "cats claw.png"],
     drum_shotgun: ["drum shotgun", "Drum Shotgun", "drum_shotgun"],
     strike_shotgun: ["strike shotgun", "Strike Shotgun", "strike_shotgun"],
     sweep_assault_rifle: ["sweep ar", "sweep assault rifle", "Sweep Assault Rifle", "sweep_assault_rifle"],
@@ -1106,18 +1165,35 @@
     { id: "scar", label: "SCAR", w: 0.06, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95, bloomPerShot: 14 },
     { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5, bloomPerShot: 2 },
     { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05, bloomPerShot: 0 },
-    { id: "cats_claw", label: "Cat's Claw", w: 0.012, dmgMul: 120 / 45, dmgMulHi: 168 / 65, fireMul: 1, spreadMul: 0.06, bloomPerShot: 0 },
+    { id: "dogshot_smash_pistol", label: "Dogshot's Smash Pistol", w: 0.008, bloomPerShot: 4, fireMul: 0.72, spreadMul: 0.65 },
+    { id: "snowstorm_smg", label: "Snowstorm's SMG", w: 0.008, bloomPerShot: 3 },
+    { id: "swift_burst_assault_rifle", label: "Swift's Burst AR", w: 0.008, bloomPerShot: 2 },
+    { id: "crackshot_shotgun", label: "Crackshot's Shotgun", w: 0.008, bloomPerShot: 5 },
+    { id: "zeus_drum_sg", label: "Zeus' Drum SG", w: 0.006, bloomPerShot: 3 },
+    { id: "foxly_assault_rifle", label: "Foxly's Assault Rifle", w: 0.008, bloomPerShot: 3 },
+    { id: "meowie_rpg", label: "Meowie's RPG", w: 0.006, bloomPerShot: 1 },
   ];
 
-  const TEST_CATS_CLAW_ONLY = false;
+  const SIGNATURE_GUN_BASE = {
+    dogshot_smash_pistol: "revolver",
+    snowstorm_smg: "smg",
+    swift_burst_assault_rifle: "burst_assault_rifle",
+    crackshot_shotgun: "tactical_shotgun",
+    zeus_drum_sg: "drum_shotgun",
+    foxly_assault_rifle: "scar",
+    meowie_rpg: "rpg",
+  };
 
-  function syncTestModeUi() {
-    document.body.classList.toggle("test-cats-claw", TEST_CATS_CLAW_ONLY);
-    document.title = TEST_CATS_CLAW_ONLY ? "Supergun [TEST Cat's Claw]" : "Supergun";
-    const banner = document.getElementById("testModeBanner");
-    if (banner) banner.style.display = TEST_CATS_CLAW_ONLY ? "block" : "none";
-  }
-  syncTestModeUi();
+  const ART_SPRITE_GUN_IDS = new Set(["meowie_rpg"]);
+  const SIGNATURE_GUN_IDS = new Set([
+    "dogshot_smash_pistol",
+    "snowstorm_smg",
+    "swift_burst_assault_rifle",
+    "crackshot_shotgun",
+    "zeus_drum_sg",
+    "foxly_assault_rifle",
+    "meowie_rpg",
+  ]);
 
   const CHEST_DROP_WEIGHTS = [
     ["common", 0.22],
@@ -1154,30 +1230,22 @@
     rare: 20,
   };
   const BOSS_DROP_WEIGHTS = [
-    ["legendary", 0.55],
-    ["mythic", 0.45],
-  ];
-  const CATS_CLAW_RARITY_WEIGHTS = [
-    ["epic", 0.30],
-    ["legendary", 0.45],
-    ["mythic", 0.25],
+    ["legendary", 1],
   ];
   const THERMAL_SCOPED_AR_RARITY_WEIGHTS = [
-    ["epic", 0.38],
-    ["legendary", 0.42],
-    ["mythic", 0.20],
+    ["epic", 0.475],
+    ["legendary", 0.525],
   ];
   const BOSS_WEAPON_WEIGHTS = [
-    ["rare", 0.22],
-    ["epic", 0.38],
-    ["legendary", 0.28],
-    ["mythic", 0.12],
+    ["rare", 0.25],
+    ["epic", 0.432],
+    ["legendary", 0.318],
   ];
   const WALL_MAX_CHARGES = 5;
   const WALL_RECHARGE_MS = 5000;
   const WALL_MAX_HP = 5;
   const RPG_EXPLODE_RADIUS = 115;
-  const CATS_CLAW_EXPLODE_RADIUS = Math.round(RPG_EXPLODE_RADIUS * 1.15);
+  const MEOWIE_RPG_EXPLODE_RADIUS = Math.round(RPG_EXPLODE_RADIUS * 1.15);
   const RPG_WALL_DMG = Math.ceil(WALL_MAX_HP / 2);
   const GRID_STEP = 80;
   const WALL_LENGTH = 100;
@@ -2044,8 +2112,21 @@
     return out;
   }
 
+  function isArtSpriteGun(typeId) {
+    return ART_SPRITE_GUN_IDS.has(typeId);
+  }
+
+  function isSignatureGun(typeId) {
+    return SIGNATURE_GUN_IDS.has(typeId);
+  }
+
+  function isMeowieRpg(gunOrType) {
+    const typeId = typeof gunOrType === "string" ? gunOrType : (gunOrType && gunOrType.type);
+    return typeId === "meowie_rpg";
+  }
+
   function finalizeGunImageReady(typeId, img, src) {
-    const useImg = (typeId === "cats_claw") ? stripNearWhiteBackground(img) : img;
+    const useImg = isArtSpriteGun(typeId) ? stripNearWhiteBackground(img) : img;
     gunImageCache[typeId] = { img: useImg, loadedSrc: src };
     gunImageReady[typeId] = true;
     gunImageFailed[typeId] = false;
@@ -2053,7 +2134,7 @@
   }
 
   function markGunImageReady(typeId, img, src) {
-    if (typeId === "cats_claw") {
+    if (isArtSpriteGun(typeId)) {
       const processed = stripNearWhiteBackground(img);
       if (processed.complete && processed.naturalWidth > 0) {
         finalizeGunImageReady(typeId, processed, src);
@@ -2166,7 +2247,7 @@
       const ix = -w * 0.5;
       const iy = -h * 0.5;
       ctx.drawImage(img, ix, iy, w, h);
-      if (gun && gun.color && opts.tintRarity !== false && typeId !== "cats_claw") {
+      if (gun && gun.color && opts.tintRarity !== false && !isArtSpriteGun(typeId)) {
         applyRarityTintToSprite(ctx, ix, iy, w, h, gun.color);
       }
       ctx.restore();
@@ -2186,7 +2267,26 @@
   }
 
   function getGunTypeMeta(typeId) {
-    return GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
+    const meta = GUN_TYPES.find((g) => g.id === typeId) || GUN_TYPES.find((g) => g.id === "assault_rifle");
+    const baseId = SIGNATURE_GUN_BASE[typeId];
+    if (!baseId) return meta;
+    const base = GUN_TYPES.find((g) => g.id === baseId);
+    if (!base) return meta;
+    const merged = {
+      ...base,
+      id: meta.id,
+      label: meta.label,
+      w: meta.w,
+      bloomPerShot: typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : base.bloomPerShot,
+    };
+    ["dmgMul", "dmgMulHi", "fireMul", "spreadMul", "burstSize", "burstShotMs", "burstPauseMs", "pellets"].forEach((key) => {
+      if (meta[key] != null) merged[key] = meta[key];
+    });
+    return merged;
+  }
+
+  function resolveGunBehaviorType(typeId) {
+    return SIGNATURE_GUN_BASE[typeId] || typeId;
   }
 
   function getGunBloomPerShot(typeId) {
@@ -2212,15 +2312,15 @@
   }
 
   function isExplosiveGun(gun) {
-    return gun && (gun.type === "rpg" || gun.type === "cats_claw");
+    return gun && (gun.type === "rpg" || gun.type === "meowie_rpg");
   }
 
   function isRpgGun(gun) {
-    return gun && gun.type === "rpg";
+    return gun && (gun.type === "rpg" || gun.type === "meowie_rpg");
   }
 
   function getExplodeRadius(gunType) {
-    if (gunType === "cats_claw") return CATS_CLAW_EXPLODE_RADIUS;
+    if (gunType === "meowie_rpg") return MEOWIE_RPG_EXPLODE_RADIUS;
     return RPG_EXPLODE_RADIUS;
   }
 
@@ -2231,6 +2331,7 @@
   }
 
   function applyGunTypeDistanceModifier(type, dmg, distance) {
+    type = resolveGunBehaviorType(type);
     switch (type) {
       case "pistol":
         return dmg * 0.95;
@@ -2291,13 +2392,13 @@
         const t = clamp((distance - 80) / 650, 0, 1);
         return dmg * (0.9 + 0.35 * t);
       }
-      case "cats_claw": {
-        const t = clamp((distance - 80) / 650, 0, 1);
-        return dmg * (0.9 + 0.35 * t);
-      }
       default:
         return dmg;
     }
+  }
+
+  function makeSignatureBossGun(gunId) {
+    return makeGun("mythic", gunId, { lockRarity: true });
   }
 
   function makeBossDropGun() {
@@ -2306,10 +2407,21 @@
 
   function normalizeGun(gun) {
     if (!gun || typeof gun !== "object") return gun;
-    const meta = getGunTypeMeta(gun.type);
+    const meta = GUN_TYPES.find((g) => g.id === gun.type) || GUN_TYPES.find((g) => g.id === "assault_rifle");
     const ammo = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    if (isSignatureGun(meta.id)) {
+      return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo };
+    }
+    let rarityId = gun.rarity;
+    if (rarityId === "mythic" && !isSignatureGun(meta.id)) {
+      rarityId = "legendary";
+    }
+    const r = RARITIES[rarityId] || RARITIES.rare;
     return {
       ...gun,
+      rarity: rarityId,
+      color: r.color,
+      label: r.label,
       type: meta.id,
       typeLabel: meta.label,
       ammo,
@@ -2347,15 +2459,18 @@
     return true;
   }
 
-  function makeGun(rarityId, forcedTypeId) {
+  function makeGun(rarityId, forcedTypeId, opts) {
+    opts = opts || {};
     const typeId = forcedTypeId || pickGunTypeId();
     const typeMeta = getGunTypeMeta(typeId);
-    if (typeMeta.id === "cats_claw") {
-      rarityId = pickWeighted(CATS_CLAW_RARITY_WEIGHTS);
+    if (isSignatureGun(typeMeta.id)) {
+      rarityId = "mythic";
     } else if (typeMeta.id === "thermal_scoped_assault_rifle") {
       rarityId = pickWeighted(THERMAL_SCOPED_AR_RARITY_WEIGHTS);
+    } else if (rarityId === "mythic" && !isSignatureGun(typeMeta.id)) {
+      rarityId = "legendary";
     }
-    const r = RARITIES[rarityId];
+    const r = RARITIES[rarityId] || RARITIES.rare;
     const dmgMul = typeMeta.dmgMul || 1;
     const dmgMulHi = typeMeta.dmgMulHi ?? dmgMul;
     const fireMul = typeMeta.fireMul || 1;
@@ -2379,8 +2494,8 @@
   function makeBotGun(forcedTypeId) {
     const typeId = forcedTypeId || pickGunTypeId();
     const typeMeta = getGunTypeMeta(typeId);
-    if (typeMeta.id === "cats_claw") {
-      return makeGun(Math.random() < 0.35 ? "epic" : "rare", "cats_claw");
+    if (isSignatureGun(typeMeta.id)) {
+      return makeGun("mythic", typeMeta.id, { lockRarity: true });
     }
     if (typeMeta.id === "thermal_scoped_assault_rifle") {
       return makeGun(pickWeighted(THERMAL_SCOPED_AR_RARITY_WEIGHTS), "thermal_scoped_assault_rifle");
@@ -2658,6 +2773,9 @@
       color: opts.color,
       isPlayer: !!opts.isPlayer,
       isBoss: !!opts.isBoss,
+      isSignatureBoss: !!opts.isSignatureBoss,
+      hideOnMinimap: !!opts.hideOnMinimap,
+      signatureBossGun: opts.signatureBossGun || null,
       isAI: !!opts.isAI,
       alive: true,
       health: opts.isBoss ? 400 : MAX_HEALTH,
@@ -2789,7 +2907,7 @@
     }
 
     const humanExtra = (twoPlayerMode ? 1 : 0) + (onlineMode && onlineHost ? 1 : 0);
-    const regularAiCount = TOTAL_DOTS - BOSS_COUNT - 1 - humanExtra;
+    const regularAiCount = TOTAL_DOTS - BOSS_COUNT - SIGNATURE_BOSS_COUNT - 1 - humanExtra;
     const usedBotNames = new Set();
     for (let i = 0; i < regularAiCount; i++) {
       const bot = spawnDotSpread({
@@ -2812,6 +2930,21 @@
       boss.inventory[0] = pickBossWeapon();
       boss.invIndex = 0;
       dots.push(boss);
+    }
+    for (const def of SIGNATURE_BOSSES) {
+      const hunter = spawnDotSpread({
+        id: nextId++,
+        name: def.name,
+        color: SIGNATURE_BOSS_COLOR,
+        isAI: true,
+        isBoss: true,
+        isSignatureBoss: true,
+        hideOnMinimap: !TEST_SHOW_SIGNATURE_BOSSES_ON_MINIMAP,
+        signatureBossGun: def.gunId,
+      }, dots);
+      hunter.inventory[0] = makeSignatureBossGun(def.gunId);
+      hunter.invIndex = 0;
+      dots.push(hunter);
     }
 
     if (rightHud) rightHud.classList.toggle("visible", twoPlayerMode);
@@ -2943,8 +3076,8 @@
           el.appendChild(wrapEl);
         }
         wrapEl.style.display = "flex";
-        wrapEl.classList.toggle("art-sprite", ng.type === "cats_claw");
-        wrapEl.style.setProperty("--rarity-tint", ng.type === "cats_claw" ? "transparent" : ng.color);
+        wrapEl.classList.toggle("art-sprite", isArtSpriteGun(ng.type));
+        wrapEl.style.setProperty("--rarity-tint", isArtSpriteGun(ng.type) ? "transparent" : ng.color);
         wrapEl.style.boxShadow = "inset 0 0 0 2px " + ng.color;
         let imgEl = wrapEl.querySelector(".gun-icon");
         if (!imgEl) {
@@ -3126,7 +3259,7 @@
         ownerId: e.id,
         gun: pelletGun,
         explosive,
-        color: explosive ? (gun.type === "cats_claw" ? gun.color : "#ff6b35") : gun.color,
+        color: explosive ? (isMeowieRpg(gun) ? gun.color : "#ff6b35") : gun.color,
         life: explosive ? 3.2 : 2.4,
       });
     }
@@ -3175,7 +3308,7 @@
   }
 
   function isBossOnlyRarity(rarity) {
-    return rarity === "legendary" || rarity === "mythic";
+    return rarity === "legendary";
   }
 
   function isRareOrStronger(rarity) {
@@ -3186,8 +3319,19 @@
     return makeGun(pickWeighted(BOSS_WEAPON_WEIGHTS));
   }
 
+  function sanitizeSignatureBossInventory(d) {
+    if (!d || !d.isSignatureBoss || !d.signatureBossGun) return;
+    d.inventory[0] = makeSignatureBossGun(d.signatureBossGun);
+    d.invIndex = 0;
+    for (let i = 1; i < INV_SLOTS; i++) d.inventory[i] = null;
+  }
+
   function sanitizeBossInventory(d) {
     if (!d || !d.isBoss) return;
+    if (d.isSignatureBoss) {
+      sanitizeSignatureBossInventory(d);
+      return;
+    }
     let hasValid = false;
     for (let i = 0; i < INV_SLOTS; i++) {
       const g = d.inventory[i];
@@ -3248,8 +3392,8 @@
     const gun = b.gun;
     const gunType = gun && gun.type ? gun.type : "rpg";
     const radius = getExplodeRadius(gunType);
-    const isCatsClaw = gunType === "cats_claw";
-    const clawFxColor = gun && gun.color ? gun.color : "#ff9800";
+    const isMeowie = isMeowieRpg(gunType);
+    const meowieFxColor = gun && gun.color ? gun.color : "#ff9800";
     const hitDist = dist(b.ox, b.oy, b.x, b.y);
     const centerDmg = gunDamage(gun, hitDist);
     explosions.push({ x: b.x, y: b.y, life: 0.35, maxLife: 0.35, radius });
@@ -3257,13 +3401,13 @@
     for (let w = walls.length - 1; w >= 0; w--) {
       const wall = walls[w];
       if (dist(b.x, b.y, wall.x, wall.y) > radius + wallExtentRadius(wall)) continue;
-      const wallDmg = isCatsClaw ? rollGunBaseDamage(gun) : RPG_WALL_DMG;
+      const wallDmg = isMeowie ? rollGunBaseDamage(gun) : RPG_WALL_DMG;
       wall.hp -= wallDmg;
       damageTexts.push({
         x: wall.x + rand(-6, 6),
         y: wall.y - wallExtentRadius(wall) - 4,
         text: wall.hp > 0 ? String(wall.hp) : "×",
-        color: isCatsClaw ? clawFxColor : "#ffb347",
+        color: isMeowie ? meowieFxColor : "#ffb347",
         life: 0.5,
         maxLife: 0.5,
         big: false,
@@ -3276,7 +3420,7 @@
       if (shotOwner && (d.id === shotOwner.id || areTeammates(shotOwner, d))) continue;
       const dDist = dist(b.x, b.y, d.x, d.y);
       if (dDist > radius + d.radius) continue;
-      const dmg = isCatsClaw
+      const dmg = isMeowie
         ? rollGunBaseDamage(gun)
         : Math.max(1, Math.round(centerDmg * (1 - dDist / (radius + d.radius)) * 0.85));
       d.health -= dmg;
@@ -3285,7 +3429,7 @@
         x: d.x + rand(-12, 12),
         y: d.y - d.radius - (d.isPlayer ? 14 : 28),
         text: String(dmg),
-        color: playerHit ? "#ffb347" : (isCatsClaw ? clawFxColor : "#ff6b35"),
+        color: playerHit ? "#ffb347" : (isMeowie ? meowieFxColor : "#ff6b35"),
         life: playerHit ? 1.35 : 0.9,
         maxLife: playerHit ? 1.35 : 0.9,
         big: playerHit,
@@ -3639,7 +3783,7 @@
     }
     dropVictimLoot(victim);
     pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
-    if (victim.isBoss) {
+    if (victim.isBoss && !victim.isSignatureBoss) {
       dropItemOnGround(victim.x, victim.y, makeBossDropGun());
     }
     checkWin();
@@ -3884,6 +4028,9 @@
         maxHealth: d.maxHealth,
         alive: d.alive,
         isBoss: !!d.isBoss,
+        isSignatureBoss: !!d.isSignatureBoss,
+        hideOnMinimap: !!d.hideOnMinimap,
+        signatureBossGun: d.signatureBossGun || null,
         isPlayer: !!d.isPlayer,
         isAI: !!d.isAI,
         name: d.name,
@@ -3939,6 +4086,9 @@
           d.kills = sd.kills || 0;
           d.color = sd.color;
           d.name = sd.name;
+          d.isSignatureBoss = !!sd.isSignatureBoss;
+          d.hideOnMinimap = !!sd.hideOnMinimap;
+          d.signatureBossGun = sd.signatureBossGun || null;
         } else {
           d = {
             id: sd.id,
@@ -3948,6 +4098,9 @@
             color: sd.color,
             isPlayer: sd.isPlayer,
             isBoss: sd.isBoss,
+            isSignatureBoss: !!sd.isSignatureBoss,
+            hideOnMinimap: !!sd.hideOnMinimap,
+            signatureBossGun: sd.signatureBossGun || null,
             isAI: sd.isAI,
             alive: sd.alive,
             health: sd.health,
@@ -4887,10 +5040,10 @@
       mctx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
     }
     for (const d of dots) {
-      if (!d.alive) continue;
+      if (!d.alive || d.hideOnMinimap) continue;
       mctx.fillStyle = d.isPlayer
         ? (d.playerSlot === 2 ? player2Color : playerColor)
-        : d.isBoss ? "#e74c3c" : d.color;
+        : d.isSignatureBoss ? SIGNATURE_BOSS_COLOR : d.isBoss ? "#e74c3c" : d.color;
       const r = d.isBoss ? 3.5 : d.isPlayer ? 3 : 2;
       mctx.beginPath();
       mctx.arc(d.x * sx, d.y * sy, r, 0, Math.PI * 2);
@@ -5094,7 +5247,13 @@
 
     const sorted = [...dots].filter(d => d.alive).sort((a, b) => a.radius - b.radius);
     for (const d of sorted) {
-      if (d.isBoss) {
+      if (d.isSignatureBoss) {
+        ctx.strokeStyle = "rgba(255,215,0,0.55)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius + 6, 0, Math.PI * 2);
+        ctx.stroke();
+      } else if (d.isBoss) {
         ctx.strokeStyle = "rgba(231,76,60,0.5)";
         ctx.lineWidth = 3;
         ctx.beginPath();
@@ -5115,7 +5274,7 @@
         const pct = d.health / d.maxHealth;
         ctx.fillStyle = "#222";
         ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w, 4);
-        ctx.fillStyle = d.isBoss ? "#e74c3c" : "#2ecc71";
+        ctx.fillStyle = d.isSignatureBoss ? "#ffd700" : d.isBoss ? "#e74c3c" : "#2ecc71";
         ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w * pct, 4);
       }
       ctx.fillStyle = "#ccc";

@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="local-2026-06-27d" />
+  <meta name="supergun-build" content="local-2026-06-29a" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <title>Supergun</title>
@@ -226,8 +226,16 @@
       font-size: 0.72rem;
       color: #ccc;
       text-shadow: 0 1px 4px #000;
+      border-radius: 4px;
     }
     #ammoHud.empty, #ammoHudP2.empty { color: #c66; }
+    #ammoHud.needs-reload, #ammoHudP2.needs-reload {
+      color: #555;
+      background: rgba(0, 0, 0, 0.82);
+      padding: 2px 6px;
+      text-shadow: none;
+    }
+    #ammoHud.reloading, #ammoHudP2.reloading { color: #999; }
     #healthBarWrap {
       position: relative;
       width: 100%;
@@ -573,6 +581,10 @@
       background: rgba(255, 255, 255, 0.94);
       box-shadow: inset 0 1px 2px rgba(0,0,0,0.25);
     }
+    .inv-slot .gun-icon-wrap.needs-reload {
+      filter: brightness(0.22) grayscale(0.35);
+      background: rgba(0, 0, 0, 0.75);
+    }
     .inv-slot .gun-icon-wrap::after {
       content: "";
       position: absolute;
@@ -819,6 +831,7 @@
     <div id="authCard" class="menu-card auth-card">
       <h1>Supergun</h1>
       <p class="menu-tag">Accounts are saved in this browser and stay after you restart your computer. They are only removed if you delete the account or clear site data.</p>
+      <p id="authStorageHint" class="menu-tag" style="margin-top:8px;color:#9ab;"></p>
       <div class="auth-tabs">
         <button type="button" id="tabLogin" class="active">Log in</button>
         <button type="button" id="tabRegister">Register</button>
@@ -896,8 +909,8 @@
           </label>
         </div>
         <span style="display:block;color:#777;font-size:0.76rem;line-height:1.45;">
-          <strong>Split screen</strong> · <strong>P1 (left):</strong> WASD · mouse aim/shoot · right-click build/med · 1–5 · Q drop · scroll slots<br />
-          <strong>P2 (right):</strong> Arrow keys · <strong>mouse on right half</strong> aim/shoot/build/med · <strong>Enter</strong> shoot · <strong>Shift</strong> build/med · <strong>/</strong> drop · F1–F5 or Numpad 1–5 · scroll on right half
+          <strong>Split screen</strong> · <strong>P1 (left):</strong> WASD · mouse aim/shoot · right-click build/med · 1–5 · Q drop · <strong>E</strong> reload · scroll slots<br />
+          <strong>P2 (right):</strong> Arrow keys · <strong>mouse on right half</strong> aim/shoot/build/med · <strong>Enter</strong> shoot · <strong>Shift</strong> build/med · <strong>/</strong> drop · <strong>.</strong> reload · F1–F5 or Numpad 1–5 · scroll on right half
         </span>
       </div>
       <div class="menu-online">
@@ -919,13 +932,13 @@
       <button type="button" id="btnDeleteAccount" class="btn-delete-account">Delete this account from this device…</button>
     </div>
     <p id="help">
-      Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor.
+      Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
-      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
+      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> add reserve ammo to the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong> split between magazine and reserve. Press <strong>E</strong> to reload (mag / reserve shown in HUD — black when you must reload). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
       Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
-      Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 yellow signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
+      Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
       The arena is <strong>huge</strong> — about <strong>50 seconds</strong> to run left to right at full speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
@@ -1031,7 +1044,17 @@
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
-  const SIGNATURE_BOSS_COLOR = "#ffd700";
+  const SIGNATURE_BOSS_COLOR = "#666";
+  const SIGNATURE_BOSS_IMAGE_DIR = "signature_bosses/";
+  const SIGNATURE_BOSS_IMAGE_FILES = {
+    dogshot: "dogshot-character.png",
+    snowstorm: "snowstorm-character.png",
+    swift: "swift-character.png",
+    crackshot: "crackshot-character.png",
+    zeus: "zeus-character.png",
+    foxly: "foxly-character.png",
+    meowie: "meowie-character.png",
+  };
 
   const TOTAL_DOTS = 16 + SIGNATURE_BOSS_COUNT;
   const SIGNATURE_BOSSES = [
@@ -1124,6 +1147,34 @@
     { id: "foxly_assault_rifle", label: "Foxly's Assault Rifle", w: 0.008, bloomPerShot: 3 },
     { id: "meowie_rpg", label: "Meowie's RPG", w: 0.006, bloomPerShot: 1 },
   ];
+
+  const GUN_RELOAD_STATS = {
+    pistol: { magSize: 8, reloadSec: 1.2 },
+    revolver: { magSize: 16, reloadSec: 1.6 },
+    smg: { magSize: 36, reloadSec: 1.78 },
+    combat_shotgun: { magSize: 12, reloadSec: 3 },
+    tactical_shotgun: { magSize: 18, reloadSec: 3.5 },
+    pump_shotgun: { magSize: 8, reloadSec: 2.25 },
+    strike_shotgun: { magSize: 6, reloadSec: 2.35 },
+    drum_shotgun: { magSize: 40, reloadSec: 3 },
+    famas: { magSize: 20, reloadSec: 1.75 },
+    assault_rifle: { magSize: 30, reloadSec: 1.5 },
+    suppressed_assault_rifle: { magSize: 30, reloadSec: 1.25 },
+    sweep_assault_rifle: { magSize: 30, reloadSec: 1.25 },
+    burst_assault_rifle: { magSize: 20, reloadSec: 1.75 },
+    scoped_assault_rifle: { magSize: 17, reloadSec: 1.5 },
+    thermal_scoped_assault_rifle: { magSize: 15, reloadSec: 1.5 },
+    scar: { magSize: 30, reloadSec: 1.5 },
+    sniper: { magSize: 1, reloadSec: 1.85 },
+    rpg: { magSize: 1, reloadSec: 2 },
+    dogshot_smash_pistol: { magSize: 10, reloadSec: 0.65 },
+    snowstorm_smg: { magSize: 45, reloadSec: 3.1 },
+    swift_burst_assault_rifle: { magSize: 30, reloadSec: 1.62 },
+    crackshot_shotgun: { magSize: 16, reloadSec: 1.5 },
+    zeus_drum_sg: { magSize: 40, reloadSec: 2.2 },
+    foxly_assault_rifle: { magSize: 35, reloadSec: 1 },
+    meowie_rpg: { magSize: 5, reloadSec: 0.25 },
+  };
 
   const SIGNATURE_GUN_BASE = {
     dogshot_smash_pistol: "revolver",
@@ -1321,6 +1372,8 @@
   const gunImageCache = {};
   const gunImageReady = {};
   const gunImageFailed = {};
+  const signatureBossImageCache = {};
+  const signatureBossImageReady = {};
   let groundMeds = [];
   let damageTexts = [];
   let walls = [];
@@ -1343,12 +1396,13 @@
   let onlineMatchRole = null;
   let onlineOpponentName = "";
   let onlineOpponentColor = "#fdcb6e";
-  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, useMed: false, build: false, drop: false, invIndex: 0 };
+  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, reload: false, useMed: false, build: false, drop: false, invIndex: 0 };
   let lastStateSentAt = 0;
   let lastInputSentAt = 0;
   let pendingOnlineMed = false;
   let pendingOnlineBuild = false;
   let pendingOnlineDrop = false;
+  let pendingOnlineReload = false;
   const ONLINE_WS_PORT = 3847;
   const ONLINE_SERVER_URL = (() => {
     const meta = document.querySelector('meta[name="supergun-ws-url"]');
@@ -1499,6 +1553,29 @@
       speedMult: lerp(0.78, 1.0, t),
       targetPlayerChance: lerp(0.18, 0.5, t),
     };
+  }
+
+  function localStorageWorks() {
+    try {
+      const k = "__supergun_storage_test__";
+      localStorage.setItem(k, "1");
+      localStorage.removeItem(k);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  function refreshAuthStorageHint() {
+    const el = document.getElementById("authStorageHint");
+    if (!el) return;
+    if (!localStorageWorks()) {
+      el.textContent = "Browser storage is blocked. Run serve.bat and open http://localhost:8777/supergun.html (do not open the file directly).";
+      el.style.color = "#f0a0a0";
+      return;
+    }
+    el.textContent = "Accounts saved only on: " + location.origin + " — GitHub, localhost, and 127.0.0.1 are separate.";
+    el.style.color = "#9ab";
   }
 
   function loadAccounts() {
@@ -1719,7 +1796,7 @@
     const accounts = loadAccounts();
     const acc = accounts[u];
     if (!acc) {
-      authMsg.textContent = "Wrong username or password. Use Register if you are new on this device.";
+      authMsg.textContent = "Wrong username or password on " + location.hostname + ". If you registered on GitHub Pages, log in there — or Register here for local play.";
       return;
     }
     const h = await hashPassword(p, acc.salt);
@@ -1925,6 +2002,10 @@
   document.getElementById("btnDeleteAccount").addEventListener("click", deleteCurrentAccount);
 
   loadSessionUser();
+  refreshAuthStorageHint();
+  if (!localStorageWorks() && authMsg) {
+    authMsg.textContent = "Cannot save accounts — use http://localhost:8777/supergun.html (double-click serve.bat).";
+  }
   updateMenuAuthUI();
   fetchShareLinks();
   connectOnline();
@@ -1999,16 +2080,27 @@
     return table[table.length - 1][0];
   }
 
-  function getGunImageBaseUrl() {
+  function getPageAssetBaseUrl() {
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      try {
+        return new URL("./", location.href).href;
+      } catch (e) { /* fall through */ }
+    }
     try {
-      return new URL(GUN_IMAGE_DIR, document.baseURI).href;
-    } catch (e) { /* fall through */ }
+      return new URL("./", document.baseURI).href;
+    } catch (e2) { /* fall through */ }
     const meta = document.querySelector('meta[name="supergun-share-url"]');
     if (meta && meta.content) {
       try {
-        return new URL(GUN_IMAGE_DIR, meta.content.trim()).href;
-      } catch (e2) { /* fall through */ }
+        return new URL("./", meta.content.trim()).href;
+      } catch (e3) { /* fall through */ }
     }
+    return "";
+  }
+
+  function getGunImageBaseUrl() {
+    const pageBase = getPageAssetBaseUrl();
+    if (pageBase) return pageBase + GUN_IMAGE_DIR;
     return GUN_IMAGE_DIR;
   }
 
@@ -2018,6 +2110,101 @@
       ? relativePath.slice(GUN_IMAGE_DIR.length)
       : relativePath;
     return base + file;
+  }
+
+  function getSignatureBossImageBaseUrl() {
+    const pageBase = getPageAssetBaseUrl();
+    if (pageBase) return pageBase + SIGNATURE_BOSS_IMAGE_DIR;
+    return SIGNATURE_BOSS_IMAGE_DIR;
+  }
+
+  function resolveSignatureBossImageSrc(filename) {
+    return getSignatureBossImageBaseUrl() + encodeURIComponent(filename);
+  }
+
+  function signatureBossImagePaths(filename) {
+    const paths = [];
+    const seen = new Set();
+    function add(base) {
+      const src = (base || "") + SIGNATURE_BOSS_IMAGE_DIR + filename;
+      if (seen.has(src)) return;
+      seen.add(src);
+      paths.push(src);
+    }
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      try { add(new URL("./", location.href).href); } catch (e) { /* fall through */ }
+    }
+    try { add(new URL("./", document.baseURI).href); } catch (e) { /* fall through */ }
+    const meta = document.querySelector('meta[name="supergun-share-url"]');
+    if (meta && meta.content) {
+      try { add(new URL("./", meta.content.trim()).href); } catch (e) { /* fall through */ }
+    }
+    add("");
+    return paths;
+  }
+
+  function signatureBossImageKey(name) {
+    return (name || "").trim().toLowerCase();
+  }
+
+  function isSignatureBossImageReady(name) {
+    return !!signatureBossImageReady[signatureBossImageKey(name)];
+  }
+
+  function tryLoadSignatureBossImage(key, paths, idx) {
+    if (idx >= paths.length) return;
+    const src = paths[idx];
+    const img = new Image();
+    img.onload = () => {
+      signatureBossImageCache[key] = { img, loadedSrc: src };
+      signatureBossImageReady[key] = true;
+      if (running) {
+        updateHud();
+        draw();
+      }
+    };
+    img.onerror = () => tryLoadSignatureBossImage(key, paths, idx + 1);
+    img.src = src;
+    if (img.complete && img.naturalWidth > 0) {
+      signatureBossImageCache[key] = { img, loadedSrc: src };
+      signatureBossImageReady[key] = true;
+    }
+  }
+
+  function preloadSignatureBossImages() {
+    for (const [key, filename] of Object.entries(SIGNATURE_BOSS_IMAGE_FILES)) {
+      if (signatureBossImageReady[key]) continue;
+      if (!signatureBossImageCache[key]) signatureBossImageCache[key] = { img: null, loadedSrc: null };
+      tryLoadSignatureBossImage(key, signatureBossImagePaths(filename), 0);
+    }
+  }
+
+  function drawSignatureBossPortrait(ctx, x, y, size, name) {
+    const key = signatureBossImageKey(name);
+    const entry = signatureBossImageCache[key];
+    const img = entry && entry.img;
+    const radius = size * 0.5;
+    const ready = isSignatureBossImageReady(name) && img && img.naturalWidth > 0;
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.closePath();
+    ctx.clip();
+    if (ready) {
+      const aspect = img.naturalHeight / img.naturalWidth;
+      const w = size * 1.08;
+      const h = w * aspect;
+      ctx.drawImage(img, x - w * 0.5, y - h * 0.58, w, h);
+    } else {
+      ctx.fillStyle = "#3d3d48";
+      ctx.fillRect(x - radius, y - radius, size, size);
+    }
+    ctx.restore();
+    ctx.strokeStyle = ready ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.35)";
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(x, y, radius, 0, Math.PI * 2);
+    ctx.stroke();
   }
 
   function gunImagePaths(typeId) {
@@ -2157,6 +2344,7 @@
   }
 
   preloadGunImages();
+  preloadSignatureBossImages();
 
   function drawGunFallbackBar(ctx, x, y, angle, len, thick, color) {
     ctx.save();
@@ -2359,9 +2547,11 @@
   function normalizeGun(gun) {
     if (!gun || typeof gun !== "object") return gun;
     const meta = GUN_TYPES.find((g) => g.id === gun.type) || GUN_TYPES.find((g) => g.id === "assault_rifle");
-    const ammo = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    const synced = syncGunAmmoFields({ ...gun, type: meta.id });
+    const ammo = getGunReserveAmmo(synced);
+    const magAmmo = getGunMagAmmo(synced);
     if (isSignatureGun(meta.id)) {
-      return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo };
+      return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo, magAmmo };
     }
     let rarityId = gun.rarity;
     if (rarityId === "mythic" && !isSignatureGun(meta.id)) {
@@ -2369,13 +2559,14 @@
     }
     const r = RARITIES[rarityId] || RARITIES.rare;
     return {
-      ...gun,
+      ...synced,
       rarity: rarityId,
       color: r.color,
       label: r.label,
       type: meta.id,
       typeLabel: meta.label,
       ammo,
+      magAmmo,
     };
   }
 
@@ -2383,9 +2574,117 @@
     return !!(e && (e.isAI || e.isBoss));
   }
 
+  function getGunReloadStats(typeId) {
+    const id = typeId || "assault_rifle";
+    if (GUN_RELOAD_STATS[id]) return GUN_RELOAD_STATS[id];
+    return { magSize: 30, reloadSec: 2 };
+  }
+
+  function getGunMagSize(typeId) {
+    return getGunReloadStats(typeId).magSize;
+  }
+
+  function getGunReloadMs(typeId) {
+    return Math.max(50, Math.round(getGunReloadStats(typeId).reloadSec * 1000));
+  }
+
+  function allocateGunAmmo(typeId, totalAmmo) {
+    const magSize = getGunMagSize(typeId);
+    const total = typeof totalAmmo === "number" ? totalAmmo : GUN_START_AMMO;
+    const magAmmo = Math.min(magSize, Math.max(0, total));
+    return { magAmmo, ammo: Math.max(0, total - magAmmo) };
+  }
+
+  function syncGunAmmoFields(gun) {
+    if (!gun || !isGunItem(gun)) return gun;
+    if (typeof gun.magAmmo === "number") {
+      gun.ammo = Math.max(0, typeof gun.ammo === "number" ? gun.ammo : 0);
+      gun.magAmmo = Math.max(0, gun.magAmmo);
+      return gun;
+    }
+    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    const alloc = allocateGunAmmo(gun.type, total);
+    gun.magAmmo = alloc.magAmmo;
+    gun.ammo = alloc.ammo;
+    return gun;
+  }
+
+  function getGunMagAmmo(gun) {
+    if (!gun || !isGunItem(gun)) return 0;
+    if (typeof gun.magAmmo === "number") return Math.max(0, gun.magAmmo);
+    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    return Math.min(getGunMagSize(gun.type), Math.max(0, total));
+  }
+
+  function getGunReserveAmmo(gun) {
+    if (!gun || !isGunItem(gun)) return 0;
+    if (typeof gun.magAmmo === "number") {
+      return Math.max(0, typeof gun.ammo === "number" ? gun.ammo : 0);
+    }
+    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    return Math.max(0, total - getGunMagAmmo(gun));
+  }
+
   function getGunAmmo(gun) {
     if (!gun || !isGunItem(gun)) return 0;
-    return typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
+    return getGunMagAmmo(gun) + getGunReserveAmmo(gun);
+  }
+
+  function gunNeedsReloadVisual(gun) {
+    return getGunMagAmmo(gun) <= 0 && getGunReserveAmmo(gun) > 0;
+  }
+
+  function canReloadGun(gun) {
+    if (!gun || !isGunItem(gun)) return false;
+    const magSize = getGunMagSize(gun.type);
+    return getGunMagAmmo(gun) < magSize && getGunReserveAmmo(gun) > 0;
+  }
+
+  function isEntityReloading(e, now) {
+    return !!(e && e.reloadUntil && now < e.reloadUntil);
+  }
+
+  function cancelEntityReload(e) {
+    if (e) e.reloadUntil = 0;
+  }
+
+  function finishGunReload(e) {
+    const i = e.invIndex;
+    if (i < 0 || i >= INV_SLOTS) return;
+    const item = e.inventory[i];
+    if (!item || !isGunItem(item)) return;
+    const gun = syncGunAmmoFields({ ...item });
+    const magSize = getGunMagSize(gun.type);
+    const mag = getGunMagAmmo(gun);
+    const reserve = getGunReserveAmmo(gun);
+    const add = Math.min(magSize - mag, reserve);
+    item.magAmmo = mag + add;
+    item.ammo = reserve - add;
+    e.inventory[i] = normalizeGun(item);
+  }
+
+  function updateEntityReload(e, now) {
+    if (!e || !e.reloadUntil) return;
+    if (now >= e.reloadUntil) {
+      e.reloadUntil = 0;
+      finishGunReload(e);
+      if (e.isPlayer) {
+        refreshInventoryHud();
+        updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+      }
+    }
+  }
+
+  function tryStartReload(e, now) {
+    if (!e || !e.alive || hasInfiniteAmmo(e)) return false;
+    if (isEntityReloading(e, now)) return false;
+    const gun = currentGun(e);
+    if (!gun || !canReloadGun(gun)) return false;
+    e.reloadUntil = now + getGunReloadMs(gun.type);
+    e.burstShotsLeft = 0;
+    e.burstPauseUntil = 0;
+    if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+    return true;
   }
 
   function consumeGunAmmo(e, amount) {
@@ -2393,7 +2692,8 @@
     if (i < 0 || i >= INV_SLOTS) return false;
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return false;
-    item.ammo = Math.max(0, getGunAmmo(item) - amount);
+    syncGunAmmoFields(item);
+    item.magAmmo = Math.max(0, getGunMagAmmo(item) - amount);
     e.inventory[i] = normalizeGun(item);
     return true;
   }
@@ -2404,7 +2704,8 @@
     if (i < 0 || i >= INV_SLOTS) return false;
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return false;
-    item.ammo = getGunAmmo(item) + pack.amount;
+    syncGunAmmoFields(item);
+    item.ammo = getGunReserveAmmo(item) + pack.amount;
     e.inventory[i] = normalizeGun(item);
     if (e.isPlayer) refreshInventoryHud();
     return true;
@@ -2428,6 +2729,7 @@
     const spreadMul = typeMeta.spreadMul || 1;
     let dmgLo = r.dmg[0];
     let dmgHi = r.dmg[1];
+    const ammoAlloc = allocateGunAmmo(typeMeta.id, GUN_START_AMMO);
     return {
       rarity: rarityId,
       color: r.color,
@@ -2438,7 +2740,8 @@
       dmgMax: Math.max(1, Math.round(dmgHi * dmgMulHi)),
       fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
       spread: r.spread * spreadMul,
-      ammo: GUN_START_AMMO,
+      magAmmo: ammoAlloc.magAmmo,
+      ammo: ammoAlloc.ammo,
     };
   }
 
@@ -2749,6 +3052,7 @@
       lastMedUse: 0,
       wallCharges: WALL_MAX_CHARGES,
       wallRechargeAt: 0,
+      reloadUntil: 0,
       playerSlot: opts.playerSlot || 0,
       aimX: 1,
       aimY: 0,
@@ -2958,6 +3262,7 @@
     buildInventoryHudP2();
     refreshInventoryHud();
     updateHud();
+    preloadSignatureBossImages();
     gameStartTime = performance.now();
   }
 
@@ -3028,6 +3333,7 @@
         }
         wrapEl.style.display = "flex";
         wrapEl.classList.toggle("art-sprite", isArtSpriteGun(ng.type));
+        wrapEl.classList.toggle("needs-reload", entity.invIndex === i && gunNeedsReloadVisual(ng));
         wrapEl.style.setProperty("--rarity-tint", isArtSpriteGun(ng.type) ? "transparent" : ng.color);
         wrapEl.style.boxShadow = "inset 0 0 0 2px " + ng.color;
         let imgEl = wrapEl.querySelector(".gun-icon");
@@ -3045,7 +3351,7 @@
         }
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = ng.label + " " + ng.typeLabel + " · " + getGunAmmo(ng) + " ammo";
+        el.title = ng.label + " " + ng.typeLabel + " · " + getGunMagAmmo(ng) + " / " + getGunReserveAmmo(ng) + " ammo";
       } else {
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
@@ -3078,15 +3384,24 @@
 
   function updateAmmoHud(entity, hudEl) {
     if (!hudEl || !entity) return;
+    const now = performance.now();
     const gun = currentGun(entity);
-    hudEl.classList.remove("empty");
+    hudEl.classList.remove("empty", "needs-reload", "reloading");
     if (!gun) {
       hudEl.textContent = "Ammo: —";
       return;
     }
-    const ammo = getGunAmmo(gun);
-    hudEl.textContent = "Ammo: " + ammo;
-    if (ammo <= 0) hudEl.classList.add("empty");
+    if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
+      const left = Math.max(0, (entity.reloadUntil - now) / 1000);
+      hudEl.textContent = "Reloading " + left.toFixed(1) + "s";
+      hudEl.classList.add("reloading");
+      return;
+    }
+    const mag = getGunMagAmmo(gun);
+    const reserve = getGunReserveAmmo(gun);
+    hudEl.textContent = "Ammo: " + mag + " / " + reserve;
+    if (mag <= 0 && reserve <= 0) hudEl.classList.add("empty");
+    else if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) hudEl.classList.add("needs-reload");
   }
 
   function updateHud() {
@@ -3144,6 +3459,10 @@
   function tryShoot(e, aimX, aimY, now, accuracy) {
     const gun = currentGun(e);
     if (!gun) return;
+    if (!hasInfiniteAmmo(e)) {
+      if (isEntityReloading(e, now)) return;
+      if (getGunMagAmmo(gun) <= 0) return;
+    }
     const meta = getGunTypeMeta(gun.type);
     const burstSize = meta.burstSize || 0;
     if (e.burstGunType !== gun.type) {
@@ -3161,7 +3480,6 @@
     } else if (now - e.lastShot < gun.fireMs) {
       return;
     }
-    if (!hasInfiniteAmmo(e) && getGunAmmo(gun) <= 0) return;
     if (e.bloomGunType !== gun.type) {
       e.bloomLevel = 0;
       e.bloomGunType = gun.type;
@@ -3241,6 +3559,7 @@
     const gy = clamp(e.y + Math.sin(ang) * off, 24, WORLD_H - 24);
     const now = performance.now();
     e.inventory[e.invIndex] = null;
+    cancelEntityReload(e);
     groundGuns.push({
       x: gx,
       y: gy,
@@ -3905,14 +4224,20 @@
   function updateOnlineRemotePlayer(dt, now) {
     if (!onlineMode || !onlineHost || !player2 || !player2.alive || !remoteInput) return;
     const ri = remoteInput;
+    updateEntityReload(player2, now);
     applyEntityMovement(player2, ri.mx || 0, ri.my || 0, dt);
     if (ri.shoot && currentGun(player2)) {
       tryShoot(player2, ri.aimX, ri.aimY, now, 1);
     }
+    if (ri.reload) tryStartReload(player2, now);
     if (ri.useMed) tryUseMed(player2, now);
     if (ri.build) tryPlaceWallForEntity(player2, ri.aimX, ri.aimY, now);
     if (ri.drop) dropCurrentWeapon(player2);
-    if (typeof ri.invIndex === "number") player2.invIndex = clamp(ri.invIndex | 0, 0, INV_SLOTS - 1);
+    if (typeof ri.invIndex === "number") {
+      const next = clamp(ri.invIndex | 0, 0, INV_SLOTS - 1);
+      if (next !== player2.invIndex) cancelEntityReload(player2);
+      player2.invIndex = next;
+    }
   }
 
   function serializeInvSlot(item) {
@@ -3934,6 +4259,7 @@
         dmgMin: g.dmgMin,
         dmgMax: g.dmgMax,
         ammo: g.ammo,
+        magAmmo: g.magAmmo,
       };
     }
     return null;
@@ -3965,6 +4291,7 @@
         invIndex: player2.invIndex,
         wallCharges: player2.wallCharges,
         wallRechargeAt: player2.wallRechargeAt,
+        reloadUntil: player2.reloadUntil || 0,
         inventory: player2.inventory.map(serializeInvSlot),
         name: player2Name,
         color: player2Color,
@@ -4019,6 +4346,7 @@
       player.kills = gv.kills;
       player.wallCharges = gv.wallCharges;
       player.wallRechargeAt = gv.wallRechargeAt;
+      player.reloadUntil = gv.reloadUntil || 0;
       if (gv.inventory) player.inventory = gv.inventory.map(hydrateInvSlot);
       player.invIndex = clamp(player.invIndex, 0, INV_SLOTS - 1);
     }
@@ -4111,6 +4439,7 @@
       aimX: mouseWorldX,
       aimY: mouseWorldY,
       shoot: !!shootMouseDown,
+      reload: pendingOnlineReload,
       useMed: pendingOnlineMed,
       build: pendingOnlineBuild,
       drop: pendingOnlineDrop,
@@ -4123,6 +4452,7 @@
     pendingOnlineMed = false;
     pendingOnlineBuild = false;
     pendingOnlineDrop = false;
+    pendingOnlineReload = false;
     return input;
   }
 
@@ -4159,7 +4489,9 @@
 
   function setEntityInvIndex(entity, idx) {
     if (!entity) return;
-    entity.invIndex = clamp(idx | 0, 0, INV_SLOTS - 1);
+    const next = clamp(idx | 0, 0, INV_SLOTS - 1);
+    if (next !== entity.invIndex) cancelEntityReload(entity);
+    entity.invIndex = next;
     refreshInventoryHud();
     if (onlineMode && !onlineHost && running) flushGuestInput();
   }
@@ -5199,22 +5531,20 @@
     const sorted = [...dots].filter(d => d.alive).sort((a, b) => a.radius - b.radius);
     for (const d of sorted) {
       if (d.isSignatureBoss) {
-        ctx.strokeStyle = "rgba(255,215,0,0.55)";
-        ctx.lineWidth = 3;
+        drawSignatureBossPortrait(ctx, d.x, d.y, d.radius * 2.35, d.name);
+      } else {
+        if (d.isBoss) {
+          ctx.strokeStyle = "rgba(231,76,60,0.5)";
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.arc(d.x, d.y, d.radius + 6, 0, Math.PI * 2);
+          ctx.stroke();
+        }
+        ctx.fillStyle = d.color;
         ctx.beginPath();
-        ctx.arc(d.x, d.y, d.radius + 6, 0, Math.PI * 2);
-        ctx.stroke();
-      } else if (d.isBoss) {
-        ctx.strokeStyle = "rgba(231,76,60,0.5)";
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.radius + 6, 0, Math.PI * 2);
-        ctx.stroke();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+        ctx.fill();
       }
-      ctx.fillStyle = d.color;
-      ctx.beginPath();
-      ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
-      ctx.fill();
       if (d.isPlayer) {
         ctx.strokeStyle = twoPlayerTeamMode && twoPlayerMode ? "#b8f0c8" : "#fff";
         ctx.lineWidth = 2;
@@ -5225,7 +5555,7 @@
         const pct = d.health / d.maxHealth;
         ctx.fillStyle = "#222";
         ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w, 4);
-        ctx.fillStyle = d.isSignatureBoss ? "#ffd700" : d.isBoss ? "#e74c3c" : "#2ecc71";
+        ctx.fillStyle = d.isSignatureBoss ? "#d8d8e0" : d.isBoss ? "#e74c3c" : "#2ecc71";
         ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w * pct, 4);
       }
       ctx.fillStyle = "#ccc";
@@ -5331,7 +5661,9 @@
       return;
     }
 
+    if (player && player.alive) updateEntityReload(player, now);
     updatePlayer(dt, now);
+    if (twoPlayerMode && player2 && player2.alive) updateEntityReload(player2, now);
     if (twoPlayerMode) updatePlayer2(dt, now);
     else if (onlineMode && onlineHost) updateOnlineRemotePlayer(dt, now);
     for (const d of dots) {
@@ -5654,8 +5986,7 @@
       const fNum = parseInt(e.code.slice(1), 10);
       if (fNum >= 1 && fNum <= 5) {
         e.preventDefault();
-        player2.invIndex = fNum - 1;
-        refreshInventoryHud();
+        setEntityInvIndex(player2, fNum - 1);
         return;
       }
     }
@@ -5671,12 +6002,29 @@
       return;
     }
 
+    if (e.code === "KeyE" && !e.repeat) {
+      e.preventDefault();
+      const now = performance.now();
+      if (onlineMode && !onlineHost) {
+        pendingOnlineReload = true;
+        flushGuestInput();
+      } else if (player && player.alive) {
+        tryStartReload(player, now);
+      }
+      return;
+    }
+
+    if (twoPlayerMode && player2 && (e.code === "Period" || e.code === "NumpadDecimal") && !e.repeat) {
+      e.preventDefault();
+      tryStartReload(player2, performance.now());
+      return;
+    }
+
     if (twoPlayerMode && e.code.startsWith("Numpad") && player2) {
       const n = parseInt(e.key, 10);
       if (n >= 1 && n <= 5) {
         e.preventDefault();
-        player2.invIndex = n - 1;
-        refreshInventoryHud();
+        setEntityInvIndex(player2, n - 1);
       }
       return;
     }

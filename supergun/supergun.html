@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="local-2026-06-29a" />
+  <meta name="supergun-build" content="local-2026-06-29b" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <title>Supergun</title>
@@ -226,16 +226,22 @@
       font-size: 0.72rem;
       color: #ccc;
       text-shadow: 0 1px 4px #000;
-      border-radius: 4px;
     }
     #ammoHud.empty, #ammoHudP2.empty { color: #c66; }
-    #ammoHud.needs-reload, #ammoHudP2.needs-reload {
+    #reloadHud, #reloadHudP2 {
+      font-size: 0.72rem;
+      color: #bbb;
+      text-shadow: 0 1px 4px #000;
+      margin-top: 2px;
+      border-radius: 4px;
+    }
+    #reloadHud.needs-reload, #reloadHudP2.needs-reload {
       color: #555;
       background: rgba(0, 0, 0, 0.82);
       padding: 2px 6px;
       text-shadow: none;
     }
-    #ammoHud.reloading, #ammoHudP2.reloading { color: #999; }
+    #reloadHud.reloading, #reloadHudP2.reloading { color: #999; }
     #healthBarWrap {
       position: relative;
       width: 100%;
@@ -934,7 +940,7 @@
     <p id="help">
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
-      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> add reserve ammo to the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong> split between magazine and reserve. Press <strong>E</strong> to reload (mag / reserve shown in HUD — black when you must reload). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
+      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
       Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
@@ -991,6 +997,7 @@
         </div>
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
         <div id="ammoHud">Ammo: —</div>
+        <div id="reloadHud">Before reload: —</div>
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
@@ -1000,6 +1007,7 @@
         </div>
         <div id="wallChargesHudP2">Walls: 5 · Right-click or Shift to build</div>
         <div id="ammoHudP2">Ammo: —</div>
+        <div id="reloadHudP2">Before reload: —</div>
       </div>
       <div id="inventoryHud"></div>
       <div id="inventoryHudP2"></div>
@@ -1268,6 +1276,7 @@
   const healthLabel = document.getElementById("healthLabel");
   const wallChargesHud = document.getElementById("wallChargesHud");
   const ammoHud = document.getElementById("ammoHud");
+  const reloadHud = document.getElementById("reloadHud");
   const inventoryHud = document.getElementById("inventoryHud");
   const inventoryHudP2 = document.getElementById("inventoryHudP2");
   const twoPlayerCheck = document.getElementById("twoPlayerCheck");
@@ -1283,6 +1292,7 @@
   const healthLabelP2 = document.getElementById("healthLabelP2");
   const wallChargesHudP2 = document.getElementById("wallChargesHudP2");
   const ammoHudP2 = document.getElementById("ammoHudP2");
+  const reloadHudP2 = document.getElementById("reloadHudP2");
   const endOverlay = document.getElementById("endOverlay");
   const endTitle = document.getElementById("endTitle");
   const endPlacement = document.getElementById("endPlacement");
@@ -2548,10 +2558,10 @@
     if (!gun || typeof gun !== "object") return gun;
     const meta = GUN_TYPES.find((g) => g.id === gun.type) || GUN_TYPES.find((g) => g.id === "assault_rifle");
     const synced = syncGunAmmoFields({ ...gun, type: meta.id });
-    const ammo = getGunReserveAmmo(synced);
-    const magAmmo = getGunMagAmmo(synced);
+    const ammo = getGunAmmo(synced);
+    const reloadShotsLeft = getReloadShotsLeft(synced);
     if (isSignatureGun(meta.id)) {
-      return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo, magAmmo };
+      return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo, reloadShotsLeft };
     }
     let rarityId = gun.rarity;
     if (rarityId === "mythic" && !isSignatureGun(meta.id)) {
@@ -2566,7 +2576,7 @@
       type: meta.id,
       typeLabel: meta.label,
       ammo,
-      magAmmo,
+      reloadShotsLeft,
     };
   }
 
@@ -2580,7 +2590,7 @@
     return { magSize: 30, reloadSec: 2 };
   }
 
-  function getGunMagSize(typeId) {
+  function getShotsBeforeReload(typeId) {
     return getGunReloadStats(typeId).magSize;
   }
 
@@ -2588,56 +2598,44 @@
     return Math.max(50, Math.round(getGunReloadStats(typeId).reloadSec * 1000));
   }
 
-  function allocateGunAmmo(typeId, totalAmmo) {
-    const magSize = getGunMagSize(typeId);
-    const total = typeof totalAmmo === "number" ? totalAmmo : GUN_START_AMMO;
-    const magAmmo = Math.min(magSize, Math.max(0, total));
-    return { magAmmo, ammo: Math.max(0, total - magAmmo) };
-  }
-
   function syncGunAmmoFields(gun) {
     if (!gun || !isGunItem(gun)) return gun;
+    const interval = getShotsBeforeReload(gun.type);
     if (typeof gun.magAmmo === "number") {
-      gun.ammo = Math.max(0, typeof gun.ammo === "number" ? gun.ammo : 0);
-      gun.magAmmo = Math.max(0, gun.magAmmo);
-      return gun;
+      const reserve = typeof gun.ammo === "number" ? gun.ammo : 0;
+      gun.ammo = Math.max(0, reserve + gun.magAmmo);
+      delete gun.magAmmo;
     }
-    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
-    const alloc = allocateGunAmmo(gun.type, total);
-    gun.magAmmo = alloc.magAmmo;
-    gun.ammo = alloc.ammo;
+    if (typeof gun.ammo !== "number") gun.ammo = GUN_START_AMMO;
+    gun.ammo = Math.max(0, gun.ammo);
+    if (typeof gun.reloadShotsLeft !== "number") {
+      gun.reloadShotsLeft = interval;
+    } else {
+      gun.reloadShotsLeft = clamp(gun.reloadShotsLeft, 0, interval);
+    }
     return gun;
-  }
-
-  function getGunMagAmmo(gun) {
-    if (!gun || !isGunItem(gun)) return 0;
-    if (typeof gun.magAmmo === "number") return Math.max(0, gun.magAmmo);
-    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
-    return Math.min(getGunMagSize(gun.type), Math.max(0, total));
-  }
-
-  function getGunReserveAmmo(gun) {
-    if (!gun || !isGunItem(gun)) return 0;
-    if (typeof gun.magAmmo === "number") {
-      return Math.max(0, typeof gun.ammo === "number" ? gun.ammo : 0);
-    }
-    const total = typeof gun.ammo === "number" ? gun.ammo : GUN_START_AMMO;
-    return Math.max(0, total - getGunMagAmmo(gun));
   }
 
   function getGunAmmo(gun) {
     if (!gun || !isGunItem(gun)) return 0;
-    return getGunMagAmmo(gun) + getGunReserveAmmo(gun);
+    if (typeof gun.ammo === "number") return Math.max(0, gun.ammo);
+    return GUN_START_AMMO;
+  }
+
+  function getReloadShotsLeft(gun) {
+    if (!gun || !isGunItem(gun)) return 0;
+    if (typeof gun.reloadShotsLeft === "number") return Math.max(0, gun.reloadShotsLeft);
+    return getShotsBeforeReload(gun.type);
   }
 
   function gunNeedsReloadVisual(gun) {
-    return getGunMagAmmo(gun) <= 0 && getGunReserveAmmo(gun) > 0;
+    return getReloadShotsLeft(gun) <= 0 && getGunAmmo(gun) > 0;
   }
 
   function canReloadGun(gun) {
     if (!gun || !isGunItem(gun)) return false;
-    const magSize = getGunMagSize(gun.type);
-    return getGunMagAmmo(gun) < magSize && getGunReserveAmmo(gun) > 0;
+    if (getGunAmmo(gun) <= 0) return false;
+    return getReloadShotsLeft(gun) < getShotsBeforeReload(gun.type);
   }
 
   function isEntityReloading(e, now) {
@@ -2654,12 +2652,7 @@
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return;
     const gun = syncGunAmmoFields({ ...item });
-    const magSize = getGunMagSize(gun.type);
-    const mag = getGunMagAmmo(gun);
-    const reserve = getGunReserveAmmo(gun);
-    const add = Math.min(magSize - mag, reserve);
-    item.magAmmo = mag + add;
-    item.ammo = reserve - add;
+    item.reloadShotsLeft = getShotsBeforeReload(gun.type);
     e.inventory[i] = normalizeGun(item);
   }
 
@@ -2670,7 +2663,7 @@
       finishGunReload(e);
       if (e.isPlayer) {
         refreshInventoryHud();
-        updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+        updateAmmoHud(e);
       }
     }
   }
@@ -2683,7 +2676,7 @@
     e.reloadUntil = now + getGunReloadMs(gun.type);
     e.burstShotsLeft = 0;
     e.burstPauseUntil = 0;
-    if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+    if (e.isPlayer) updateAmmoHud(e);
     return true;
   }
 
@@ -2693,7 +2686,8 @@
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return false;
     syncGunAmmoFields(item);
-    item.magAmmo = Math.max(0, getGunMagAmmo(item) - amount);
+    item.ammo = Math.max(0, getGunAmmo(item) - amount);
+    item.reloadShotsLeft = Math.max(0, getReloadShotsLeft(item) - amount);
     e.inventory[i] = normalizeGun(item);
     return true;
   }
@@ -2705,7 +2699,7 @@
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return false;
     syncGunAmmoFields(item);
-    item.ammo = getGunReserveAmmo(item) + pack.amount;
+    item.ammo = getGunAmmo(item) + pack.amount;
     e.inventory[i] = normalizeGun(item);
     if (e.isPlayer) refreshInventoryHud();
     return true;
@@ -2729,7 +2723,6 @@
     const spreadMul = typeMeta.spreadMul || 1;
     let dmgLo = r.dmg[0];
     let dmgHi = r.dmg[1];
-    const ammoAlloc = allocateGunAmmo(typeMeta.id, GUN_START_AMMO);
     return {
       rarity: rarityId,
       color: r.color,
@@ -2740,8 +2733,8 @@
       dmgMax: Math.max(1, Math.round(dmgHi * dmgMulHi)),
       fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
       spread: r.spread * spreadMul,
-      magAmmo: ammoAlloc.magAmmo,
-      ammo: ammoAlloc.ammo,
+      ammo: GUN_START_AMMO,
+      reloadShotsLeft: getShotsBeforeReload(typeMeta.id),
     };
   }
 
@@ -3351,7 +3344,7 @@
         }
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
-        el.title = ng.label + " " + ng.typeLabel + " · " + getGunMagAmmo(ng) + " / " + getGunReserveAmmo(ng) + " ammo";
+        el.title = ng.label + " " + ng.typeLabel + " · " + getGunAmmo(ng) + " ammo · " + getReloadShotsLeft(ng) + " before reload";
       } else {
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
@@ -3382,26 +3375,41 @@
     }
   }
 
-  function updateAmmoHud(entity, hudEl) {
-    if (!hudEl || !entity) return;
+  function updateAmmoHud(entity) {
+    if (!entity) return;
+    const ammoEl = entity.playerSlot === 2 ? ammoHudP2 : ammoHud;
+    const reloadEl = entity.playerSlot === 2 ? reloadHudP2 : reloadHud;
     const now = performance.now();
     const gun = currentGun(entity);
-    hudEl.classList.remove("empty", "needs-reload", "reloading");
+    if (ammoEl) {
+      ammoEl.classList.remove("empty");
+      if (!gun) {
+        ammoEl.textContent = "Ammo: —";
+      } else {
+        ammoEl.textContent = "Ammo: " + getGunAmmo(gun);
+        if (getGunAmmo(gun) <= 0) ammoEl.classList.add("empty");
+      }
+    }
+    if (!reloadEl) return;
+    reloadEl.classList.remove("needs-reload", "reloading");
     if (!gun) {
-      hudEl.textContent = "Ammo: —";
+      reloadEl.textContent = "Before reload: —";
       return;
     }
     if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
       const left = Math.max(0, (entity.reloadUntil - now) / 1000);
-      hudEl.textContent = "Reloading " + left.toFixed(1) + "s";
-      hudEl.classList.add("reloading");
+      reloadEl.textContent = "Reloading " + left.toFixed(1) + "s";
+      reloadEl.classList.add("reloading");
       return;
     }
-    const mag = getGunMagAmmo(gun);
-    const reserve = getGunReserveAmmo(gun);
-    hudEl.textContent = "Ammo: " + mag + " / " + reserve;
-    if (mag <= 0 && reserve <= 0) hudEl.classList.add("empty");
-    else if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) hudEl.classList.add("needs-reload");
+    if (getGunAmmo(gun) <= 0) {
+      reloadEl.textContent = "Before reload: —";
+      return;
+    }
+    const left = getReloadShotsLeft(gun);
+    const interval = getShotsBeforeReload(gun.type);
+    reloadEl.textContent = "Before reload: " + left + " / " + interval;
+    if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) reloadEl.classList.add("needs-reload");
   }
 
   function updateHud() {
@@ -3419,7 +3427,7 @@
       '<div class="hud-line">Alive <strong>' + alive + "</strong> / " + TOTAL_DOTS +
       " · Kills <strong>" + player.kills + "</strong>" + modeTag + "</div>";
     updateWallChargesHud(player, wallChargesHud);
-    updateAmmoHud(player, ammoHud);
+    updateAmmoHud(player);
 
     if (twoPlayerMode && player2 && hudP2) {
       const pct2 = clamp(player2.health / MAX_HEALTH, 0, 1) * 100;
@@ -3429,7 +3437,7 @@
         '<div class="hud-name">' + player2Name + " (P2)</div>" +
         '<div class="hud-line">Kills <strong>' + player2.kills + "</strong></div>";
       updateWallChargesHud(player2, wallChargesHudP2);
-      updateAmmoHud(player2, ammoHudP2);
+      updateAmmoHud(player2);
     } else if (onlineMode && !onlineHost && player2 && hud) {
       hud.innerHTML =
         '<div class="hud-name">' + playerName + "</div>" +
@@ -3461,7 +3469,8 @@
     if (!gun) return;
     if (!hasInfiniteAmmo(e)) {
       if (isEntityReloading(e, now)) return;
-      if (getGunMagAmmo(gun) <= 0) return;
+      if (getReloadShotsLeft(gun) <= 0) return;
+      if (getGunAmmo(gun) <= 0) return;
     }
     const meta = getGunTypeMeta(gun.type);
     const burstSize = meta.burstSize || 0;
@@ -3487,7 +3496,7 @@
     e.lastShot = now;
     if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
     addBloomOnShot(e, gun);
-    if (e.isPlayer) updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+    if (e.isPlayer) updateAmmoHud(e);
     if (burstSize > 1) {
       e.burstShotsLeft--;
       if (e.burstShotsLeft <= 0) {
@@ -4035,7 +4044,7 @@
     } else if (ch.kind === "gun") {
       if (ch.gun && addGunToEntity(e, ch.gun) && e.isAI) aiSelectWeapon(e);
     } else if (ch.kind === "ammo" && e.isPlayer) {
-      updateAmmoHud(e, e.playerSlot === 2 ? ammoHudP2 : ammoHud);
+      updateAmmoHud(e);
     }
   }
 
@@ -4259,7 +4268,7 @@
         dmgMin: g.dmgMin,
         dmgMax: g.dmgMax,
         ammo: g.ammo,
-        magAmmo: g.magAmmo,
+        reloadShotsLeft: g.reloadShotsLeft,
       };
     }
     return null;

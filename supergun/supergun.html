@@ -941,7 +941,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
@@ -1111,8 +1111,12 @@
     zeus_drum_sg: "zeus's drum shotgun",
     foxly_assault_rifle: "foxly's assault rifle",
     meowie_rpg: "meowie rpg",
+    overcharge_shotgun: "charge shotgun",
+    breacher_shotgun: "breacher shotgun",
   };
   const GUN_IMAGE_ALT_NAMES = {
+    overcharge_shotgun: ["charge shotgun", "overcharge shotgun", "Overcharge Shotgun"],
+    breacher_shotgun: ["breacher shotgun", "Breacher Shotgun", "breacher_shotgun"],
     dogshot_smash_pistol: ["dogshot's smash pistol", "dogshots smash pistol", "Dogshot's Smash Pistol"],
     snowstorm_smg: ["snowstorm's smg", "snowstorms smg", "Snowstorm's SMG"],
     swift_burst_assault_rifle: ["swift's burst ar", "swifts burst ar", "Swift's Burst AR"],
@@ -1143,6 +1147,8 @@
     { id: "scoped_assault_rifle", label: "Scoped AR", w: 0.075, dmgMul: 1.06, dmgMulHi: 1.1, fireMul: 1, spreadMul: 0.72, bloomPerShot: 7, burstSize: 3, burstShotMs: 76, burstPauseMs: 360 },
     { id: "thermal_scoped_assault_rifle", label: "Thermal Scoped AR", w: 0.02, dmgMul: 1.18, dmgMulHi: 1.24, fireMul: 0.9, spreadMul: 0.66, bloomPerShot: 8 },
     { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.4, bloomPerShot: 9 },
+    { id: "overcharge_shotgun", label: "Overcharge Shotgun", w: 0.06, dmgMul: 1, fireMul: 1.6, spreadMul: 0.85, bloomPerShot: 0 },
+    { id: "breacher_shotgun", label: "Breacher Shotgun", w: 0.05, dmgMul: 0.52, dmgMulHi: 0.55, fireMul: 1.05, spreadMul: 1.25, bloomPerShot: 14 },
     { id: "drum_shotgun", label: "Drum Shotgun", w: 0.055, dmgMul: 41 / 45, dmgMulHi: 58 / 65, fireMul: 1, spreadMul: 1.05, bloomPerShot: 3, pellets: 1, burstSize: 8, burstShotMs: 48, burstPauseMs: 1000 },
     { id: "scar", label: "SCAR", w: 0.06, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95, bloomPerShot: 14 },
     { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5, bloomPerShot: 2 },
@@ -1163,6 +1169,8 @@
     combat_shotgun: { magSize: 12, reloadSec: 3 },
     tactical_shotgun: { magSize: 18, reloadSec: 3.5 },
     pump_shotgun: { magSize: 8, reloadSec: 2.25 },
+    overcharge_shotgun: { magSize: 3, reloadSec: 2.2 },
+    breacher_shotgun: { magSize: 4, reloadSec: 2.5 },
     strike_shotgun: { magSize: 6, reloadSec: 2.35 },
     drum_shotgun: { magSize: 40, reloadSec: 3 },
     famas: { magSize: 20, reloadSec: 1.75 },
@@ -2460,6 +2468,84 @@
     e.bloomLevel = Math.max(0, (e.bloomLevel || 0) - BLOOM_DECAY_PER_SEC * dt);
   }
 
+  const OVERCHARGE_MAX_SEC = 25;
+  const OVERCHARGE_RARE_DAMAGE_CURVE = [
+    { sec: 0, dmg: 0 },
+    { sec: 1, dmg: 28 },
+    { sec: 10, dmg: 59 },
+    { sec: 25, dmg: 100 },
+  ];
+
+  function isOverchargeShotgun(typeId) {
+    return typeId === "overcharge_shotgun";
+  }
+
+  function isBreacherShotgun(typeId) {
+    return typeId === "breacher_shotgun";
+  }
+
+  function getBulletWallDamage(gun) {
+    const type = gun && gun.type ? resolveGunBehaviorType(gun.type) : null;
+    if (type === "breacher_shotgun") return WALL_MAX_HP;
+    return 1;
+  }
+
+  function overchargeRareDamageAtSec(chargeSec) {
+    const t = clamp(chargeSec, 0, OVERCHARGE_MAX_SEC);
+    const curve = OVERCHARGE_RARE_DAMAGE_CURVE;
+    for (let i = 1; i < curve.length; i++) {
+      if (t <= curve[i].sec) {
+        const a = curve[i - 1];
+        const b = curve[i];
+        const u = (t - a.sec) / (b.sec - a.sec);
+        return a.dmg + (b.dmg - a.dmg) * u;
+      }
+    }
+    return curve[curve.length - 1].dmg;
+  }
+
+  function overchargeDamageAtSec(chargeSec, rarityId) {
+    const r = RARITIES[rarityId] || RARITIES.rare;
+    const rareAvg = (RARITIES.rare.dmg[0] + RARITIES.rare.dmg[1]) * 0.5;
+    const tierAvg = (r.dmg[0] + r.dmg[1]) * 0.5;
+    const scale = tierAvg / rareAvg;
+    return Math.max(1, Math.round(overchargeRareDamageAtSec(chargeSec) * scale));
+  }
+
+  function cancelOvercharge(e) {
+    if (!e) return;
+    e.chargeStartAt = 0;
+    e.chargeGunType = null;
+    e.aiOverchargeStartAt = 0;
+    e.aiOverchargeFireAt = 0;
+  }
+
+  function beginOverchargeIfNeeded(e, now) {
+    const gun = currentGun(e);
+    if (!gun || !isOverchargeShotgun(gun.type)) return;
+    if (e.chargeGunType && e.chargeGunType !== gun.type) cancelOvercharge(e);
+    if (e.chargeStartAt) return;
+    if (!hasInfiniteAmmo(e)) {
+      if (isEntityReloading(e, now)) return;
+      if (getReloadShotsLeft(gun) <= 0) return;
+      if (getGunAmmo(gun) <= 0) return;
+    }
+    e.chargeStartAt = now;
+    e.chargeGunType = gun.type;
+  }
+
+  function releaseOverchargeShot(e, aimX, aimY, now) {
+    if (!e || !e.chargeStartAt) return;
+    const gun = currentGun(e);
+    if (!gun || !isOverchargeShotgun(gun.type)) {
+      cancelOvercharge(e);
+      return;
+    }
+    const chargeSec = Math.min(OVERCHARGE_MAX_SEC, (now - e.chargeStartAt) / 1000);
+    fireOverchargeShot(e, aimX, aimY, now, chargeSec, 1);
+    cancelOvercharge(e);
+  }
+
   function isExplosiveGun(gun) {
     return gun && (gun.type === "rpg" || gun.type === "meowie_rpg");
   }
@@ -2536,6 +2622,14 @@
       case "pump_shotgun": {
         const t = clamp(1 - distance / 150, 0, 1);
         return dmg * (0.55 + 0.45 * t);
+      }
+      case "overcharge_shotgun": {
+        const t = clamp(1 - distance / 320, 0, 1);
+        return dmg * (0.48 + 0.52 * t);
+      }
+      case "breacher_shotgun": {
+        const t = clamp(1 - distance / 240, 0, 1);
+        return dmg * (0.32 + 0.48 * t);
       }
       case "rpg": {
         const t = clamp((distance - 80) / 650, 0, 1);
@@ -2673,6 +2767,7 @@
     if (isEntityReloading(e, now)) return false;
     const gun = currentGun(e);
     if (!gun || !canReloadGun(gun)) return false;
+    cancelOvercharge(e);
     e.reloadUntil = now + getGunReloadMs(gun.type);
     e.burstShotsLeft = 0;
     e.burstPauseUntil = 0;
@@ -2802,6 +2897,12 @@
     if (g.type === "sniper") {
       return sniperDamageByDistance(g.rarity, distance);
     }
+    if (isOverchargeShotgun(g.type)) {
+      const base = typeof g.chargeDamage === "number"
+        ? g.chargeDamage
+        : overchargeDamageAtSec(0, g.rarity);
+      return applyGunTypeDistanceModifier(g.type, base, distance);
+    }
     let dmg = rollGunBaseDamage(g);
     return applyGunTypeDistanceModifier(g.type, dmg, distance);
   }
@@ -2814,6 +2915,9 @@
     const g = normalizeGun(gun);
     if (g.type === "sniper") {
       return sniperDamageByDistance(g.rarity, distance);
+    }
+    if (isOverchargeShotgun(g.type)) {
+      return applyGunTypeDistanceModifier(g.type, overchargeDamageAtSec(10, g.rarity), distance);
     }
     let dmg = (g.dmgMin + g.dmgMax) * 0.5;
     return applyGunTypeDistanceModifier(g.type, dmg, distance);
@@ -3051,6 +3155,12 @@
       aimY: 0,
       bloomLevel: 0,
       bloomGunType: null,
+      chargeStartAt: 0,
+      chargeGunType: null,
+      aiOverchargeStartAt: 0,
+      aiOverchargeFireAt: 0,
+      aiOverchargeAimX: 0,
+      aiOverchargeAimY: 0,
     };
   }
 
@@ -3396,6 +3506,12 @@
       reloadEl.textContent = "Before reload: —";
       return;
     }
+    if (entity.chargeStartAt && isOverchargeShotgun(gun.type)) {
+      const chargeSec = Math.min(OVERCHARGE_MAX_SEC, (now - entity.chargeStartAt) / 1000);
+      const dmg = overchargeDamageAtSec(chargeSec, gun.rarity);
+      reloadEl.textContent = "Charge: " + chargeSec.toFixed(1) + "s · " + dmg + " dmg";
+      return;
+    }
     if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
       const left = Math.max(0, (entity.reloadUntil - now) / 1000);
       reloadEl.textContent = "Reloading " + left.toFixed(1) + "s";
@@ -3464,9 +3580,47 @@
     return isGunItem(item) ? normalizeGun(item) : null;
   }
 
+  function fireOverchargeShot(e, aimX, aimY, now, chargeSec, accuracy) {
+    const gun = currentGun(e);
+    if (!gun || !isOverchargeShotgun(gun.type)) return;
+    if (!hasInfiniteAmmo(e)) {
+      if (isEntityReloading(e, now)) return;
+      if (getReloadShotsLeft(gun) <= 0) return;
+      if (getGunAmmo(gun) <= 0) return;
+    }
+    if (now - e.lastShot < gun.fireMs) return;
+    e.lastShot = now;
+    if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
+    if (e.isPlayer) updateAmmoHud(e);
+    let ang = Math.atan2(aimY - e.y, aimX - e.x);
+    if (e.isAI) {
+      const err = (1 - (accuracy || 0.5)) * 0.78;
+      ang += rand(-err, err);
+    }
+    const chargeDamage = overchargeDamageAtSec(chargeSec, gun.rarity);
+    const shotGun = { ...gun, chargeDamage };
+    const spd = 520;
+    const shotSpread = getEffectiveSpread(e, gun);
+    ang += rand(-shotSpread, shotSpread);
+    bullets.push({
+      x: e.x + Math.cos(ang) * (e.radius + 4),
+      y: e.y + Math.sin(ang) * (e.radius + 4),
+      ox: e.x,
+      oy: e.y,
+      vx: Math.cos(ang) * spd,
+      vy: Math.sin(ang) * spd,
+      ownerId: e.id,
+      gun: shotGun,
+      explosive: false,
+      color: gun.color,
+      life: 2.4,
+    });
+  }
+
   function tryShoot(e, aimX, aimY, now, accuracy) {
     const gun = currentGun(e);
     if (!gun) return;
+    if (isOverchargeShotgun(gun.type)) return;
     if (!hasInfiniteAmmo(e)) {
       if (isEntityReloading(e, now)) return;
       if (getReloadShotsLeft(gun) <= 0) return;
@@ -3551,6 +3705,7 @@
   function dropCurrentWeapon(e) {
     const gun = currentGun(e);
     if (!gun) return false;
+    cancelOvercharge(e);
     let ang;
     if (e.isPlayer && e.playerSlot === 1) {
       ang = Math.atan2(mouseWorldY - e.y, mouseWorldX - e.x);
@@ -4212,7 +4367,14 @@
     }
     applyEntityMovement(player, mx, my, dt);
 
-    if (shootMouseDown && currentGun(player)) tryShoot(player, mouseWorldX, mouseWorldY, now, 1);
+    const gun = currentGun(player);
+    if (gun && isOverchargeShotgun(gun.type)) {
+      if (shootMouseDown) beginOverchargeIfNeeded(player, now);
+      if (player.isPlayer) updateAmmoHud(player);
+    } else {
+      cancelOvercharge(player);
+      if (shootMouseDown && gun) tryShoot(player, mouseWorldX, mouseWorldY, now, 1);
+    }
   }
 
   function updatePlayer2(dt, now) {
@@ -4224,9 +4386,17 @@
     if (keys["arrowright"]) mx += 1;
     applyEntityMovement(player2, mx, my, dt);
 
-    if ((p2ShootMouseDown || p2ShootHeld) && currentGun(player2)) {
-      const aim = getP2ShootTarget();
-      tryShoot(player2, aim.x, aim.y, now, 1);
+    const gun = currentGun(player2);
+    const p2Shooting = !!(p2ShootMouseDown || p2ShootHeld);
+    if (gun && isOverchargeShotgun(gun.type)) {
+      if (p2Shooting) beginOverchargeIfNeeded(player2, now);
+      if (player2.isPlayer) updateAmmoHud(player2);
+    } else {
+      cancelOvercharge(player2);
+      if (p2Shooting && gun) {
+        const aim = getP2ShootTarget();
+        tryShoot(player2, aim.x, aim.y, now, 1);
+      }
     }
   }
 
@@ -4235,8 +4405,14 @@
     const ri = remoteInput;
     updateEntityReload(player2, now);
     applyEntityMovement(player2, ri.mx || 0, ri.my || 0, dt);
-    if (ri.shoot && currentGun(player2)) {
-      tryShoot(player2, ri.aimX, ri.aimY, now, 1);
+    const gun = currentGun(player2);
+    if (gun && isOverchargeShotgun(gun.type)) {
+      if (ri.shoot) beginOverchargeIfNeeded(player2, now);
+      else if (player2.chargeStartAt) releaseOverchargeShot(player2, ri.aimX, ri.aimY, now);
+      if (player2.isPlayer) updateAmmoHud(player2);
+    } else {
+      cancelOvercharge(player2);
+      if (ri.shoot && gun) tryShoot(player2, ri.aimX, ri.aimY, now, 1);
     }
     if (ri.reload) tryStartReload(player2, now);
     if (ri.useMed) tryUseMed(player2, now);
@@ -4499,7 +4675,10 @@
   function setEntityInvIndex(entity, idx) {
     if (!entity) return;
     const next = clamp(idx | 0, 0, INV_SLOTS - 1);
-    if (next !== entity.invIndex) cancelEntityReload(entity);
+    if (next !== entity.invIndex) {
+      cancelEntityReload(entity);
+      cancelOvercharge(entity);
+    }
     entity.invIndex = next;
     refreshInventoryHud();
     if (onlineMode && !onlineHost && running) flushGuestInput();
@@ -5197,6 +5376,10 @@
 
     const gun = currentGun(d);
     if (gun) {
+      if (!isOverchargeShotgun(gun.type)) {
+        d.aiOverchargeStartAt = 0;
+        d.aiOverchargeFireAt = 0;
+      }
       let aim = d.aiTarget;
       if (!aim || !aim.alive) {
         const foes = dots.filter(x => x.alive && x.id !== d.id && !areTeammates(d, x))
@@ -5207,7 +5390,28 @@
         d.aiTarget = aim;
         const shootChance = spectateMode ? 0.98 : 0.48;
         if (dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < shootChance) {
-          tryShoot(d, aim.x, aim.y, now, spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy);
+          if (isOverchargeShotgun(gun.type)) {
+            if (!d.aiOverchargeStartAt) {
+              d.aiOverchargeStartAt = now;
+              d.aiOverchargeFireAt = now + rand(1000, 14000);
+              d.aiOverchargeAimX = aim.x;
+              d.aiOverchargeAimY = aim.y;
+            } else if (now >= d.aiOverchargeFireAt) {
+              const chargeSec = Math.min(OVERCHARGE_MAX_SEC, (now - d.aiOverchargeStartAt) / 1000);
+              fireOverchargeShot(
+                d,
+                d.aiOverchargeAimX,
+                d.aiOverchargeAimY,
+                now,
+                chargeSec,
+                spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy
+              );
+              d.aiOverchargeStartAt = 0;
+              d.aiOverchargeFireAt = 0;
+            }
+          } else {
+            tryShoot(d, aim.x, aim.y, now, spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy);
+          }
         }
       }
     }
@@ -5231,12 +5435,13 @@
         if (b.explosive) {
           triggerExplosion(b, shotOwner);
         } else {
-          wall.hp--;
+          const wallDmg = getBulletWallDamage(b.gun);
+          wall.hp -= wallDmg;
           damageTexts.push({
             x: wall.x + rand(-6, 6),
             y: wall.y - wallExtentRadius(wall) - 4,
             text: wall.hp > 0 ? String(wall.hp) : "×",
-            color: "#bbb",
+            color: isBreacherShotgun(b.gun && b.gun.type) ? "#ffb347" : "#bbb",
             life: 0.5,
             maxLife: 0.5,
             big: false,
@@ -5655,6 +5860,12 @@
 
     if (onlineMode && !onlineHost) {
       applyGuestPrediction(dt);
+      const gun = player && player.alive ? currentGun(player) : null;
+      if (gun && isOverchargeShotgun(gun.type)) {
+        if (shootMouseDown) beginOverchargeIfNeeded(player, now);
+      } else if (player) {
+        cancelOvercharge(player);
+      }
       sendGuestOnlineInput();
       updateHud();
       draw();
@@ -5944,8 +6155,18 @@
   });
   window.addEventListener("mouseup", (e) => {
     if (e.button === 0) {
+      const now = performance.now();
+      if (player && player.alive && player.chargeStartAt) {
+        if (onlineMode && !onlineHost) cancelOvercharge(player);
+        else releaseOverchargeShot(player, mouseWorldX, mouseWorldY, now);
+      }
+      if (player2 && player2.alive && player2.chargeStartAt) {
+        const aim = getP2ShootTarget();
+        releaseOverchargeShot(player2, aim.x, aim.y, now);
+      }
       shootMouseDown = false;
       p2ShootMouseDown = false;
+      if (onlineMode && !onlineHost && running) flushGuestInput();
     }
   });
 
@@ -6047,7 +6268,13 @@
   window.addEventListener("keyup", (e) => {
     const k = e.key.length === 1 ? e.key.toLowerCase() : e.key.toLowerCase();
     keys[k] = false;
-    if (k === "enter" || e.code === "NumpadEnter") p2ShootHeld = false;
+    if (k === "enter" || e.code === "NumpadEnter") {
+      if (player2 && player2.alive && player2.chargeStartAt) {
+        const aim = getP2ShootTarget();
+        releaseOverchargeShot(player2, aim.x, aim.y, performance.now());
+      }
+      p2ShootHeld = false;
+    }
   });
   canvas.addEventListener("wheel", (e) => {
     if (!running) return;

@@ -9,6 +9,7 @@
   <meta name="supergun-build" content="local-2026-06-29b" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
+  <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
   <title>Supergun</title>
   <style>
     :root {
@@ -828,12 +829,120 @@
       background: #1a1212;
     }
     .btn-delete-account:hover { background: #2a1818; }
+    .main-menu-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 2px;
+    }
+    .main-menu-tabs button {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 10px;
+    }
+    .main-menu-tabs button.active {
+      background: #2a3a42;
+      border-color: #4a6a72;
+      color: #fff;
+    }
+    #menuScreen.menu-index-open { max-width: 920px; }
+    .index-card { text-align: left; }
+    .index-card h1 { text-align: center; }
+    .index-wiki-row {
+      margin: 0 0 16px;
+      padding: 10px 12px;
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 8px;
+      font-size: 0.82rem;
+      color: #aaa;
+      line-height: 1.45;
+    }
+    .index-wiki-row a { color: #8ad4ff; }
+    .weapon-index-section {
+      margin-bottom: 22px;
+    }
+    .weapon-index-section h2 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ccc;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .weapon-index-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .weapon-index-card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      min-height: 100%;
+    }
+    .weapon-index-card.signature {
+      border-color: #665522;
+      background: linear-gradient(180deg, #1a1810 0%, #161616 100%);
+    }
+    .weapon-index-card img {
+      width: 100%;
+      height: 72px;
+      object-fit: contain;
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 6px;
+    }
+    .weapon-index-card h3 {
+      margin: 0;
+      font-size: 0.88rem;
+      line-height: 1.25;
+      color: #eee;
+    }
+    .weapon-index-stats {
+      margin: 0;
+      font-size: 0.76rem;
+      color: #8ad4ff;
+      line-height: 1.4;
+    }
+    .weapon-index-blurb {
+      margin: 0;
+      font-size: 0.76rem;
+      color: #999;
+      line-height: 1.45;
+    }
+    .weapon-index-tag {
+      display: inline-block;
+      align-self: flex-start;
+      padding: 2px 7px;
+      border-radius: 999px;
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #ffd700;
+      background: rgba(255, 215, 0, 0.12);
+      border: 1px solid rgba(255, 215, 0, 0.35);
+    }
   </style>
 </head>
 <body>
   <h1 class="page-title">Supergun</h1>
 
   <div id="menuScreen">
+    <div class="main-menu-tabs" id="mainMenuTabs">
+      <button type="button" id="tabPlay" class="active">Play</button>
+      <button type="button" id="tabIndex">Guns</button>
+      <button type="button" id="tabWiki">Wiki</button>
+    </div>
+    <div id="playPanel">
     <div id="authCard" class="menu-card auth-card">
       <h1>Supergun</h1>
       <p class="menu-tag">Accounts are saved in this browser and stay after you restart your computer. They are only removed if you delete the account or clear site data.</p>
@@ -941,13 +1050,23 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (screen-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
       The arena is <strong>huge</strong> — about <strong>50 seconds</strong> to run left to right at full speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
+    </div>
+
+    <div id="indexPanel" hidden>
+      <div class="menu-card index-card">
+        <h1>Weapon Index</h1>
+        <p class="menu-tag" style="text-align:center;">All guns in Supergun. Reload stats are shots before reload and reload time.</p>
+        <p id="wikiLinkRow" class="index-wiki-row"></p>
+        <div id="weaponIndexList"></div>
+      </div>
+    </div>
   </div>
 
   <div id="challengeIncomingModal" class="modal-overlay" hidden>
@@ -1192,6 +1311,36 @@
     meowie_rpg: { magSize: 5, reloadSec: 0.25 },
   };
 
+  const GUN_INDEX_BLURBS = {
+    pistol: "Weakest gun. Common starter pick.",
+    revolver: "Hard-hitting, slow fire rate.",
+    smg: "Very fast fire, high bloom.",
+    combat_shotgun: "Heavy close-range damage.",
+    tactical_shotgun: "Combat shotgun damage, faster fire.",
+    pump_shotgun: "One heavy slug per shot, very slow.",
+    overcharge_shotgun: "Hold to charge, release to fire. Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s.",
+    breacher_shotgun: "Weak vs players. Destroys walls in 1 hit.",
+    drum_shotgun: "8-round fast burst, then 1s pause.",
+    strike_shotgun: "Heavy close-range slug. Damage falls off sharply at distance.",
+    famas: "3-round burst with strong range.",
+    assault_rifle: "Balanced full-auto rifle.",
+    suppressed_assault_rifle: "Accurate full-auto, lower bloom.",
+    sweep_assault_rifle: "Full-auto tuned for closer fights.",
+    burst_assault_rifle: "3-round burst, fast and accurate.",
+    scoped_assault_rifle: "3-round precision burst, long range.",
+    thermal_scoped_assault_rifle: "Semi-auto, high long-range damage. Epic+ chests only.",
+    scar: "Strong, balanced rifle.",
+    sniper: "Weak up close, deadly past screen range.",
+    rpg: "Explosive area damage. 2 hits to break walls.",
+    dogshot_smash_pistol: "Mythic revolver — Dogshot's signature. Fast and hard-hitting.",
+    snowstorm_smg: "Mythic SMG — Snowstorm's signature.",
+    swift_burst_assault_rifle: "Mythic Burst AR — Swift's signature.",
+    crackshot_shotgun: "Mythic Tactical SG — Crackshot's signature.",
+    zeus_drum_sg: "Mythic Drum SG — Zeus' signature.",
+    foxly_assault_rifle: "Mythic SCAR — Foxly's signature.",
+    meowie_rpg: "Mythic RPG — Meowie's signature. Very fast reload.",
+  };
+
   const SIGNATURE_GUN_BASE = {
     dogshot_smash_pistol: "revolver",
     snowstorm_smg: "smg",
@@ -1324,6 +1473,13 @@
   const accountStats = document.getElementById("accountStats");
   const tabLogin = document.getElementById("tabLogin");
   const tabRegister = document.getElementById("tabRegister");
+  const tabPlayMain = document.getElementById("tabPlay");
+  const tabIndexMain = document.getElementById("tabIndex");
+  const tabWikiMain = document.getElementById("tabWiki");
+  const playPanel = document.getElementById("playPanel");
+  const indexPanel = document.getElementById("indexPanel");
+  const weaponIndexList = document.getElementById("weaponIndexList");
+  const wikiLinkRow = document.getElementById("wikiLinkRow");
 
   const ACCOUNTS_KEY = "supergun_accounts_v1";
   const SESSION_KEY = "supergun_session_v1";
@@ -2027,6 +2183,7 @@
   updateMenuAuthUI();
   fetchShareLinks();
   connectOnline();
+  initMainMenuTabs();
 
   function screenToWorld(sx, sy, cam) {
     return { x: sx + cam.x, y: sy + cam.y };
@@ -2234,6 +2391,128 @@
       }
     }
     return paths;
+  }
+
+  function getGunIndexBlurb(typeId) {
+    return GUN_INDEX_BLURBS[typeId] || "";
+  }
+
+  function buildWeaponIndexCard(meta) {
+    const card = document.createElement("article");
+    card.className = "weapon-index-card" + (isSignatureGun(meta.id) ? " signature" : "");
+    const img = document.createElement("img");
+    img.alt = meta.label;
+    img.loading = "lazy";
+    img.src = gunImagePaths(meta.id)[0] || "";
+    img.onerror = () => { img.hidden = true; };
+    card.appendChild(img);
+    const title = document.createElement("h3");
+    title.textContent = meta.label;
+    card.appendChild(title);
+    if (isSignatureGun(meta.id)) {
+      const tag = document.createElement("span");
+      tag.className = "weapon-index-tag";
+      tag.textContent = "Mythic";
+      card.appendChild(tag);
+    }
+    const reload = GUN_RELOAD_STATS[meta.id];
+    const stats = document.createElement("p");
+    stats.className = "weapon-index-stats";
+    if (reload) {
+      stats.textContent = reload.magSize + " before reload · " + reload.reloadSec + "s reload";
+      if (typeof meta.bloomPerShot === "number") {
+        stats.textContent += " · " + meta.bloomPerShot + " bloom";
+      }
+    } else {
+      stats.textContent = "Reload stats vary";
+    }
+    card.appendChild(stats);
+    const blurb = getGunIndexBlurb(meta.id);
+    if (blurb) {
+      const note = document.createElement("p");
+      note.className = "weapon-index-blurb";
+      note.textContent = blurb;
+      card.appendChild(note);
+    }
+    return card;
+  }
+
+  function renderWeaponIndexSection(title, guns) {
+    const section = document.createElement("section");
+    section.className = "weapon-index-section";
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+    section.appendChild(heading);
+    const grid = document.createElement("div");
+    grid.className = "weapon-index-grid";
+    const sorted = [...guns].sort((a, b) => a.label.localeCompare(b.label));
+    for (const meta of sorted) {
+      grid.appendChild(buildWeaponIndexCard(meta));
+    }
+    section.appendChild(grid);
+    return section;
+  }
+
+  function renderWeaponIndex() {
+    if (!weaponIndexList) return;
+    weaponIndexList.replaceChildren();
+    const standard = GUN_TYPES.filter((t) => !isSignatureGun(t.id));
+    const signature = GUN_TYPES.filter((t) => isSignatureGun(t.id));
+    weaponIndexList.appendChild(renderWeaponIndexSection("Standard weapons", standard));
+    weaponIndexList.appendChild(renderWeaponIndexSection("Signature weapons", signature));
+  }
+
+  function getWikiUrl() {
+    const wikiMeta = document.querySelector('meta[name="supergun-wiki-url"]');
+    const wikiUrl = wikiMeta && wikiMeta.content ? wikiMeta.content.trim() : "";
+    return wikiUrl || "https://sites.google.com/view/supergun-index";
+  }
+
+  function goToWiki() {
+    window.location.href = getWikiUrl();
+  }
+
+  function updateWikiLinkRow() {
+    if (!wikiLinkRow) return;
+    const wikiUrl = getWikiUrl();
+    wikiLinkRow.innerHTML =
+      'Full wiki on Google Sites: <a href="' + wikiUrl.replace(/"/g, "&quot;") +
+      '" target="_blank" rel="noopener noreferrer">Open wiki</a>';
+  }
+
+  function setMainMenuTab(tab) {
+    const indexOn = tab === "index";
+    const playOn = tab === "play";
+    if (tabPlayMain) tabPlayMain.classList.toggle("active", playOn);
+    if (tabIndexMain) tabIndexMain.classList.toggle("active", indexOn);
+    if (tabWikiMain) tabWikiMain.classList.remove("active");
+    if (playPanel) playPanel.hidden = !playOn;
+    if (indexPanel) indexPanel.hidden = !indexOn;
+    if (menuScreen) menuScreen.classList.toggle("menu-index-open", indexOn);
+    if (indexOn) {
+      updateWikiLinkRow();
+      renderWeaponIndex();
+    }
+    const hash = indexOn ? "#index" : "#play";
+    if (location.hash !== hash) {
+      history.replaceState(null, "", hash);
+    }
+  }
+
+  function initMainMenuTabs() {
+    updateWikiLinkRow();
+    if (tabPlayMain) tabPlayMain.addEventListener("click", () => setMainMenuTab("play"));
+    if (tabIndexMain) tabIndexMain.addEventListener("click", () => setMainMenuTab("index"));
+    if (tabWikiMain) tabWikiMain.addEventListener("click", goToWiki);
+    window.addEventListener("hashchange", () => {
+      if (location.hash === "#wiki") {
+        goToWiki();
+        return;
+      }
+      setMainMenuTab(location.hash === "#index" ? "index" : "play");
+    });
+    if (location.hash === "#wiki") goToWiki();
+    else if (location.hash === "#index") setMainMenuTab("index");
   }
 
   function gunImageUrl(typeId) {
@@ -5976,6 +6255,7 @@
     onlineMatchId = null;
     gameScreen.hidden = true;
     menuScreen.hidden = false;
+    setMainMenuTab("play");
     endOverlay.hidden = true;
     endPlacement.hidden = true;
     endLeaderboard.hidden = true;

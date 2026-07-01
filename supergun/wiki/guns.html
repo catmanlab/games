@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Supergun — Gun Index</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0a0a0c;
+      --card: #141418;
+      --text: #e8e8e8;
+      --muted: #9a9aa8;
+      --link: #8ad4ff;
+      --accent: #ffb74d;
+      --border: #2a2a34;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, Segoe UI, Roboto, sans-serif;
+      line-height: 1.55;
+    }
+    a { color: var(--link); }
+    .wrap {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 28px 20px 48px;
+    }
+    nav {
+      margin-bottom: 24px;
+      font-size: 0.92rem;
+      color: var(--muted);
+    }
+    h1 {
+      font-size: 1.75rem;
+      margin: 0 0 8px;
+    }
+    .lead {
+      color: var(--muted);
+      margin: 0 0 28px;
+    }
+    .gun {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+      margin-bottom: 18px;
+    }
+    .gun h2 {
+      margin: 0 0 6px;
+      font-size: 1.25rem;
+    }
+    .stats {
+      color: var(--accent);
+      font-size: 0.92rem;
+      margin: 0 0 12px;
+    }
+    .gun p { margin: 0 0 10px; }
+    .gun p:last-child { margin-bottom: 0; }
+    .tag {
+      display: inline-block;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+    ul { margin: 8px 0 0; padding-left: 1.2rem; }
+    li { margin-bottom: 6px; }
+    .note {
+      margin-top: 28px;
+      padding: 14px 16px;
+      border-radius: 10px;
+      background: #101820;
+      border: 1px solid #1e3a4a;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <a href="../supergun.html">Play</a>
+      ·
+      <a href="../supergun.html#index">In-game guns</a>
+      ·
+      <a href="https://sites.google.com/view/supergun-index">Google Sites wiki</a>
+    </nav>
+
+    <h1>Gun Index</h1>
+    <p class="lead">
+      Damage scales with rarity (Common → Epic in chests; Legendary from red bosses; Mythic from signature bosses only).
+      Every gun starts with <strong>50 ammo</strong>. Press <strong>E</strong> to reload.
+    </p>
+
+    <section class="gun" id="modulated-ar">
+      <span class="tag">Assault rifle</span>
+      <h2>Modulated AR</h2>
+      <p class="stats">30 before reload · 1.5s reload · 12 bloom · Press <strong>F</strong> to switch mode</p>
+      <p>
+        A dual-mode assault rifle that trades fire rate for punch. Press <strong>F</strong> at any time to swap modes
+        (two-player same device: Player 2 uses <strong>V</strong>).
+      </p>
+      <ul>
+        <li><strong>Rapid</strong> — Nearly Tactical Shotgun speed (~151 ms per shot at Rare). Lighter hits (~82% AR damage). Good for close pressure and finishing weak targets.</li>
+        <li><strong>Heavy</strong> — Revolver-slow cadence (~403 ms per shot at Rare). Much harder hits (~128% AR damage). Best for mid-range taps and burst damage.</li>
+      </ul>
+      <p>
+        Balanced rifle range and spread — same effective distance as a standard Assault Rifle.
+        Rare point-blank damage: Rapid ~37–53 per shot; Heavy ~58–83 per shot.
+      </p>
+      <p><strong>Found in:</strong> Brown chests (Common–Epic)</p>
+    </section>
+
+    <section class="gun" id="overdrive-shotgun">
+      <span class="tag">Shotgun</span>
+      <h2>Overdrive Shotgun</h2>
+      <p class="stats">20 before reload · 1.9s reload · 14 bloom</p>
+      <p>
+        Mid/close-range shotgun that gets stronger as the mag runs dry. First shots are weak (~55% damage);
+        last shells before reload hit hardest (~145% damage). Slightly fast fire — burn through the mag for peak damage, then reload.
+      </p>
+      <p><strong>Found in:</strong> Brown chests (Common–Epic)</p>
+    </section>
+
+    <section class="gun" id="suppressed-smg">
+      <span class="tag">SMG</span>
+      <h2>Suppressed SMG</h2>
+      <p class="stats">36 before reload · 2s reload · 7 bloom</p>
+      <p>
+        Very high fire rate with strong damage and heavy ammo use. Short bursts stay accurate to mid range — ideal run-and-gun.
+      </p>
+      <p><strong>Found in:</strong> Brown chests (Common–Epic)</p>
+    </section>
+
+    <section class="gun" id="machine-gun">
+      <span class="tag">Assault rifle</span>
+      <h2>Machine Gun</h2>
+      <p class="stats">60 before reload · 3.25s reload · 8 bloom</p>
+      <p>
+        Fast sustained fire with a huge magazine. Strong at close-to-mid range; bloom builds quickly — poor at long range.
+        Great for shredding walls and pressure fights up close.
+      </p>
+      <p><strong>Found in:</strong> Brown chests (Common–Epic)</p>
+    </section>
+
+    <section class="gun" id="assault-rifle">
+      <span class="tag">Assault rifle</span>
+      <h2>Assault Rifle</h2>
+      <p class="stats">30 before reload · 1.5s reload · 13 bloom</p>
+      <p>Balanced full-auto rifle. The baseline for most AR variants.</p>
+      <p><strong>Found in:</strong> Brown chests (Common–Epic)</p>
+    </section>
+
+    <p class="note">
+      For every weapon with images and live stats, open the
+      <a href="../supergun.html#index">in-game Guns tab</a>.
+      Basic rules and medicine/ammo are on the
+      <a href="https://sites.google.com/view/supergun-index/basic-rules">Google Sites wiki</a>.
+    </p>
+  </div>
+</body>
+</html>

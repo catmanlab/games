@@ -2495,9 +2495,12 @@
   function updateWikiLinkRow() {
     if (!wikiLinkRow) return;
     const wikiUrl = getWikiUrl();
+    const gunsWikiUrl = "wiki/guns.html";
     wikiLinkRow.innerHTML =
-      'Full wiki on Google Sites: <a href="' + wikiUrl.replace(/"/g, "&quot;") +
-      '" target="_blank" rel="noopener noreferrer">Open wiki</a>';
+      'Wiki: <a href="' + wikiUrl.replace(/"/g, "&quot;") +
+      '" target="_blank" rel="noopener noreferrer">Google Sites</a>' +
+      ' · <a href="' + gunsWikiUrl + '">Gun pages</a>' +
+      ' · <a href="' + gunsWikiUrl + '#modulated-ar">Modulated AR</a>';
   }
 
   function setMainMenuTab(tab) {

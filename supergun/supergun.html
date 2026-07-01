@@ -1050,7 +1050,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Modulated AR</strong> (press <strong>F</strong> to swap rapid light fire or slow heavy fire) / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
@@ -1215,6 +1215,7 @@
     drum_shotgun: "drum shotgun",
     famas: "famas",
     assault_rifle: "assault rifle",
+    modulated_assault_rifle: "modulated assault rifle",
     scoped_assault_rifle: "scoped ar",
     thermal_scoped_assault_rifle: "thermal scoped assault rifle",
     suppressed_assault_rifle: "suppresed assault rifle",
@@ -1255,6 +1256,7 @@
     scoped_assault_rifle: ["scoped ar", "scoped assault rifle", "Scoped AR", "Scoped Assault Rifle", "scoped_assault_rifle"],
     thermal_scoped_assault_rifle: ["thermal scoped assault rifle", "thermal scoped ar", "Thermal Scoped AR", "thermal_scoped_assault_rifle"],
     suppressed_assault_rifle: ["suppressed assault rifle", "suppresed assault rifle", "suppressed ar", "Suppressed AR", "suppressed_assault_rifle"],
+    modulated_assault_rifle: ["modulated assault rifle", "modulated ar", "Modulated AR", "modulated_assault_rifle"],
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
   const GUN_TYPES = [
@@ -1268,6 +1270,7 @@
     { id: "overdrive_shotgun", label: "Overdrive Shotgun", w: 0.06, dmgMul: 0.88, fireMul: 0.78, spreadMul: 1.12, bloomPerShot: 14 },
     { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45, bloomPerShot: 11 },
     { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1, bloomPerShot: 13 },
+    { id: "modulated_assault_rifle", label: "Modulated AR", w: 0.055, dmgMul: 1, fireMul: 1, spreadMul: 0.94, bloomPerShot: 12 },
     { id: "machine_gun", label: "Machine Gun", w: 0.055, dmgMul: 0.88, fireMul: 0.7, spreadMul: 1.28, bloomPerShot: 8 },
     { id: "suppressed_assault_rifle", label: "Suppressed AR", w: 0.085, dmgMul: 0.94, dmgMulHi: 0.98, fireMul: 0.74, spreadMul: 0.9, bloomPerShot: 10 },
     { id: "sweep_assault_rifle", label: "Sweep Assault Rifle", w: 0.09, dmgMul: 0.72, dmgMulHi: 0.75, fireMul: 0.66, spreadMul: 1.12, bloomPerShot: 14 },
@@ -1305,6 +1308,7 @@
     drum_shotgun: { magSize: 40, reloadSec: 3 },
     famas: { magSize: 20, reloadSec: 1.75 },
     assault_rifle: { magSize: 30, reloadSec: 1.5 },
+    modulated_assault_rifle: { magSize: 30, reloadSec: 1.5 },
     machine_gun: { magSize: 60, reloadSec: 3.25 },
     suppressed_assault_rifle: { magSize: 30, reloadSec: 1.25 },
     sweep_assault_rifle: { magSize: 30, reloadSec: 1.25 },
@@ -1338,6 +1342,7 @@
     strike_shotgun: "Heavy close-range slug. Damage falls off sharply at distance.",
     famas: "3-round burst with strong range.",
     assault_rifle: "Balanced full-auto rifle.",
+    modulated_assault_rifle: "Press F to swap modes: rapid light fire (Tactical SG speed) or slow heavy fire (Revolver speed).",
     machine_gun: "Fast sustained fire, 60-round mag. Strong close-mid; bloom builds quickly — poor at long range. Great for shredding walls.",
     suppressed_assault_rifle: "Accurate full-auto, lower bloom.",
     sweep_assault_rifle: "Full-auto tuned for closer fights.",
@@ -1585,13 +1590,14 @@
   let onlineMatchRole = null;
   let onlineOpponentName = "";
   let onlineOpponentColor = "#fdcb6e";
-  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, reload: false, useMed: false, build: false, drop: false, invIndex: 0 };
+  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, reload: false, useMed: false, build: false, drop: false, modulate: false, invIndex: 0 };
   let lastStateSentAt = 0;
   let lastInputSentAt = 0;
   let pendingOnlineMed = false;
   let pendingOnlineBuild = false;
   let pendingOnlineDrop = false;
   let pendingOnlineReload = false;
+  let pendingOnlineModulate = false;
   const ONLINE_WS_PORT = 3847;
   const ONLINE_SERVER_URL = (() => {
     const meta = document.querySelector('meta[name="supergun-ws-url"]');
@@ -2762,6 +2768,10 @@
   }
 
   const OVERCHARGE_MAX_SEC = 25;
+  const MODULATED_FAST_FIRE_MUL = 0.58;
+  const MODULATED_HEAVY_FIRE_MUL = 1.55;
+  const MODULATED_FAST_DMG_MUL = 0.82;
+  const MODULATED_HEAVY_DMG_MUL = 1.28;
   const OVERCHARGE_RARE_DAMAGE_CURVE = [
     { sec: 0, dmg: 0 },
     { sec: 1, dmg: 28 },
@@ -2779,6 +2789,38 @@
 
   function isOverdriveShotgun(typeId) {
     return typeId === "overdrive_shotgun";
+  }
+
+  function isModulatedAR(typeId) {
+    return typeId === "modulated_assault_rifle";
+  }
+
+  function getModulatedHeavyMode(e) {
+    return !!(e && e.modulatedHeavy);
+  }
+
+  function toggleModulatedMode(e) {
+    if (!e) return false;
+    const gun = currentGun(e);
+    if (!gun || !isModulatedAR(gun.type)) return false;
+    e.modulatedHeavy = !e.modulatedHeavy;
+    if (e.isPlayer) updateAmmoHud(e);
+    return true;
+  }
+
+  function getModulatedFireMs(gun, heavy) {
+    const r = RARITIES[gun.rarity] || RARITIES.rare;
+    const mul = heavy ? MODULATED_HEAVY_FIRE_MUL : MODULATED_FAST_FIRE_MUL;
+    return Math.max(80, Math.round(r.fireMs * mul));
+  }
+
+  function getModulatedDamageMul(heavy) {
+    return heavy ? MODULATED_HEAVY_DMG_MUL : MODULATED_FAST_DMG_MUL;
+  }
+
+  function getEntityFireMs(e, gun) {
+    if (isModulatedAR(gun.type)) return getModulatedFireMs(gun, getModulatedHeavyMode(e));
+    return gun.fireMs;
   }
 
   function overdriveMagEmptyRatio(reloadShotsLeft, magSize) {
@@ -2933,6 +2975,7 @@
         return dmg * (0.9 + close + far);
       }
       case "assault_rifle":
+      case "modulated_assault_rifle":
       case "burst_assault_rifle":
       case "scar":
         return dmg;
@@ -3230,6 +3273,12 @@
       dmg *= scale;
       return applyGunTypeDistanceModifier(g.type, dmg, distance);
     }
+    if (isModulatedAR(g.type)) {
+      let dmg = rollGunBaseDamage(g);
+      const scale = typeof g.modulatedScale === "number" ? g.modulatedScale : 1;
+      dmg *= scale;
+      return applyGunTypeDistanceModifier(g.type, dmg, distance);
+    }
     let dmg = rollGunBaseDamage(g);
     return applyGunTypeDistanceModifier(g.type, dmg, distance);
   }
@@ -3250,6 +3299,13 @@
       const magSize = getShotsBeforeReload(g.type);
       const scale = overdriveDamageMultiplier(Math.ceil(magSize * 0.35), magSize);
       let dmg = (g.dmgMin + g.dmgMax) * 0.5 * scale;
+      return applyGunTypeDistanceModifier(g.type, dmg, distance);
+    }
+    if (isModulatedAR(g.type)) {
+      const heavyScale = getModulatedDamageMul(true);
+      const fastScale = getModulatedDamageMul(false);
+      const avgScale = (heavyScale + fastScale) * 0.5;
+      let dmg = (g.dmgMin + g.dmgMax) * 0.5 * avgScale;
       return applyGunTypeDistanceModifier(g.type, dmg, distance);
     }
     let dmg = (g.dmgMin + g.dmgMax) * 0.5;
@@ -3343,6 +3399,11 @@
       const burstPauseMs = meta.burstPauseMs || 220;
       const cycleMs = meta.burstSize * burstShotMs + burstPauseMs;
       return (dmg * meta.burstSize) / Math.max(cycleMs / 1000, 0.08);
+    }
+    if (isModulatedAR(g.type)) {
+      const heavyDps = dmg * getModulatedDamageMul(true) / Math.max(getModulatedFireMs(g, true) / 1000, 0.08);
+      const fastDps = dmg * getModulatedDamageMul(false) / Math.max(getModulatedFireMs(g, false) / 1000, 0.08);
+      return Math.max(heavyDps, fastDps);
     }
     return dmg / Math.max(g.fireMs / 1000, 0.08);
   }
@@ -3494,6 +3555,7 @@
       aiOverchargeFireAt: 0,
       aiOverchargeAimX: 0,
       aiOverchargeAimY: 0,
+      modulatedHeavy: false,
     };
   }
 
@@ -3845,6 +3907,25 @@
       reloadEl.textContent = "Charge: " + chargeSec.toFixed(1) + "s · " + dmg + " dmg";
       return;
     }
+    if (isModulatedAR(gun.type)) {
+      const heavy = getModulatedHeavyMode(entity);
+      const modeLabel = heavy ? "Heavy" : "Rapid";
+      if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
+        const left = Math.max(0, (entity.reloadUntil - now) / 1000);
+        reloadEl.textContent = "Reloading " + left.toFixed(1) + "s";
+        reloadEl.classList.add("reloading");
+        return;
+      }
+      if (getGunAmmo(gun) <= 0) {
+        reloadEl.textContent = "Mode: " + modeLabel + " · Before reload: — (F)";
+        return;
+      }
+      const left = getReloadShotsLeft(gun);
+      const interval = getShotsBeforeReload(gun.type);
+      reloadEl.textContent = "Mode: " + modeLabel + " · Before reload: " + left + " / " + interval + " (F)";
+      if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) reloadEl.classList.add("needs-reload");
+      return;
+    }
     if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
       const left = Math.max(0, (entity.reloadUntil - now) / 1000);
       reloadEl.textContent = "Reloading " + left.toFixed(1) + "s";
@@ -3921,7 +4002,7 @@
       if (getReloadShotsLeft(gun) <= 0) return;
       if (getGunAmmo(gun) <= 0) return;
     }
-    if (now - e.lastShot < gun.fireMs) return;
+    if (now - e.lastShot < getEntityFireMs(e, gun)) return;
     e.lastShot = now;
     if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
     if (e.isPlayer) updateAmmoHud(e);
@@ -3973,7 +4054,7 @@
       } else if (now - e.lastShot < (meta.burstShotMs || 55)) {
         return;
       }
-    } else if (now - e.lastShot < gun.fireMs) {
+    } else if (now - e.lastShot < getEntityFireMs(e, gun)) {
       return;
     }
     if (e.bloomGunType !== gun.type) {
@@ -3982,6 +4063,9 @@
     }
     const overdriveScale = isOverdriveShotgun(gun.type)
       ? overdriveDamageMultiplier(getReloadShotsLeft(gun), getShotsBeforeReload(gun.type))
+      : null;
+    const modulatedScale = isModulatedAR(gun.type)
+      ? getModulatedDamageMul(getModulatedHeavyMode(e))
       : null;
     e.lastShot = now;
     if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
@@ -4016,10 +4100,13 @@
             dmgMin: Math.max(1, Math.round(gun.dmgMin * pelletDmgMul)),
             dmgMax: Math.max(1, Math.round(gun.dmgMax * pelletDmgMul)),
             ...(overdriveScale != null ? { overdriveScale } : {}),
+            ...(modulatedScale != null ? { modulatedScale } : {}),
           }
         : overdriveScale != null
           ? { ...gun, overdriveScale }
-          : gun;
+          : modulatedScale != null
+            ? { ...gun, modulatedScale }
+            : gun;
       bullets.push({
         x: e.x + Math.cos(pelletAng) * (e.radius + 4),
         y: e.y + Math.sin(pelletAng) * (e.radius + 4),
@@ -4754,6 +4841,7 @@
       if (ri.shoot && gun) tryShoot(player2, ri.aimX, ri.aimY, now, 1);
     }
     if (ri.reload) tryStartReload(player2, now);
+    if (ri.modulate) toggleModulatedMode(player2);
     if (ri.useMed) tryUseMed(player2, now);
     if (ri.build) tryPlaceWallForEntity(player2, ri.aimX, ri.aimY, now);
     if (ri.drop) dropCurrentWeapon(player2);
@@ -4816,6 +4904,7 @@
         wallCharges: player2.wallCharges,
         wallRechargeAt: player2.wallRechargeAt,
         reloadUntil: player2.reloadUntil || 0,
+        modulatedHeavy: !!player2.modulatedHeavy,
         inventory: player2.inventory.map(serializeInvSlot),
         name: player2Name,
         color: player2Color,
@@ -4871,6 +4960,7 @@
       player.wallCharges = gv.wallCharges;
       player.wallRechargeAt = gv.wallRechargeAt;
       player.reloadUntil = gv.reloadUntil || 0;
+      if (typeof gv.modulatedHeavy === "boolean") player.modulatedHeavy = gv.modulatedHeavy;
       if (gv.inventory) player.inventory = gv.inventory.map(hydrateInvSlot);
       player.invIndex = clamp(player.invIndex, 0, INV_SLOTS - 1);
     }
@@ -4964,6 +5054,7 @@
       aimY: mouseWorldY,
       shoot: !!shootMouseDown,
       reload: pendingOnlineReload,
+      modulate: pendingOnlineModulate,
       useMed: pendingOnlineMed,
       build: pendingOnlineBuild,
       drop: pendingOnlineDrop,
@@ -4977,6 +5068,7 @@
     pendingOnlineBuild = false;
     pendingOnlineDrop = false;
     pendingOnlineReload = false;
+    pendingOnlineModulate = false;
     return input;
   }
 
@@ -5749,6 +5841,9 @@
               d.aiOverchargeFireAt = 0;
             }
           } else {
+            if (isModulatedAR(gun.type) && aim) {
+              d.modulatedHeavy = dist(d.x, d.y, aim.x, aim.y) > 280;
+            }
             tryShoot(d, aim.x, aim.y, now, spectateMode ? Math.max(tune.accuracy, 0.62) : tune.accuracy);
           }
         }
@@ -6581,6 +6676,23 @@
       } else if (player && player.alive) {
         tryStartReload(player, now);
       }
+      return;
+    }
+
+    if (e.code === "KeyF" && !e.repeat) {
+      e.preventDefault();
+      if (onlineMode && !onlineHost) {
+        pendingOnlineModulate = true;
+        flushGuestInput();
+      } else if (player && player.alive) {
+        toggleModulatedMode(player);
+      }
+      return;
+    }
+
+    if (twoPlayerMode && player2 && e.code === "KeyV" && !e.repeat) {
+      e.preventDefault();
+      toggleModulatedMode(player2);
       return;
     }
 

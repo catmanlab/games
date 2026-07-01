@@ -1050,7 +1050,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
@@ -1233,6 +1233,7 @@
     meowie_rpg: "meowie rpg",
     overcharge_shotgun: "charge shotgun",
     breacher_shotgun: "breacher shotgun",
+    overdrive_shotgun: "overdrive shotgun",
     machine_gun: "machine gun",
   };
   const GUN_IMAGE_ALT_NAMES = {
@@ -1240,6 +1241,7 @@
     suppressed_smg: ["suppresed smg", "suppressed smg", "Suppressed SMG", "suppressed_smg"],
     overcharge_shotgun: ["charge shotgun", "overcharge shotgun", "Overcharge Shotgun"],
     breacher_shotgun: ["breacher shotgun", "Breacher Shotgun", "breacher_shotgun"],
+    overdrive_shotgun: ["overdrive shotgun", "Overdrive Shotgun", "overdrive_shotgun"],
     dogshot_smash_pistol: ["dogshot's smash pistol", "dogshots smash pistol", "Dogshot's Smash Pistol"],
     snowstorm_smg: ["snowstorm's smg", "snowstorms smg", "Snowstorm's SMG"],
     swift_burst_assault_rifle: ["swift's burst ar", "swifts burst ar", "Swift's Burst AR"],
@@ -1263,6 +1265,7 @@
     { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95, bloomPerShot: 16 },
     { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.9, fireMul: 0.84, spreadMul: 0.88, bloomPerShot: 10, burstSize: 3, burstShotMs: 72, burstPauseMs: 340 },
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 0.90, dmgMulHi: 0.94, fireMul: 0.58, spreadMul: 1.35, bloomPerShot: 24 },
+    { id: "overdrive_shotgun", label: "Overdrive Shotgun", w: 0.06, dmgMul: 0.88, fireMul: 0.78, spreadMul: 1.12, bloomPerShot: 14 },
     { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45, bloomPerShot: 11 },
     { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1, bloomPerShot: 13 },
     { id: "machine_gun", label: "Machine Gun", w: 0.055, dmgMul: 0.88, fireMul: 0.7, spreadMul: 1.28, bloomPerShot: 8 },
@@ -1294,6 +1297,7 @@
     suppressed_smg: { magSize: 36, reloadSec: 2 },
     combat_shotgun: { magSize: 12, reloadSec: 3 },
     tactical_shotgun: { magSize: 18, reloadSec: 3.5 },
+    overdrive_shotgun: { magSize: 20, reloadSec: 1.9 },
     pump_shotgun: { magSize: 8, reloadSec: 2.25 },
     overcharge_shotgun: { magSize: 3, reloadSec: 2.2 },
     breacher_shotgun: { magSize: 4, reloadSec: 2.5 },
@@ -1326,6 +1330,7 @@
     suppressed_smg: "Very high fire rate, strong damage, heavy ammo use. Short bursts stay accurate to mid range — ideal run-and-gun.",
     combat_shotgun: "Heavy close-range damage.",
     tactical_shotgun: "Combat shotgun damage, faster fire.",
+    overdrive_shotgun: "Damage rises as the mag empties — last shots hit hardest. Mid-close range, slightly fast fire.",
     pump_shotgun: "One heavy slug per shot, very slow.",
     overcharge_shotgun: "Hold to charge, release to fire. Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s.",
     breacher_shotgun: "Weak vs players. Destroys walls in 1 hit.",
@@ -2413,8 +2418,7 @@
     const img = document.createElement("img");
     img.alt = meta.label;
     img.loading = "lazy";
-    img.src = gunImagePaths(meta.id)[0] || "";
-    img.onerror = () => { img.hidden = true; };
+    bindInventoryGunImage(img, meta.id);
     card.appendChild(img);
     const title = document.createElement("h3");
     title.textContent = meta.label;
@@ -2773,6 +2777,22 @@
     return typeId === "breacher_shotgun";
   }
 
+  function isOverdriveShotgun(typeId) {
+    return typeId === "overdrive_shotgun";
+  }
+
+  function overdriveMagEmptyRatio(reloadShotsLeft, magSize) {
+    if (magSize <= 1) return 1;
+    return 1 - (reloadShotsLeft - 1) / (magSize - 1);
+  }
+
+  function overdriveDamageMultiplier(reloadShotsLeft, magSize) {
+    const t = overdriveMagEmptyRatio(reloadShotsLeft, magSize);
+    const minMul = 0.55;
+    const maxMul = 1.45;
+    return minMul + (maxMul - minMul) * t;
+  }
+
   function getBulletWallDamage(gun) {
     const type = gun && gun.type ? resolveGunBehaviorType(gun.type) : null;
     if (type === "breacher_shotgun") return WALL_MAX_HP;
@@ -2878,6 +2898,10 @@
       case "tactical_shotgun": {
         const t = clamp(1 - distance / 300, 0, 1);
         return dmg * (0.38 + 0.62 * t);
+      }
+      case "overdrive_shotgun": {
+        const t = clamp(1 - distance / 340, 0, 1);
+        return dmg * (0.42 + 0.58 * t);
       }
       case "strike_shotgun": {
         const t = clamp(1 - distance / VIEW_W, 0, 1);
@@ -3200,6 +3224,12 @@
         : overchargeDamageAtSec(0, g.rarity);
       return applyGunTypeDistanceModifier(g.type, base, distance);
     }
+    if (isOverdriveShotgun(g.type)) {
+      let dmg = rollGunBaseDamage(g);
+      const scale = typeof g.overdriveScale === "number" ? g.overdriveScale : 1;
+      dmg *= scale;
+      return applyGunTypeDistanceModifier(g.type, dmg, distance);
+    }
     let dmg = rollGunBaseDamage(g);
     return applyGunTypeDistanceModifier(g.type, dmg, distance);
   }
@@ -3215,6 +3245,12 @@
     }
     if (isOverchargeShotgun(g.type)) {
       return applyGunTypeDistanceModifier(g.type, overchargeDamageAtSec(10, g.rarity), distance);
+    }
+    if (isOverdriveShotgun(g.type)) {
+      const magSize = getShotsBeforeReload(g.type);
+      const scale = overdriveDamageMultiplier(Math.ceil(magSize * 0.35), magSize);
+      let dmg = (g.dmgMin + g.dmgMax) * 0.5 * scale;
+      return applyGunTypeDistanceModifier(g.type, dmg, distance);
     }
     let dmg = (g.dmgMin + g.dmgMax) * 0.5;
     return applyGunTypeDistanceModifier(g.type, dmg, distance);
@@ -3944,6 +3980,9 @@
       e.bloomLevel = 0;
       e.bloomGunType = gun.type;
     }
+    const overdriveScale = isOverdriveShotgun(gun.type)
+      ? overdriveDamageMultiplier(getReloadShotsLeft(gun), getShotsBeforeReload(gun.type))
+      : null;
     e.lastShot = now;
     if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
     addBloomOnShot(e, gun);
@@ -3976,8 +4015,11 @@
             ...gun,
             dmgMin: Math.max(1, Math.round(gun.dmgMin * pelletDmgMul)),
             dmgMax: Math.max(1, Math.round(gun.dmgMax * pelletDmgMul)),
+            ...(overdriveScale != null ? { overdriveScale } : {}),
           }
-        : gun;
+        : overdriveScale != null
+          ? { ...gun, overdriveScale }
+          : gun;
       bullets.push({
         x: e.x + Math.cos(pelletAng) * (e.radius + 4),
         y: e.y + Math.sin(pelletAng) * (e.radius + 4),

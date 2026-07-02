@@ -279,6 +279,45 @@
       padding: 2px 6px;
       text-shadow: none;
     }
+    #reloadHud.reloading, #reloadHudP2.reloading {
+      color: #8ad4ff;
+    }
+    #teamChartHud {
+      margin-top: 4px;
+      padding: 8px 8px 6px;
+      background: rgba(0, 0, 0, 0.58);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      max-height: 230px;
+      overflow-y: auto;
+      pointer-events: none;
+    }
+    #teamChartHud.hidden { display: none; }
+    .team-chart-title {
+      font-size: 0.68rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 6px;
+    }
+    .team-chart-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.68rem;
+      color: #bbb;
+      margin-bottom: 4px;
+      line-height: 1.25;
+    }
+    .team-chart-row.you { color: #eee; font-weight: 600; }
+    .team-chart-row.eliminated { opacity: 0.42; }
+    .team-chart-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+    }
     #reloadHud.reloading, #reloadHudP2.reloading { color: #999; }
     #healthBarWrap {
       position: relative;
@@ -1036,16 +1075,7 @@
           <option value="revenge">Revenge — kill your killer's killer to respawn</option>
         </select>
         <div id="teamSizeRow" class="menu-team-size" hidden>
-          <label for="teamSizeSelect">Players per team</label>
-          <select id="teamSizeSelect" aria-label="Players per team">
-            <option value="2">2 per team</option>
-            <option value="3">3 per team</option>
-            <option value="4">4 per team</option>
-            <option value="5">5 per team</option>
-            <option value="6">6 per team</option>
-            <option value="7">7 per team</option>
-            <option value="8" selected>8 per team</option>
-          </select>
+          <span class="menu-mode-desc" style="margin-top:0;">9 competing teams · 22 AI bots + you · teammates share team color</span>
         </div>
         <span id="gameModeDesc" class="menu-mode-desc">Classic free-for-all. Be the last dot alive.</span>
       </div>
@@ -1176,6 +1206,10 @@
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
         <div id="ammoHud">Ammo: —</div>
         <div id="reloadHud">Before reload: —</div>
+        <div id="teamChartHud" class="hidden" aria-label="Team chart">
+          <div class="team-chart-title">Teams (9)</div>
+          <div id="teamChartList"></div>
+        </div>
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
@@ -1231,9 +1265,9 @@
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
   const BED_MAX_HP = 25;
-  const TEAM_ENEMY_COLOR = "#ff6b6b";
+  const TEAM_MODE_TEAM_COUNT = 9;
+  const TEAM_MODE_AI_COUNT = 22;
   const PLAYER_TEAM_ID = 0;
-  const ENEMY_TEAM_ID = 1;
   const SIGNATURE_BOSS_COLOR = "#666";
   const SIGNATURE_BOSS_IMAGE_DIR = "signature_bosses/";
   const SIGNATURE_BOSS_IMAGE_FILES = {
@@ -1616,7 +1650,7 @@
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
   let gameMode = "battle_royale";
-  let teamSizePerTeam = 8;
+  let teamMeta = [];
   let beds = [];
   let revengeKilledBy = new Map();
   let playerName = "You";
@@ -1701,13 +1735,14 @@
   const lobbyCompetitive = document.getElementById("lobbyCompetitive");
   const gameModeSelect = document.getElementById("gameModeSelect");
   const teamSizeRow = document.getElementById("teamSizeRow");
-  const teamSizeSelect = document.getElementById("teamSizeSelect");
   const gameModeDesc = document.getElementById("gameModeDesc");
   const menuModeTag = document.getElementById("menuModeTag");
+  const teamChartHud = document.getElementById("teamChartHud");
+  const teamChartList = document.getElementById("teamChartList");
 
   const GAME_MODE_DESCRIPTIONS = {
     battle_royale: "Classic free-for-all. Be the last dot alive.",
-    teams: "Your team shares your color. Teammates cannot hurt each other. Eliminate every enemy team to win — if one teammate survives, your team wins.",
+    teams: "Your team shares your color with AI allies. 9 teams fight — 22 AI bots plus you. Eliminate every other team to win.",
     bedwars: "Same team rules as Teams, plus a bed. Die while your bed lives and you respawn with no gun. Beds break after 25 shots. No bed = final death.",
     revenge: "No teams. If someone kills you, you respawn when a different player kills your killer. Last dot alive still wins.",
   };
@@ -1723,8 +1758,61 @@
   }
 
   function readTeamSizeFromMenu() {
-    const n = teamSizeSelect ? parseInt(teamSizeSelect.value, 10) : 8;
-    return clamp(isNaN(n) ? 8 : n, 2, 8);
+    return TEAM_MODE_TEAM_COUNT;
+  }
+
+  function getTeamSlotCounts(totalFighters, teamCount) {
+    const base = Math.floor(totalFighters / teamCount);
+    const extra = totalFighters % teamCount;
+    const counts = [];
+    for (let i = 0; i < teamCount; i++) {
+      counts.push(base + (i < extra ? 1 : 0));
+    }
+    return counts;
+  }
+
+  function getTeamColor(teamId) {
+    if (teamId === PLAYER_TEAM_ID) return playerColor;
+    const meta = teamMeta.find((m) => m.teamId === teamId);
+    if (meta) return meta.color;
+    return AI_COLORS[teamId % AI_COLORS.length];
+  }
+
+  function getTeamLabel(teamId) {
+    const meta = teamMeta.find((m) => m.teamId === teamId);
+    if (!meta) return "Team " + (teamId + 1);
+    if (teamId === PLAYER_TEAM_ID) return meta.captainName || playerName;
+    return meta.captainName || ("Team " + (teamId + 1));
+  }
+
+  function countTeamMembers(teamId, aliveOnly) {
+    return dots.filter((d) => d.teamId === teamId && (!aliveOnly || d.alive)).length;
+  }
+
+  function updateTeamChartHud() {
+    if (!teamChartHud || !teamChartList) return;
+    if (!isTeamGameMode() || !teamMeta.length) {
+      teamChartHud.classList.add("hidden");
+      teamChartList.innerHTML = "";
+      return;
+    }
+    teamChartHud.classList.remove("hidden");
+    const rows = teamMeta.map((meta) => {
+      const alive = countTeamMembers(meta.teamId, true);
+      const total = meta.totalSlots || 0;
+      const isYou = player && player.teamId === meta.teamId;
+      const eliminated = alive <= 0;
+      const cls = "team-chart-row" + (isYou ? " you" : "") + (eliminated ? " eliminated" : "");
+      const label = getTeamLabel(meta.teamId);
+      return (
+        '<div class="' + cls + '">' +
+        '<span class="team-chart-dot" style="background:' + meta.color.replace(/"/g, "") + '"></span>' +
+        "<span>" + label + (isYou ? " (you)" : "") + "</span>" +
+        '<span style="margin-left:auto;color:#888;">' + alive + "/" + total + "</span>" +
+        "</div>"
+      );
+    });
+    teamChartList.innerHTML = rows.join("");
   }
 
   function updateGameModeMenuUI() {
@@ -1736,7 +1824,7 @@
       if (mode === "battle_royale") {
         menuModeTag.textContent = "16-dot arena · 7 hidden hunters · ~50s to cross · last dot wins";
       } else if (mode === "teams") {
-        menuModeTag.textContent = "Team battle · same-color allies · shared victory";
+        menuModeTag.textContent = "9 teams · 22 AI + you · team chart in-game";
       } else if (mode === "bedwars") {
         menuModeTag.textContent = "Team bedwars · protect your bed · 25 hits breaks a bed";
       } else {
@@ -1758,9 +1846,6 @@
 
   if (gameModeSelect) {
     gameModeSelect.addEventListener("change", updateGameModeMenuUI);
-  }
-  if (teamSizeSelect) {
-    teamSizeSelect.addEventListener("change", updateGameModeMenuUI);
   }
 
   menuDotPreview.style.background = colorInput.value;
@@ -3719,6 +3804,7 @@
       aiOverchargeAimY: 0,
       modulatedHeavy: false,
       teamId: typeof opts.teamId === "number" ? opts.teamId : null,
+      isTeamCaptain: !!opts.isTeamCaptain,
     };
   }
 
@@ -3756,13 +3842,13 @@
 
   function spawnTeamBeds() {
     beds = [];
-    for (const teamId of [PLAYER_TEAM_ID, ENEMY_TEAM_ID]) {
-      const members = dots.filter((d) => d.teamId === teamId);
+    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
+      const members = dots.filter((d) => d.teamId === t);
       if (!members.length) continue;
       const ax = members.reduce((s, d) => s + d.x, 0) / members.length;
       const ay = members.reduce((s, d) => s + d.y, 0) / members.length;
       beds.push({
-        teamId,
+        teamId: t,
         x: clamp(ax, 80, WORLD_W - 80),
         y: clamp(ay - 48, 80, WORLD_H - 80),
         hp: BED_MAX_HP,
@@ -3773,65 +3859,78 @@
 
   function spawnTeamMatch(startId) {
     let nextId = startId;
-    const teamSize = clamp(teamSizePerTeam, 2, 8);
+    teamMeta = [];
     const humanCount = (twoPlayerMode ? 2 : 1) + (onlineMode && onlineHost ? 1 : 0);
-    const allyBots = Math.max(0, teamSize - humanCount);
-
-    player = spawnDotSpread({
-      id: nextId++,
-      name: playerName,
-      color: playerColor,
-      isPlayer: true,
-      playerSlot: 1,
-      teamId: PLAYER_TEAM_ID,
-    }, dots);
-    dots.push(player);
-
-    if (twoPlayerMode) {
-      player2 = spawnDotSpread({
-        id: nextId++,
-        name: player2Name,
-        color: playerColor,
-        isPlayer: true,
-        playerSlot: 2,
-        teamId: PLAYER_TEAM_ID,
-      }, dots);
-      dots.push(player2);
-    } else if (onlineMode && onlineHost) {
-      player2 = spawnDotSpread({
-        id: nextId++,
-        name: player2Name,
-        color: TEAM_ENEMY_COLOR,
-        isPlayer: true,
-        playerSlot: 2,
-        teamId: ENEMY_TEAM_ID,
-      }, dots);
-      dots.push(player2);
-    }
-
+    const totalFighters = TEAM_MODE_AI_COUNT + humanCount;
+    const slotCounts = getTeamSlotCounts(totalFighters, TEAM_MODE_TEAM_COUNT);
     const usedBotNames = new Set();
-    for (let i = 0; i < allyBots; i++) {
-      const ally = spawnDotSpread({
-        id: nextId++,
-        name: makeBotName(usedBotNames),
-        color: playerColor,
-        isAI: true,
-        teamId: PLAYER_TEAM_ID,
-      }, dots);
-      equipBotSpawnLoadout(ally);
-      dots.push(ally);
+
+    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
+      teamMeta.push({
+        teamId: t,
+        color: t === PLAYER_TEAM_ID ? playerColor : AI_COLORS[(t - 1) % AI_COLORS.length],
+        captainName: null,
+        totalSlots: slotCounts[t],
+      });
     }
 
-    for (let i = 0; i < teamSize; i++) {
-      const enemy = spawnDotSpread({
-        id: nextId++,
-        name: makeBotName(usedBotNames),
-        color: TEAM_ENEMY_COLOR,
-        isAI: true,
-        teamId: ENEMY_TEAM_ID,
-      }, dots);
-      equipBotSpawnLoadout(enemy);
-      dots.push(enemy);
+    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
+      const meta = teamMeta[t];
+      for (let s = 0; s < meta.totalSlots; s++) {
+        if (t === PLAYER_TEAM_ID && s === 0) {
+          player = spawnDotSpread({
+            id: nextId++,
+            name: playerName,
+            color: meta.color,
+            isPlayer: true,
+            playerSlot: 1,
+            teamId: t,
+            isTeamCaptain: true,
+          }, dots);
+          meta.captainName = playerName;
+          dots.push(player);
+          continue;
+        }
+        if (t === PLAYER_TEAM_ID && s === 1 && twoPlayerMode) {
+          player2 = spawnDotSpread({
+            id: nextId++,
+            name: player2Name,
+            color: meta.color,
+            isPlayer: true,
+            playerSlot: 2,
+            teamId: t,
+          }, dots);
+          dots.push(player2);
+          continue;
+        }
+        if (t === 1 && s === 0 && onlineMode && onlineHost && !twoPlayerMode) {
+          player2 = spawnDotSpread({
+            id: nextId++,
+            name: player2Name,
+            color: meta.color,
+            isPlayer: true,
+            playerSlot: 2,
+            teamId: t,
+            isTeamCaptain: true,
+          }, dots);
+          meta.captainName = player2Name;
+          dots.push(player2);
+          continue;
+        }
+        const isCaptain = s === 0;
+        const botName = makeBotName(usedBotNames);
+        if (isCaptain) meta.captainName = botName;
+        const bot = spawnDotSpread({
+          id: nextId++,
+          name: botName,
+          color: meta.color,
+          isAI: true,
+          teamId: t,
+          isTeamCaptain: isCaptain,
+        }, dots);
+        equipBotSpawnLoadout(bot);
+        dots.push(bot);
+      }
     }
 
     nextId = spawnBosses(nextId);
@@ -3958,10 +4057,10 @@
     if (!opts.onlineMode) saveDifficulty(diffId);
     aiTune = getAiTune(diffId);
     gameMode = opts.gameMode || readGameModeFromMenu();
-    teamSizePerTeam = opts.teamSize != null ? clamp(opts.teamSize | 0, 2, 8) : readTeamSizeFromMenu();
     if (isTeamGameMode()) {
       twoPlayerTeamMode = true;
     }
+    teamMeta = [];
 
     player2 = null;
     let nextId = 0;
@@ -4243,9 +4342,9 @@
             : (twoPlayerMode ? (twoPlayerTeamMode ? "2P Team" : "2P VS") : "Battle Royale");
     let aliveLine = "Alive <strong>" + alive.length + "</strong>";
     if (isTeamGameMode() && player && player.teamId != null) {
-      const allyAlive = dots.filter((d) => d.alive && d.teamId === player.teamId).length;
-      const enemyAlive = dots.filter((d) => d.alive && d.teamId === ENEMY_TEAM_ID).length;
-      aliveLine = "Your team <strong>" + allyAlive + "</strong> · Enemy <strong>" + enemyAlive + "</strong>";
+      const allyAlive = countTeamMembers(player.teamId, true);
+      const teamsAlive = getAliveTeamIds().size;
+      aliveLine = "Your team <strong>" + allyAlive + "</strong> · Teams left <strong>" + teamsAlive + "</strong>";
     }
     const modeTag = ' · <span style="color:#9ad4ff">' + modeLabel + "</span>";
     const twoTag = twoPlayerMode
@@ -4258,6 +4357,7 @@
       " · Kills <strong>" + player.kills + "</strong></div>";
     updateWallChargesHud(player, wallChargesHud);
     updateAmmoHud(player);
+    updateTeamChartHud();
 
     if (twoPlayerMode && player2 && hudP2) {
       const pct2 = clamp(player2.health / MAX_HEALTH, 0, 1) * 100;
@@ -5061,7 +5161,7 @@
       showEndOverlay({
         title: "Defeat",
         place: player ? player.finishPlace : null,
-        summary: "The enemy team won the match." + killsSummaryLine(),
+        summary: "Another team won the match." + killsSummaryLine(),
         won: false,
         record: !defeatStatsRecorded,
       });
@@ -6320,7 +6420,7 @@
             x: bed.x + rand(-8, 8),
             y: bed.y - 16,
             text: bed.hp > 0 ? String(bed.hp) : "BED!",
-            color: bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR,
+            color: getTeamColor(bed.teamId),
             life: 0.55,
             maxLife: 0.55,
             big: false,
@@ -6417,7 +6517,7 @@
     }
     for (const bed of beds) {
       if (bed.hp <= 0) continue;
-      mctx.fillStyle = bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR;
+      mctx.fillStyle = getTeamColor(bed.teamId);
       mctx.fillRect(bed.x * sx - 2, bed.y * sy - 2, 4, 4);
     }
     for (const ch of chests) {
@@ -6566,7 +6666,7 @@
 
     for (const bed of beds) {
       if (bed.hp <= 0) continue;
-      const bedColor = bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR;
+      const bedColor = getTeamColor(bed.teamId);
       ctx.fillStyle = bedColor;
       ctx.fillRect(bed.x - 18, bed.y - 10, 36, 20);
       ctx.strokeStyle = "rgba(255,255,255,0.55)";
@@ -6672,7 +6772,7 @@
         ctx.strokeStyle = (isTeamGameMode() || (twoPlayerTeamMode && twoPlayerMode)) ? "#b8f0c8" : "#fff";
         ctx.lineWidth = 2;
         ctx.stroke();
-      } else if (isTeamGameMode() && d.teamId === PLAYER_TEAM_ID) {
+      } else if (isTeamGameMode() && player && d.teamId === player.teamId) {
         ctx.strokeStyle = "rgba(184,240,200,0.55)";
         ctx.lineWidth = 2;
         ctx.stroke();
@@ -6821,7 +6921,7 @@
         const p1Dead = !player || !player.alive;
         const p2Dead = !player2 || !player2.alive;
         if (p1Dead && p2Dead) {
-          if (isTeamGameMode() && teamHasAliveMembers(PLAYER_TEAM_ID)) {
+          if (isTeamGameMode() && player && player.teamId != null && teamHasAliveMembers(player.teamId)) {
             if (player && !spectateMode) {
               enterSpectateDefeatOverlay({
                 title: "Downed",

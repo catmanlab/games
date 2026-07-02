@@ -107,6 +107,43 @@
       background: #000;
       cursor: pointer;
     }
+    .menu-game-mode {
+      margin: 14px 0 0;
+      padding: 12px 14px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: left;
+    }
+    .menu-game-mode label { display: block; margin-bottom: 6px; color: #999; font-size: 0.82rem; }
+    .menu-game-mode select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #111;
+      color: #eee;
+      font-size: 0.88rem;
+    }
+    .menu-team-size {
+      margin-top: 10px;
+    }
+    .menu-team-size select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #111;
+      color: #eee;
+      font-size: 0.88rem;
+    }
+    .menu-mode-desc {
+      display: block;
+      margin-top: 8px;
+      color: #777;
+      font-size: 0.76rem;
+      line-height: 1.45;
+    }
     .menu-bot-difficulty {
       margin-top: 10px;
       padding: 10px 12px;
@@ -976,7 +1013,7 @@
       </div>
       <p id="accountStats" class="account-stats"></p>
       <h1>Supergun</h1>
-      <p class="menu-tag">16-dot arena · 7 hidden hunters · ~50s to cross the map · chests · guns · last dot wins</p>
+      <p id="menuModeTag" class="menu-tag">16-dot arena · 7 hidden hunters · ~50s to cross the map · chests · guns · last dot wins</p>
       <div class="menu-preview-row">
         <span id="menuDotPreview" aria-hidden="true"></span>
       </div>
@@ -989,6 +1026,28 @@
           <label for="colorInput">Dot color</label><br />
           <input id="colorInput" type="color" value="#4af0ff" />
         </div>
+      </div>
+      <div class="menu-game-mode">
+        <label for="gameModeSelect">Game mode</label>
+        <select id="gameModeSelect" aria-label="Game mode">
+          <option value="battle_royale">Battle Royale — last dot wins</option>
+          <option value="teams">Teams — wipe the enemy team</option>
+          <option value="bedwars">Bedwars — protect your bed</option>
+          <option value="revenge">Revenge — kill your killer's killer to respawn</option>
+        </select>
+        <div id="teamSizeRow" class="menu-team-size" hidden>
+          <label for="teamSizeSelect">Players per team</label>
+          <select id="teamSizeSelect" aria-label="Players per team">
+            <option value="2">2 per team</option>
+            <option value="3">3 per team</option>
+            <option value="4">4 per team</option>
+            <option value="5">5 per team</option>
+            <option value="6">6 per team</option>
+            <option value="7">7 per team</option>
+            <option value="8" selected>8 per team</option>
+          </select>
+        </div>
+        <span id="gameModeDesc" class="menu-mode-desc">Classic free-for-all. Be the last dot alive.</span>
       </div>
       <div class="menu-bot-difficulty">
         <label for="botDifficultySelect">Bot difficulty</label>
@@ -1171,6 +1230,10 @@
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
+  const BED_MAX_HP = 25;
+  const TEAM_ENEMY_COLOR = "#ff6b6b";
+  const PLAYER_TEAM_ID = 0;
+  const ENEMY_TEAM_ID = 1;
   const SIGNATURE_BOSS_COLOR = "#666";
   const SIGNATURE_BOSS_IMAGE_DIR = "signature_bosses/";
   const SIGNATURE_BOSS_IMAGE_FILES = {
@@ -1552,6 +1615,10 @@
   let gameStartTime = 0;
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
+  let gameMode = "battle_royale";
+  let teamSizePerTeam = 8;
+  let beds = [];
+  let revengeKilledBy = new Map();
   let playerName = "You";
   let playerColor = "#4af0ff";
   let player2Name = "P2";
@@ -1632,6 +1699,69 @@
   const btnCancelLobby = document.getElementById("btnCancelLobby");
   const lobbyTeam = document.getElementById("lobbyTeam");
   const lobbyCompetitive = document.getElementById("lobbyCompetitive");
+  const gameModeSelect = document.getElementById("gameModeSelect");
+  const teamSizeRow = document.getElementById("teamSizeRow");
+  const teamSizeSelect = document.getElementById("teamSizeSelect");
+  const gameModeDesc = document.getElementById("gameModeDesc");
+  const menuModeTag = document.getElementById("menuModeTag");
+
+  const GAME_MODE_DESCRIPTIONS = {
+    battle_royale: "Classic free-for-all. Be the last dot alive.",
+    teams: "Your team shares your color. Teammates cannot hurt each other. Eliminate every enemy team to win — if one teammate survives, your team wins.",
+    bedwars: "Same team rules as Teams, plus a bed. Die while your bed lives and you respawn with no gun. Beds break after 25 shots. No bed = final death.",
+    revenge: "No teams. If someone kills you, you respawn when a different player kills your killer. Last dot alive still wins.",
+  };
+
+  function isTeamGameMode() {
+    return gameMode === "teams" || gameMode === "bedwars";
+  }
+
+  function readGameModeFromMenu() {
+    const val = gameModeSelect && gameModeSelect.value;
+    if (val === "teams" || val === "bedwars" || val === "revenge") return val;
+    return "battle_royale";
+  }
+
+  function readTeamSizeFromMenu() {
+    const n = teamSizeSelect ? parseInt(teamSizeSelect.value, 10) : 8;
+    return clamp(isNaN(n) ? 8 : n, 2, 8);
+  }
+
+  function updateGameModeMenuUI() {
+    const mode = readGameModeFromMenu();
+    const teamMode = mode === "teams" || mode === "bedwars";
+    if (teamSizeRow) teamSizeRow.hidden = !teamMode;
+    if (gameModeDesc) gameModeDesc.textContent = GAME_MODE_DESCRIPTIONS[mode] || "";
+    if (menuModeTag) {
+      if (mode === "battle_royale") {
+        menuModeTag.textContent = "16-dot arena · 7 hidden hunters · ~50s to cross · last dot wins";
+      } else if (mode === "teams") {
+        menuModeTag.textContent = "Team battle · same-color allies · shared victory";
+      } else if (mode === "bedwars") {
+        menuModeTag.textContent = "Team bedwars · protect your bed · 25 hits breaks a bed";
+      } else {
+        menuModeTag.textContent = "Revenge free-for-all · avenge your killer to respawn";
+      }
+    }
+    const btnStart = document.getElementById("btnStart");
+    if (btnStart) {
+      if (mode === "teams") btnStart.textContent = "Start teams";
+      else if (mode === "bedwars") btnStart.textContent = "Start bedwars";
+      else if (mode === "revenge") btnStart.textContent = "Start revenge";
+      else btnStart.textContent = twoPlayerCheck && twoPlayerCheck.checked ? "Start two player" : "Start solo";
+    }
+    if (p2ModeFields && twoPlayerCheck) {
+      const hideP2TeamRadios = readGameModeFromMenu() === "teams" || readGameModeFromMenu() === "bedwars";
+      p2ModeFields.style.display = twoPlayerCheck.checked && !hideP2TeamRadios ? "" : "none";
+    }
+  }
+
+  if (gameModeSelect) {
+    gameModeSelect.addEventListener("change", updateGameModeMenuUI);
+  }
+  if (teamSizeSelect) {
+    teamSizeSelect.addEventListener("change", updateGameModeMenuUI);
+  }
 
   menuDotPreview.style.background = colorInput.value;
 
@@ -1639,7 +1769,8 @@
     twoPlayerCheck.addEventListener("change", () => {
       const on = twoPlayerCheck.checked;
       if (p2Fields) p2Fields.classList.toggle("visible", on);
-      if (p2ModeFields) p2ModeFields.classList.toggle("visible", on);
+      if (p2ModeFields) p2ModeFields.classList.toggle("visible", on && !(readGameModeFromMenu() === "teams" || readGameModeFromMenu() === "bedwars"));
+      updateGameModeMenuUI();
     });
   }
 
@@ -1730,9 +1861,35 @@
   }
 
   function areTeammates(a, b) {
+    if (!a || !b) return false;
+    if (isTeamGameMode()) {
+      return a.teamId != null && a.teamId === b.teamId;
+    }
     const teamOn = (twoPlayerMode || onlineMode) && twoPlayerTeamMode;
-    if (!teamOn || !a || !b) return false;
+    if (!teamOn) return false;
     return a.isPlayer && b.isPlayer;
+  }
+
+  function getTeamBed(teamId) {
+    return beds.find((b) => b.teamId === teamId && b.hp > 0) || null;
+  }
+
+  function teamHasAliveMembers(teamId) {
+    return dots.some((d) => d.alive && d.teamId === teamId);
+  }
+
+  function getAliveTeamIds() {
+    const ids = new Set();
+    for (const d of dots) {
+      if (d.alive && d.teamId != null) ids.add(d.teamId);
+    }
+    return ids;
+  }
+
+  function playerTeamWon(winningTeamId) {
+    if (player && player.teamId === winningTeamId) return true;
+    if (player2 && player2.teamId === winningTeamId) return true;
+    return false;
   }
 
   function lerp(a, b, t) { return a + (b - a) * t; }
@@ -1916,6 +2073,7 @@
     const ok = !!currentUserSlug;
     if (authCard) authCard.hidden = ok;
     if (gameMenuCard) gameMenuCard.hidden = !ok;
+    if (ok) updateGameModeMenuUI();
     if (ok && loggedInName) {
       const acc = loadAccounts()[currentUserSlug];
       loggedInName.textContent = acc ? acc.displayName : currentUserSlug;
@@ -2202,6 +2360,7 @@
     authMsg.textContent = "Cannot save accounts — use http://localhost:8777/supergun.html (double-click serve.bat).";
   }
   updateMenuAuthUI();
+  updateGameModeMenuUI();
   fetchShareLinks();
   connectOnline();
   initMainMenuTabs();
@@ -3559,7 +3718,156 @@
       aiOverchargeAimX: 0,
       aiOverchargeAimY: 0,
       modulatedHeavy: false,
+      teamId: typeof opts.teamId === "number" ? opts.teamId : null,
     };
+  }
+
+  function spawnBosses(startId) {
+    let nextId = startId;
+    for (let b = 0; b < BOSS_COUNT; b++) {
+      const boss = spawnDotSpread({
+        id: nextId++,
+        name: "Boss " + (b + 1),
+        color: "#e74c3c",
+        isAI: true,
+        isBoss: true,
+      }, dots);
+      boss.inventory[0] = pickBossWeapon();
+      boss.invIndex = 0;
+      dots.push(boss);
+    }
+    for (const def of SIGNATURE_BOSSES) {
+      const hunter = spawnDotSpread({
+        id: nextId++,
+        name: def.name,
+        color: SIGNATURE_BOSS_COLOR,
+        isAI: true,
+        isBoss: true,
+        isSignatureBoss: true,
+        hideOnMinimap: true,
+        signatureBossGun: def.gunId,
+      }, dots);
+      hunter.inventory[0] = makeSignatureBossGun(def.gunId);
+      hunter.invIndex = 0;
+      dots.push(hunter);
+    }
+    return nextId;
+  }
+
+  function spawnTeamBeds() {
+    beds = [];
+    for (const teamId of [PLAYER_TEAM_ID, ENEMY_TEAM_ID]) {
+      const members = dots.filter((d) => d.teamId === teamId);
+      if (!members.length) continue;
+      const ax = members.reduce((s, d) => s + d.x, 0) / members.length;
+      const ay = members.reduce((s, d) => s + d.y, 0) / members.length;
+      beds.push({
+        teamId,
+        x: clamp(ax, 80, WORLD_W - 80),
+        y: clamp(ay - 48, 80, WORLD_H - 80),
+        hp: BED_MAX_HP,
+        maxHp: BED_MAX_HP,
+      });
+    }
+  }
+
+  function spawnTeamMatch(startId) {
+    let nextId = startId;
+    const teamSize = clamp(teamSizePerTeam, 2, 8);
+    const humanCount = (twoPlayerMode ? 2 : 1) + (onlineMode && onlineHost ? 1 : 0);
+    const allyBots = Math.max(0, teamSize - humanCount);
+
+    player = spawnDotSpread({
+      id: nextId++,
+      name: playerName,
+      color: playerColor,
+      isPlayer: true,
+      playerSlot: 1,
+      teamId: PLAYER_TEAM_ID,
+    }, dots);
+    dots.push(player);
+
+    if (twoPlayerMode) {
+      player2 = spawnDotSpread({
+        id: nextId++,
+        name: player2Name,
+        color: playerColor,
+        isPlayer: true,
+        playerSlot: 2,
+        teamId: PLAYER_TEAM_ID,
+      }, dots);
+      dots.push(player2);
+    } else if (onlineMode && onlineHost) {
+      player2 = spawnDotSpread({
+        id: nextId++,
+        name: player2Name,
+        color: TEAM_ENEMY_COLOR,
+        isPlayer: true,
+        playerSlot: 2,
+        teamId: ENEMY_TEAM_ID,
+      }, dots);
+      dots.push(player2);
+    }
+
+    const usedBotNames = new Set();
+    for (let i = 0; i < allyBots; i++) {
+      const ally = spawnDotSpread({
+        id: nextId++,
+        name: makeBotName(usedBotNames),
+        color: playerColor,
+        isAI: true,
+        teamId: PLAYER_TEAM_ID,
+      }, dots);
+      equipBotSpawnLoadout(ally);
+      dots.push(ally);
+    }
+
+    for (let i = 0; i < teamSize; i++) {
+      const enemy = spawnDotSpread({
+        id: nextId++,
+        name: makeBotName(usedBotNames),
+        color: TEAM_ENEMY_COLOR,
+        isAI: true,
+        teamId: ENEMY_TEAM_ID,
+      }, dots);
+      equipBotSpawnLoadout(enemy);
+      dots.push(enemy);
+    }
+
+    nextId = spawnBosses(nextId);
+    if (gameMode === "bedwars") spawnTeamBeds();
+    return nextId;
+  }
+
+  function spawnBattleRoyaleMatch(startId) {
+    let nextId = startId;
+    player = spawnDotSpread({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 }, dots);
+    dots.push(player);
+
+    if (twoPlayerMode) {
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
+      dots.push(player2);
+    } else if (onlineMode && onlineHost) {
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
+      dots.push(player2);
+    }
+
+    const humanExtra = (twoPlayerMode ? 1 : 0) + (onlineMode && onlineHost ? 1 : 0);
+    const regularAiCount = TOTAL_DOTS - BOSS_COUNT - SIGNATURE_BOSS_COUNT - 1 - humanExtra;
+    const usedBotNames = new Set();
+    for (let i = 0; i < regularAiCount; i++) {
+      const bot = spawnDotSpread({
+        id: nextId++,
+        name: makeBotName(usedBotNames),
+        color: AI_COLORS[i % AI_COLORS.length],
+        isAI: true,
+      }, dots);
+      equipBotSpawnLoadout(bot);
+      dots.push(bot);
+    }
+
+    nextId = spawnBosses(nextId);
+    return nextId;
   }
 
   function getEntityAimWorld(e) {
@@ -3617,6 +3925,8 @@
     groundMeds = [];
     damageTexts = [];
     walls = [];
+    beds = [];
+    revengeKilledBy = new Map();
     matchStandings = [];
     clearSpectateMode();
     defeatStatsRecorded = false;
@@ -3647,60 +3957,19 @@
     const diffId = opts.difficulty || (botDifficultySelect && botDifficultySelect.value) || "intermediate";
     if (!opts.onlineMode) saveDifficulty(diffId);
     aiTune = getAiTune(diffId);
+    gameMode = opts.gameMode || readGameModeFromMenu();
+    teamSizePerTeam = opts.teamSize != null ? clamp(opts.teamSize | 0, 2, 8) : readTeamSizeFromMenu();
+    if (isTeamGameMode()) {
+      twoPlayerTeamMode = true;
+    }
 
     player2 = null;
     let nextId = 0;
     dots = [];
-    player = spawnDotSpread({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 }, dots);
-    dots.push(player);
-
-    if (twoPlayerMode) {
-      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
-      dots.push(player2);
-    } else if (onlineMode && onlineHost) {
-      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
-      dots.push(player2);
-    }
-
-    const humanExtra = (twoPlayerMode ? 1 : 0) + (onlineMode && onlineHost ? 1 : 0);
-    const regularAiCount = TOTAL_DOTS - BOSS_COUNT - SIGNATURE_BOSS_COUNT - 1 - humanExtra;
-    const usedBotNames = new Set();
-    for (let i = 0; i < regularAiCount; i++) {
-      const bot = spawnDotSpread({
-        id: nextId++,
-        name: makeBotName(usedBotNames),
-        color: AI_COLORS[i % AI_COLORS.length],
-        isAI: true,
-      }, dots);
-      equipBotSpawnLoadout(bot);
-      dots.push(bot);
-    }
-    for (let b = 0; b < BOSS_COUNT; b++) {
-      const boss = spawnDotSpread({
-        id: nextId++,
-        name: "Boss " + (b + 1),
-        color: "#e74c3c",
-        isAI: true,
-        isBoss: true,
-      }, dots);
-      boss.inventory[0] = pickBossWeapon();
-      boss.invIndex = 0;
-      dots.push(boss);
-    }
-    for (const def of SIGNATURE_BOSSES) {
-      const hunter = spawnDotSpread({
-        id: nextId++,
-        name: def.name,
-        color: SIGNATURE_BOSS_COLOR,
-        isAI: true,
-        isBoss: true,
-        isSignatureBoss: true,
-        hideOnMinimap: true,
-        signatureBossGun: def.gunId,
-      }, dots);
-      hunter.inventory[0] = makeSignatureBossGun(def.gunId);
-      hunter.invIndex = 0;
-      dots.push(hunter);
+    if (isTeamGameMode()) {
+      nextId = spawnTeamMatch(0);
+    } else {
+      nextId = spawnBattleRoyaleMatch(0);
     }
 
     if (rightHud) rightHud.classList.toggle("visible", twoPlayerMode);
@@ -3929,6 +4198,21 @@
       if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) reloadEl.classList.add("needs-reload");
       return;
     }
+    if (gameMode === "bedwars" && entity.teamId != null) {
+      const bed = getTeamBed(entity.teamId);
+      const bedText = bed ? ("Bed: " + bed.hp + " HP") : "Bed: destroyed";
+      if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
+        const left = Math.max(0, (entity.reloadUntil - now) / 1000);
+        reloadEl.textContent = "Reloading " + left.toFixed(1) + "s · " + bedText;
+        reloadEl.classList.add("reloading");
+        return;
+      }
+      const leftShots = getReloadShotsLeft(gun);
+      const interval = getShotsBeforeReload(gun.type);
+      reloadEl.textContent = bedText + " · Before reload: " + leftShots + " / " + interval;
+      if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) reloadEl.classList.add("needs-reload");
+      return;
+    }
     if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
       const left = Math.max(0, (entity.reloadUntil - now) / 1000);
       reloadEl.textContent = "Reloading " + left.toFixed(1) + "s";
@@ -3951,14 +4235,27 @@
     healthBarFill.style.width = pct + "%";
     const hp = Math.ceil(player.health);
     healthLabel.textContent = hp + " / " + MAX_HEALTH;
-    const alive = dots.filter(d => d.alive).length;
-    const modeTag = twoPlayerMode
+    const alive = dots.filter(d => d.alive);
+    const modeLabel =
+      gameMode === "teams" ? "Teams"
+        : gameMode === "bedwars" ? "Bedwars"
+          : gameMode === "revenge" ? "Revenge"
+            : (twoPlayerMode ? (twoPlayerTeamMode ? "2P Team" : "2P VS") : "Battle Royale");
+    let aliveLine = "Alive <strong>" + alive.length + "</strong>";
+    if (isTeamGameMode() && player && player.teamId != null) {
+      const allyAlive = dots.filter((d) => d.alive && d.teamId === player.teamId).length;
+      const enemyAlive = dots.filter((d) => d.alive && d.teamId === ENEMY_TEAM_ID).length;
+      aliveLine = "Your team <strong>" + allyAlive + "</strong> · Enemy <strong>" + enemyAlive + "</strong>";
+    }
+    const modeTag = ' · <span style="color:#9ad4ff">' + modeLabel + "</span>";
+    const twoTag = twoPlayerMode
       ? (twoPlayerTeamMode ? ' · <span style="color:#b8f0c8">Team</span>' : ' · <span style="color:#f0c0c8">VS</span>')
       : "";
     hud.innerHTML =
       '<div class="hud-name">' + playerName + (twoPlayerMode ? " (P1)" : "") + "</div>" +
-      '<div class="hud-line">Alive <strong>' + alive + "</strong> / " + TOTAL_DOTS +
-      " · Kills <strong>" + player.kills + "</strong>" + modeTag + "</div>";
+      '<div class="hud-line">' + aliveLine +
+      modeTag + twoTag +
+      " · Kills <strong>" + player.kills + "</strong></div>";
     updateWallChargesHud(player, wallChargesHud);
     updateAmmoHud(player);
 
@@ -4632,23 +4929,100 @@
     }
   }
 
+  function applyKillRewards(killer) {
+    if (!killer) return;
+    killer.kills++;
+    if (killer.isPlayer) {
+      killer.health = clamp(killer.health + KILL_HEAL, 0, MAX_HEALTH);
+    } else if (!killer.isPlayer) {
+      killer.health = clamp(killer.health + KILL_HEAL * 0.5, 0, killer.maxHealth);
+    }
+    if (killer.isAI) aiSelectWeapon(killer);
+  }
+
+  function respawnEntityEmpty(victim, x, y, label) {
+    victim.x = x;
+    victim.y = y;
+    victim.health = victim.maxHealth;
+    victim.alive = true;
+    victim.finishPlace = null;
+    victim.inventory = [null, null, null, null, null];
+    victim.invIndex = 0;
+    cancelEntityReload(victim);
+    cancelOvercharge(victim);
+    victim.bloomLevel = 0;
+    victim.bloomGunType = null;
+    matchStandings = matchStandings.filter((row) => row.id !== victim.id);
+    damageTexts.push({
+      x: victim.x,
+      y: victim.y - victim.radius - 18,
+      text: label || "RESPAWN",
+      color: victim.color,
+      life: 1.1,
+      maxLife: 1.1,
+      big: !!victim.isPlayer,
+    });
+    if (victim.isPlayer) {
+      clearSpectateMode();
+      updateAmmoHud(victim);
+      refreshInventoryHud();
+    }
+  }
+
+  function respawnBedwars(victim) {
+    const bed = getTeamBed(victim.teamId);
+    if (!bed) return false;
+    dropVictimLoot(victim);
+    respawnEntityEmpty(
+      victim,
+      clamp(bed.x + rand(-28, 28), 40, WORLD_W - 40),
+      clamp(bed.y + rand(-18, 18), 40, WORLD_H - 40),
+      "RESPAWN"
+    );
+    return true;
+  }
+
+  function processRevengeOnKillerDeath(deadKiller, killer) {
+    if (!deadKiller || gameMode !== "revenge") return;
+    if (!killer || killer.id === deadKiller.id) return;
+    for (const d of dots) {
+      if (d.alive || d.isBoss) continue;
+      if (revengeKilledBy.get(d.id) === deadKiller.id) {
+        revengeKilledBy.delete(d.id);
+        const pt = pickSpreadSpawnPoint(dots, d);
+        respawnEntityEmpty(d, pt.x, pt.y, "REVENGE");
+      }
+    }
+  }
+
   function killEntity(killer, victim) {
+    if (!victim || !victim.alive) return;
+
+    if (gameMode === "revenge" && killer && killer.id !== victim.id) {
+      revengeKilledBy.set(victim.id, killer.id);
+    }
+
+    if (gameMode === "bedwars" && victim.teamId != null && !victim.isBoss) {
+      const bed = getTeamBed(victim.teamId);
+      if (bed) {
+        dropVictimLoot(victim);
+        applyKillRewards(killer);
+        pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
+        if (respawnBedwars(victim)) {
+          return;
+        }
+      }
+    }
+
     recordPlacement(victim);
     victim.alive = false;
-    if (killer) {
-      killer.kills++;
-      if (killer.isPlayer) {
-        killer.health = clamp(killer.health + KILL_HEAL, 0, MAX_HEALTH);
-      } else if (!killer.isPlayer) {
-        killer.health = clamp(killer.health + KILL_HEAL * 0.5, 0, killer.maxHealth);
-      }
-      if (killer.isAI) aiSelectWeapon(killer);
-    }
+    applyKillRewards(killer);
     dropVictimLoot(victim);
     pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
     if (victim.isBoss && !victim.isSignatureBoss) {
       dropItemOnGround(victim.x, victim.y, makeBossDropGun());
     }
+    processRevengeOnKillerDeath(victim, killer);
     checkWin();
   }
 
@@ -4668,8 +5042,52 @@
     });
   }
 
+  function showTeamModeVictory(winningTeamId) {
+    const won = playerTeamWon(winningTeamId);
+    if (won) {
+      if (player && player.teamId === winningTeamId) ensureWinnerPlaced(player);
+      if (player2 && player2.teamId === winningTeamId) ensureWinnerPlaced(player2);
+      const ally = dots.find((d) => d.alive && d.teamId === winningTeamId);
+      const headline = ally
+        ? ally.name + " secured the win for your team!"
+        : "Your team cleared the arena!";
+      showEndOverlay({
+        title: "Team Victory!",
+        place: 1,
+        summary: headline + killsSummaryLine(),
+        won: true,
+      });
+    } else {
+      showEndOverlay({
+        title: "Defeat",
+        place: player ? player.finishPlace : null,
+        summary: "The enemy team won the match." + killsSummaryLine(),
+        won: false,
+        record: !defeatStatsRecorded,
+      });
+    }
+  }
+
   function checkWin() {
     if (!running) return;
+
+    if (isTeamGameMode()) {
+      const teamsAlive = getAliveTeamIds();
+      if (teamsAlive.size <= 1) {
+        if (teamsAlive.size === 1) {
+          showTeamModeVictory([...teamsAlive][0]);
+        } else {
+          showEndOverlay({
+            title: "Draw",
+            place: player ? player.finishPlace : null,
+            summary: "Every team was eliminated." + killsSummaryLine(),
+            won: false,
+          });
+        }
+      }
+      return;
+    }
+
     const alive = dots.filter(d => d.alive);
     const aliveHumans = alive.filter(d => d.isPlayer);
 
@@ -5890,6 +6308,41 @@
         break;
       }
       if (hitWall) continue;
+
+      if (gameMode === "bedwars" && beds.length) {
+        for (let bi = 0; bi < beds.length; bi++) {
+          const bed = beds[bi];
+          if (bed.hp <= 0) continue;
+          if (shotOwner && shotOwner.teamId != null && shotOwner.teamId === bed.teamId) continue;
+          if (dist(b.x, b.y, bed.x, bed.y) > 22) continue;
+          bed.hp -= 1;
+          damageTexts.push({
+            x: bed.x + rand(-8, 8),
+            y: bed.y - 16,
+            text: bed.hp > 0 ? String(bed.hp) : "BED!",
+            color: bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR,
+            life: 0.55,
+            maxLife: 0.55,
+            big: false,
+          });
+          if (bed.hp <= 0) {
+            damageTexts.push({
+              x: bed.x,
+              y: bed.y - 28,
+              text: "BED DESTROYED",
+              color: "#ffb347",
+              life: 1.2,
+              maxLife: 1.2,
+              big: true,
+            });
+          }
+          bullets.splice(i, 1);
+          hitWall = true;
+          break;
+        }
+      }
+      if (hitWall) continue;
+
       for (const d of dots) {
         if (!d.alive || d.id === b.ownerId) continue;
         if (shotOwner && areTeammates(shotOwner, d)) continue;
@@ -5961,6 +6414,11 @@
     for (const w of walls) {
       mctx.fillStyle = "#556";
       mctx.fillRect(w.x * sx - 1, w.y * sy - 1, 3, 3);
+    }
+    for (const bed of beds) {
+      if (bed.hp <= 0) continue;
+      mctx.fillStyle = bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR;
+      mctx.fillRect(bed.x * sx - 2, bed.y * sy - 2, 4, 4);
     }
     for (const ch of chests) {
       if (ch.open) continue;
@@ -6106,6 +6564,20 @@
       drawWallShape(w, "#3d4555", "#6a7a94", w.hp / w.maxHp);
     }
 
+    for (const bed of beds) {
+      if (bed.hp <= 0) continue;
+      const bedColor = bed.teamId === PLAYER_TEAM_ID ? playerColor : TEAM_ENEMY_COLOR;
+      ctx.fillStyle = bedColor;
+      ctx.fillRect(bed.x - 18, bed.y - 10, 36, 20);
+      ctx.strokeStyle = "rgba(255,255,255,0.55)";
+      ctx.lineWidth = 2;
+      ctx.strokeRect(bed.x - 18, bed.y - 10, 36, 20);
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 10px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("BED " + bed.hp, bed.x, bed.y + 4);
+    }
+
     if (opts.p1WallPreview && player && player.alive && player.wallCharges > 0 && !isMedItem(currentItem(player))) {
       const ext = wallExtentRadius({ len: WALL_LENGTH, thick: WALL_THICK });
       const snapped = getSnappedWallPlacement(player, mouseWorldX, mouseWorldY);
@@ -6197,7 +6669,11 @@
         ctx.fill();
       }
       if (d.isPlayer) {
-        ctx.strokeStyle = twoPlayerTeamMode && twoPlayerMode ? "#b8f0c8" : "#fff";
+        ctx.strokeStyle = (isTeamGameMode() || (twoPlayerTeamMode && twoPlayerMode)) ? "#b8f0c8" : "#fff";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else if (isTeamGameMode() && d.teamId === PLAYER_TEAM_ID) {
+        ctx.strokeStyle = "rgba(184,240,200,0.55)";
         ctx.lineWidth = 2;
         ctx.stroke();
       }
@@ -6345,12 +6821,22 @@
         const p1Dead = !player || !player.alive;
         const p2Dead = !player2 || !player2.alive;
         if (p1Dead && p2Dead) {
-          showEndOverlay({
-            title: "Eliminated",
-            place: player && player.finishPlace != null ? player.finishPlace : (player2 ? player2.finishPlace : null),
-            summary: playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + (player2 ? player2.kills : 0) + " kills.",
-            won: false,
-          });
+          if (isTeamGameMode() && teamHasAliveMembers(PLAYER_TEAM_ID)) {
+            if (player && !spectateMode) {
+              enterSpectateDefeatOverlay({
+                title: "Downed",
+                place: player.finishPlace,
+                summary: "Your team is still fighting. Spectating allies…",
+              });
+            }
+          } else if (!isTeamGameMode()) {
+            showEndOverlay({
+              title: "Eliminated",
+              place: player && player.finishPlace != null ? player.finishPlace : (player2 ? player2.finishPlace : null),
+              summary: playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + (player2 ? player2.kills : 0) + " kills.",
+              won: false,
+            });
+          }
         }
       } else if (onlineMode && onlineHost && player2) {
         if ((!player || !player.alive) && !player2.alive) {
@@ -6362,10 +6848,13 @@
           });
         }
       } else if (player && !player.alive && !onlineMode && !spectateMode) {
+        const teamStillAlive = isTeamGameMode() && player.teamId != null && teamHasAliveMembers(player.teamId);
         enterSpectateDefeatOverlay({
-          title: "Eliminated",
+          title: teamStillAlive ? "Downed" : "Eliminated",
           place: player.finishPlace,
-          summary: "Kills: " + player.kills + ".",
+          summary: teamStillAlive
+            ? "Your team is still fighting. Spectating allies…"
+            : "Kills: " + player.kills + ".",
         });
       }
     }

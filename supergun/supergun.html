@@ -1072,7 +1072,7 @@
           <option value="battle_royale">Battle Royale — last dot wins</option>
           <option value="teams">Teams — wipe the enemy team</option>
           <option value="bedwars">Bedwars — protect your bed</option>
-          <option value="revenge">Revenge — kill your killer's killer to respawn</option>
+          <option value="revenge">Revenge — your victims respawn when you die</option>
         </select>
         <div id="teamSizeRow" class="menu-team-size" hidden>
           <span class="menu-mode-desc" style="margin-top:0;">9 competing teams · 22 AI bots + you · teammates share team color</span>
@@ -1744,7 +1744,7 @@
     battle_royale: "Classic free-for-all. Be the last dot alive.",
     teams: "Your team shares your color with AI allies. 9 teams fight — 22 AI bots plus you. Eliminate every other team to win.",
     bedwars: "Same team rules as Teams, plus a bed. Die while your bed lives and you respawn with no gun. Beds break after 25 shots. No bed = final death.",
-    revenge: "No teams. If someone kills you, you respawn when a different player kills your killer. Last dot alive still wins.",
+    revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot.",
   };
 
   function isTeamGameMode() {
@@ -5082,9 +5082,8 @@
     return true;
   }
 
-  function processRevengeOnKillerDeath(deadKiller, killer) {
+  function processRevengeOnKillerDeath(deadKiller) {
     if (!deadKiller || gameMode !== "revenge") return;
-    if (!killer || killer.id === deadKiller.id) return;
     for (const d of dots) {
       if (d.alive || d.isBoss) continue;
       if (revengeKilledBy.get(d.id) === deadKiller.id) {
@@ -5098,7 +5097,7 @@
   function killEntity(killer, victim) {
     if (!victim || !victim.alive) return;
 
-    if (gameMode === "revenge" && killer && killer.id !== victim.id) {
+    if (gameMode === "revenge" && killer && killer.id !== victim.id && !victim.isBoss) {
       revengeKilledBy.set(victim.id, killer.id);
     }
 
@@ -5122,7 +5121,7 @@
     if (victim.isBoss && !victim.isSignatureBoss) {
       dropItemOnGround(victim.x, victim.y, makeBossDropGun());
     }
-    processRevengeOnKillerDeath(victim, killer);
+    processRevengeOnKillerDeath(victim);
     checkWin();
   }
 

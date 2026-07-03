@@ -1139,7 +1139,7 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (same damage, faster fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge, release to fire — Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Modulated AR</strong> (press <strong>F</strong> to swap rapid light fire or slow heavy fire) / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (heavy close range, slower fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge — Rare: 90 tap, 135 full charge, 0.85/sec; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Modulated AR</strong> (press <strong>F</strong> to swap rapid light fire or slow heavy fire) / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
@@ -1242,8 +1242,8 @@
 (function () {
   const VIEW_W = 1200;
   const VIEW_H = 750;
-  const SNIPER_RARE_CLOSE_DMG = 25;
-  const SNIPER_RARE_FAR_DMG = 102;
+  const SNIPER_RARE_CLOSE_DMG = 110;
+  const SNIPER_RARE_FAR_DMG = 110;
   const SNIPER_CLOSE_RANGE = 110;
   const DOT_SPEED = 200;
   const MAP_CROSS_SECONDS = 50;
@@ -1357,30 +1357,30 @@
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
   const GUN_TYPES = [
-    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.55, fireMul: 0.9, spreadMul: 1.3, bloomPerShot: 14 },
-    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 0.622, dmgMulHi: 0.677, fireMul: 1.55, spreadMul: 0.65, bloomPerShot: 8 },
-    { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.7, fireMul: 0.82, spreadMul: 1.15, bloomPerShot: 18 },
-    { id: "suppressed_smg", label: "Suppressed SMG", w: 0.065, dmgMul: 0.88, fireMul: 0.64, spreadMul: 0.92, bloomPerShot: 7 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 0.95, dmgMulHi: 1.0, fireMul: 0.88, spreadMul: 0.95, bloomPerShot: 16 },
-    { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.9, fireMul: 0.84, spreadMul: 0.88, bloomPerShot: 10, burstSize: 3, burstShotMs: 72, burstPauseMs: 340 },
-    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 0.90, dmgMulHi: 0.94, fireMul: 0.58, spreadMul: 1.35, bloomPerShot: 24 },
-    { id: "overdrive_shotgun", label: "Overdrive Shotgun", w: 0.06, dmgMul: 0.88, fireMul: 0.78, spreadMul: 1.12, bloomPerShot: 14 },
-    { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 71 / 45, dmgMulHi: 103 / 65, fireMul: 0.72, spreadMul: 1.45, bloomPerShot: 11 },
-    { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 1, fireMul: 1, spreadMul: 1, bloomPerShot: 13 },
-    { id: "modulated_assault_rifle", label: "Modulated AR", w: 0.055, dmgMul: 1, fireMul: 1, spreadMul: 0.94, bloomPerShot: 12 },
-    { id: "machine_gun", label: "Machine Gun", w: 0.055, dmgMul: 0.88, fireMul: 0.7, spreadMul: 1.28, bloomPerShot: 8 },
-    { id: "suppressed_assault_rifle", label: "Suppressed AR", w: 0.085, dmgMul: 0.94, dmgMulHi: 0.98, fireMul: 0.74, spreadMul: 0.9, bloomPerShot: 10 },
-    { id: "sweep_assault_rifle", label: "Sweep Assault Rifle", w: 0.09, dmgMul: 0.72, dmgMulHi: 0.75, fireMul: 0.66, spreadMul: 1.12, bloomPerShot: 14 },
-    { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.78, fireMul: 1, spreadMul: 0.92, bloomPerShot: 6, burstSize: 3, burstShotMs: 79, burstPauseMs: 330 },
-    { id: "scoped_assault_rifle", label: "Scoped AR", w: 0.075, dmgMul: 1.06, dmgMulHi: 1.1, fireMul: 1, spreadMul: 0.72, bloomPerShot: 7, burstSize: 3, burstShotMs: 76, burstPauseMs: 360 },
-    { id: "thermal_scoped_assault_rifle", label: "Thermal Scoped AR", w: 0.02, dmgMul: 1.18, dmgMulHi: 1.24, fireMul: 0.9, spreadMul: 0.66, bloomPerShot: 8 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 2.0, fireMul: 2.5, spreadMul: 1.4, bloomPerShot: 9 },
-    { id: "overcharge_shotgun", label: "Overcharge Shotgun", w: 0.06, dmgMul: 1, fireMul: 1.6, spreadMul: 0.85, bloomPerShot: 0 },
-    { id: "breacher_shotgun", label: "Breacher Shotgun", w: 0.05, dmgMul: 0.52, dmgMulHi: 0.55, fireMul: 1.05, spreadMul: 1.25, bloomPerShot: 14 },
-    { id: "drum_shotgun", label: "Drum Shotgun", w: 0.055, dmgMul: 41 / 45, dmgMulHi: 58 / 65, fireMul: 1, spreadMul: 1.05, bloomPerShot: 3, pellets: 1, burstSize: 8, burstShotMs: 48, burstPauseMs: 1000 },
-    { id: "scar", label: "SCAR", w: 0.06, dmgMul: 1.12, fireMul: 1, spreadMul: 0.95, bloomPerShot: 14 },
-    { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 1.65, spreadMul: 0.5, bloomPerShot: 2 },
-    { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.4, fireMul: 2.0, spreadMul: 0.05, bloomPerShot: 0 },
+    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.5, fireMul: 0.57, spreadMul: 1.3, bloomPerShot: 14 },
+    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 1.05, dmgMulHi: 1.05, fireMul: 2.56, spreadMul: 0.65, bloomPerShot: 8 },
+    { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.278, fireMul: 0.257, spreadMul: 1.15, bloomPerShot: 18 },
+    { id: "suppressed_smg", label: "Suppressed SMG", w: 0.065, dmgMul: 0.455, dmgMulHi: 0.455, fireMul: 0.481, spreadMul: 0.92, bloomPerShot: 7 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 1.22, dmgMulHi: 1.22, fireMul: 2.26, spreadMul: 0.95, bloomPerShot: 16 },
+    { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.674, dmgMulHi: 0.674, fireMul: 0.70, spreadMul: 0.88, bloomPerShot: 10, burstSize: 3, burstShotMs: 80, burstPauseMs: 471 },
+    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 1.6, dmgMulHi: 1.6, fireMul: 2.56, spreadMul: 1.35, bloomPerShot: 24 },
+    { id: "overdrive_shotgun", label: "Overdrive Shotgun", w: 0.06, dmgMul: 1.34, dmgMulHi: 1.34, fireMul: 3.346, spreadMul: 1.12, bloomPerShot: 14 },
+    { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 81 / 55, dmgMulHi: 81 / 55, fireMul: 2.198, spreadMul: 1.45, bloomPerShot: 11 },
+    { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 0.6, fireMul: 0.70, spreadMul: 1, bloomPerShot: 13 },
+    { id: "modulated_assault_rifle", label: "Modulated AR", w: 0.055, dmgMul: 0.636, dmgMulHi: 0.636, fireMul: 0.70, spreadMul: 0.94, bloomPerShot: 12 },
+    { id: "machine_gun", label: "Machine Gun", w: 0.055, dmgMul: 0.455, dmgMulHi: 0.455, fireMul: 0.549, spreadMul: 1.28, bloomPerShot: 8 },
+    { id: "suppressed_assault_rifle", label: "Suppressed AR", w: 0.085, dmgMul: 0.57, dmgMulHi: 0.57, fireMul: 0.693, spreadMul: 0.9, bloomPerShot: 10 },
+    { id: "sweep_assault_rifle", label: "Sweep Assault Rifle", w: 0.09, dmgMul: 0.57, dmgMulHi: 0.57, fireMul: 0.549, spreadMul: 1.12, bloomPerShot: 14 },
+    { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.670, dmgMulHi: 0.670, fireMul: 0.70, spreadMul: 0.92, bloomPerShot: 6, burstSize: 3, burstShotMs: 80, burstPauseMs: 471 },
+    { id: "scoped_assault_rifle", label: "Scoped AR", w: 0.075, dmgMul: 0.822, dmgMulHi: 0.822, fireMul: 1, spreadMul: 0.72, bloomPerShot: 7, burstSize: 3, burstShotMs: 120, burstPauseMs: 1000 },
+    { id: "thermal_scoped_assault_rifle", label: "Thermal Scoped AR", w: 0.02, dmgMul: 0.705, dmgMulHi: 0.705, fireMul: 0.962, spreadMul: 0.66, bloomPerShot: 8 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 1.67, dmgMulHi: 1.68, fireMul: 5.5, spreadMul: 1.4, bloomPerShot: 9 },
+    { id: "overcharge_shotgun", label: "Overcharge Shotgun", w: 0.06, dmgMul: 1, fireMul: 4.525, spreadMul: 0.85, bloomPerShot: 0 },
+    { id: "breacher_shotgun", label: "Breacher Shotgun", w: 0.05, dmgMul: 0.545, dmgMulHi: 0.545, fireMul: 3.846, spreadMul: 1.25, bloomPerShot: 14 },
+    { id: "drum_shotgun", label: "Drum Shotgun", w: 0.055, dmgMul: 0.364, dmgMulHi: 0.364, fireMul: 1, spreadMul: 1.05, bloomPerShot: 3, pellets: 1, burstSize: 8, burstShotMs: 48, burstPauseMs: 392 },
+    { id: "scar", label: "SCAR", w: 0.06, dmgMul: 0.655, dmgMulHi: 0.655, fireMul: 0.699, spreadMul: 0.95, bloomPerShot: 14 },
+    { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 5.13, spreadMul: 0.5, bloomPerShot: 2 },
+    { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.03, dmgMulHi: 2.03, fireMul: 5.13, spreadMul: 0.05, bloomPerShot: 0 },
     { id: "dogshot_smash_pistol", label: "Dogshot's Smash Pistol", w: 0.008, bloomPerShot: 4, fireMul: 0.72, spreadMul: 0.65 },
     { id: "snowstorm_smg", label: "Snowstorm's SMG", w: 0.008, bloomPerShot: 3 },
     { id: "swift_burst_assault_rifle", label: "Swift's Burst AR", w: 0.008, bloomPerShot: 2 },
@@ -1430,10 +1430,10 @@
     smg: "Very fast fire, high bloom.",
     suppressed_smg: "Very high fire rate, strong damage, heavy ammo use. Short bursts stay accurate to mid range — ideal run-and-gun.",
     combat_shotgun: "Heavy close-range damage.",
-    tactical_shotgun: "Combat shotgun damage, faster fire.",
+    tactical_shotgun: "Heavy close-range damage, slower fire than Combat SG.",
     overdrive_shotgun: "Damage rises as the mag empties — last shots hit hardest. Mid-close range, slightly fast fire.",
     pump_shotgun: "One heavy slug per shot, very slow.",
-    overcharge_shotgun: "Hold to charge, release to fire. Rare: 28 dmg at 1s, 59 at 10s, 100 at 25s.",
+    overcharge_shotgun: "Hold to charge, release to fire. Rare: 90 dmg tap, 135 full charge, 0.85/sec.",
     breacher_shotgun: "Weak vs players. Destroys walls in 1 hit.",
     drum_shotgun: "8-round fast burst, then 1s pause.",
     strike_shotgun: "Heavy close-range slug. Damage falls off sharply at distance.",
@@ -1447,7 +1447,7 @@
     scoped_assault_rifle: "3-round precision burst, long range.",
     thermal_scoped_assault_rifle: "Semi-auto, high long-range damage. Epic+ chests only.",
     scar: "Strong, balanced rifle.",
-    sniper: "Weak up close, deadly past screen range.",
+    sniper: "Heavy hit per shot, very slow fire. Rare: 110 dmg, 0.75/sec.",
     rpg: "Explosive area damage. 2 hits to break walls.",
     dogshot_smash_pistol: "Mythic revolver — Dogshot's signature. Fast and hard-hitting.",
     snowstorm_smg: "Mythic SMG — Snowstorm's signature.",
@@ -3014,16 +3014,15 @@
     e.bloomLevel = Math.max(0, (e.bloomLevel || 0) - BLOOM_DECAY_PER_SEC * dt);
   }
 
+  const MIN_GUN_FIRE_MS = 64;
   const OVERCHARGE_MAX_SEC = 25;
-  const MODULATED_FAST_FIRE_MUL = 0.58;
+  const MODULATED_FAST_FIRE_MUL = 0.70;
   const MODULATED_HEAVY_FIRE_MUL = 1.55;
-  const MODULATED_FAST_DMG_MUL = 0.82;
+  const MODULATED_FAST_DMG_MUL = 1.0;
   const MODULATED_HEAVY_DMG_MUL = 1.28;
   const OVERCHARGE_RARE_DAMAGE_CURVE = [
-    { sec: 0, dmg: 0 },
-    { sec: 1, dmg: 28 },
-    { sec: 10, dmg: 59 },
-    { sec: 25, dmg: 100 },
+    { sec: 0, dmg: 90 },
+    { sec: 25, dmg: 135 },
   ];
 
   function isOverchargeShotgun(typeId) {
@@ -3058,7 +3057,7 @@
   function getModulatedFireMs(gun, heavy) {
     const r = RARITIES[gun.rarity] || RARITIES.rare;
     const mul = heavy ? MODULATED_HEAVY_FIRE_MUL : MODULATED_FAST_FIRE_MUL;
-    return Math.max(80, Math.round(r.fireMs * mul));
+    return Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * mul));
   }
 
   function getModulatedDamageMul(heavy) {
@@ -3437,7 +3436,7 @@
       typeLabel: typeMeta.label,
       dmgMin: Math.max(1, Math.round(dmgLo * dmgMul)),
       dmgMax: Math.max(1, Math.round(dmgHi * dmgMulHi)),
-      fireMs: Math.max(80, Math.round(r.fireMs * fireMul)),
+      fireMs: Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * fireMul)),
       spread: r.spread * spreadMul,
       ammo: GUN_START_AMMO,
       reloadShotsLeft: getShotsBeforeReload(typeMeta.id),

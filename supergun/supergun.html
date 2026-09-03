@@ -236,6 +236,7 @@
       gap: 6px;
       pointer-events: none;
     }
+    #leftHud.gun-game-board { width: 252px; }
     #hud {
       font-size: 0.75rem;
       color: #ccc;
@@ -292,6 +293,7 @@
       overflow-y: auto;
       pointer-events: none;
     }
+    #leftHud.gun-game-board #teamChartHud { max-height: 340px; }
     #teamChartHud.hidden { display: none; }
     .team-chart-title {
       font-size: 0.68rem;
@@ -311,6 +313,7 @@
     }
     .team-chart-row.you { color: #eee; font-weight: 600; }
     .team-chart-row.eliminated { opacity: 0.42; }
+    .team-chart-row.last-gun { color: #ffd700; }
     .team-chart-dot {
       width: 8px;
       height: 8px;
@@ -318,6 +321,23 @@
       flex-shrink: 0;
       border: 1px solid rgba(255, 255, 255, 0.25);
     }
+    .team-chart-name {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .team-chart-gun {
+      margin-left: auto;
+      color: #8ad4ff;
+      text-align: right;
+      flex-shrink: 0;
+      max-width: 118px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .team-chart-row.last-gun .team-chart-gun { color: #ffd700; }
     #reloadHud.reloading, #reloadHudP2.reloading { color: #999; }
     #healthBarWrap {
       position: relative;
@@ -938,6 +958,70 @@
       line-height: 1.45;
     }
     .index-wiki-row a { color: #8ad4ff; }
+    .analysis-card-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+      margin-top: 8px;
+    }
+    .analysis-section {
+      margin-bottom: 22px;
+    }
+    .analysis-section h2 {
+      margin: 0 0 10px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #ccc;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .analysis-stat {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 12px;
+      padding: 16px;
+      min-height: 140px;
+    }
+    .analysis-stat.metric { min-height: 0; }
+    .analysis-stat h3 {
+      margin: 0 0 8px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #8b8ba0;
+    }
+    .analysis-stat .analysis-gun {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ececf4;
+      margin-bottom: 6px;
+    }
+    .analysis-stat .analysis-count {
+      font-size: 0.88rem;
+      color: #8ad4ff;
+    }
+    .analysis-stat .analysis-empty {
+      color: #777;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
+    .analysis-stat img {
+      width: 100%;
+      height: 64px;
+      object-fit: contain;
+      margin: 8px 0 10px;
+      background: #0a0a0a;
+      border: 1px solid #222;
+      border-radius: 6px;
+    }
+    .analysis-card-row > .analysis-empty {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: #777;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    }
     .weapon-index-section {
       margin-bottom: 22px;
     }
@@ -1016,6 +1100,7 @@
     <div class="main-menu-tabs" id="mainMenuTabs">
       <button type="button" id="tabPlay" class="active">Play</button>
       <button type="button" id="tabIndex">Guns</button>
+      <button type="button" id="tabAnalysis">Analysis</button>
       <button type="button" id="tabWiki">Wiki</button>
     </div>
     <div id="playPanel">
@@ -1061,7 +1146,7 @@
           <label for="nameInput">In-game name</label><br />
           <input id="nameInput" type="text" value="You" maxlength="12" autocomplete="nickname" />
         </div>
-        <div>
+        <div id="menuColorField">
           <label for="colorInput">Dot color</label><br />
           <input id="colorInput" type="color" value="#4af0ff" />
         </div>
@@ -1073,11 +1158,55 @@
           <option value="teams">Teams — wipe the enemy team</option>
           <option value="bedwars">Bedwars — protect your bed</option>
           <option value="revenge">Revenge — your victims respawn when you die</option>
+          <option value="gun_game">Gun Game — climb the ladder, last-gun kill wins</option>
         </select>
         <div id="teamSizeRow" class="menu-team-size" hidden>
-          <span class="menu-mode-desc" style="margin-top:0;">9 competing teams · 22 AI bots + you · teammates share team color</span>
+          <label for="teamsCountSelect">Number of teams</label>
+          <select id="teamsCountSelect" aria-label="Number of teams">
+            <option value="2">2 teams</option>
+            <option value="3">3 teams</option>
+            <option value="4" selected>4 teams</option>
+            <option value="5">5 teams</option>
+            <option value="6">6 teams</option>
+          </select>
+        </div>
+        <div id="gunGameVariantRow" class="menu-team-size" hidden>
+          <label for="gunGameVariantSelect">Ladder</label>
+          <select id="gunGameVariantSelect" aria-label="Gun Game ladder">
+            <option value="damage_up">Damage workup — weakest gun first, strongest last</option>
+            <option value="damage_down">Damage build down — strongest first, weakest last</option>
+            <option value="speed_up">Speed build up — slowest gun first, fastest last</option>
+            <option value="speed_down">Speed build down — fastest first, slowest last</option>
+          </select>
         </div>
         <span id="gameModeDesc" class="menu-mode-desc">Classic free-for-all. Be the last dot alive.</span>
+      </div>
+      <div class="menu-game-mode">
+        <label for="mapSelectA">Map structures</label>
+        <select id="mapSelectA" aria-label="Map structures">
+          <option value="none">No structures — open field</option>
+          <option value="arena">Arena</option>
+          <option value="canyon">Canyon</option>
+          <option value="storage">Storage</option>
+          <option value="maze">Maze</option>
+          <option value="pyramids">Pyramids</option>
+          <option value="coral">Coral</option>
+          <option value="chilltown">Chilltown</option>
+        </select>
+        <div class="menu-team-size">
+          <label for="mapSelectB">Second map (optional)</label>
+          <select id="mapSelectB" aria-label="Second map">
+            <option value="none">None</option>
+            <option value="arena">Arena</option>
+            <option value="canyon">Canyon</option>
+            <option value="storage">Storage</option>
+            <option value="maze">Maze</option>
+            <option value="pyramids">Pyramids</option>
+            <option value="coral">Coral</option>
+            <option value="chilltown">Chilltown</option>
+          </select>
+        </div>
+        <span class="menu-mode-desc">Pick none, one, or two maps. Solid walls block shots forever. Light cover breaks after 5 hits. Structures show on the minimap.</span>
       </div>
       <div class="menu-bot-difficulty">
         <label for="botDifficultySelect">Bot difficulty</label>
@@ -1139,10 +1268,10 @@
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Pistol</strong> (weakest), <strong>Revolver</strong> (hard-hitting, slow), <strong>SMG</strong> (fast), <strong>Suppressed SMG</strong> (very fast, strong damage, burst for mid range; 36 before reload, 2s reload), <strong>Combat Shotgun</strong> (heavy close range), <strong>Tactical Shotgun</strong> (heavy close range, slower fire), <strong>Overdrive Shotgun</strong> (damage rises as mag empties; 20 before reload, 1.9s reload), <strong>Pump Shotgun</strong> (one heavy slug, very slow), <strong>Overcharge Shotgun</strong> (hold to charge — Rare: 90 tap, 135 full charge, 0.85/sec; 3 shots before reload), <strong>Breacher Shotgun</strong> (weak vs players, destroys walls in 1 hit; 4 shots before reload), <strong>Drum Shotgun</strong> (8-round fast burst, 1s reload), <strong>Strike Shotgun</strong> (heavy close-range slug), <strong>FAMAS</strong> (3-round burst, range, careful aim), <strong>Assault Rifle</strong> / <strong>Modulated AR</strong> (press <strong>F</strong> to swap rapid light fire or slow heavy fire) / <strong>Machine Gun</strong> (fast sustained fire, huge mag, high bloom — close-mid only) / <strong>Suppressed AR</strong> (full-auto, accurate bursts) / <strong>Burst AR</strong> (3-round fast bursts) / <strong>Scoped AR</strong> (precision burst, long range) / <strong>Thermal Scoped AR</strong> (semi-auto, high long-range damage, Epic+) / <strong>SCAR</strong> (balanced), <strong>Sniper</strong> (weak up close, deadly past screen range), <strong>RPG</strong> (explosions, 2 hits to break walls). <strong>Signature guns</strong> (Dogshot's Smash Pistol, Snowstorm's SMG, Swift's Burst AR, Crackshot's Shotgun, Zeus' Drum SG, Foxly's AR, Meowie's RPG) are the <strong>only Mythic</strong> weapons (yellow). Dogshot = fast Mythic Revolver, Foxly = Mythic SCAR, Crackshot = Mythic Tactical SG, etc. Type text shows only on <strong>dropped ground guns</strong>.
+      Gun types: <strong>Shotguns</strong> — Tactical, Pump, Double Barrel, Combat, Auto. <strong>ARs</strong> — Assault Rifle, SCAR, FAMAS, AUG, Tactical AR, Heavy AR, Scoped AR. <strong>SMGs</strong> — SMG, Suppressed SMG, Rapid Fire SMG. <strong>LMGs</strong> — LMG, Minigun, Tommy Gun. <strong>Pistols</strong> — Pistol, Revolver, Auto Pistol. <strong>Snipers</strong> — Bolt Action, Heavy, Semi Auto. <strong>DMRs</strong> — DMR, Tactical DMR. <strong>RPG</strong> — explosive area damage. Each dot shows the <strong>gun and rarity</strong> it is holding.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
-      Kills restore <strong>+50 HP</strong>. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
-      Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for their signature weapons. Chests give Common through Epic. Be the last dot alive to win.
+      Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
+      Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for <strong>Mythic</strong> versions of their guns. Chests give Common through Epic. Be the last dot alive to win.
       The arena is <strong>huge</strong> — about <strong>50 seconds</strong> to run left to right at full speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
@@ -1151,9 +1280,17 @@
     <div id="indexPanel" hidden>
       <div class="menu-card index-card">
         <h1>Weapon Index</h1>
-        <p class="menu-tag" style="text-align:center;">All guns in Supergun. Reload stats are shots before reload and reload time.</p>
+        <p class="menu-tag" style="text-align:center;">Keep-list guns with placeholder stats. Pictures will be added later. Reload stats are shots before reload and reload time.</p>
         <p id="wikiLinkRow" class="index-wiki-row"></p>
         <div id="weaponIndexList"></div>
+      </div>
+    </div>
+
+    <div id="analysisPanel" hidden>
+      <div class="menu-card index-card">
+        <h1>Analysis</h1>
+        <p class="menu-tag" style="text-align:center;">Saved on this account. Placement, wins, kills, and gun use are tracked while you play.</p>
+        <div id="analysisList" class="analysis-card-row"></div>
       </div>
     </div>
   </div>
@@ -1206,8 +1343,8 @@
         <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
         <div id="ammoHud">Ammo: —</div>
         <div id="reloadHud">Before reload: —</div>
-        <div id="teamChartHud" class="hidden" aria-label="Team chart">
-          <div class="team-chart-title">Teams (9)</div>
+        <div id="teamChartHud" class="hidden" aria-label="Leaderboard">
+          <div class="team-chart-title" id="teamChartTitle">Teams</div>
           <div id="teamChartList"></div>
         </div>
       </div>
@@ -1242,9 +1379,10 @@
 (function () {
   const VIEW_W = 1200;
   const VIEW_H = 750;
-  const SNIPER_RARE_CLOSE_DMG = 110;
-  const SNIPER_RARE_FAR_DMG = 110;
   const SNIPER_CLOSE_RANGE = 110;
+  const SNIPER_CLOSE_DMG_MUL = 0.55;
+  const SNIPER_BULLET_SPEED = 820;
+  const SNIPER_BULLET_LIFE = 2.8;
   const DOT_SPEED = 200;
   const MAP_CROSS_SECONDS = 50;
   const WORLD_W = DOT_SPEED * MAP_CROSS_SECONDS;
@@ -1252,6 +1390,7 @@
   const MAP_SCALE = WORLD_W / 7200;
   const MAX_HEALTH = 200;
   const KILL_HEAL = 50;
+  const KILL_AMMO = 20;
   const DOT_R = 10;
   const BOSS_R = 18;
   const CHEST_COUNT = Math.round(40 * MAP_SCALE);
@@ -1264,10 +1403,16 @@
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
-  const BED_MAX_HP = 25;
-  const TEAM_MODE_TEAM_COUNT = 9;
-  const TEAM_MODE_AI_COUNT = 22;
+  const TEAM_MODE_FIGHTER_COUNT = 11;
   const PLAYER_TEAM_ID = 0;
+  const TEAM_COLORS = ["#e63946", "#2d6a4f", "#e9c46a", "#457b9d", "#9b59b6", "#f4a261"];
+  const TEAM_NAMES = ["Red", "Green", "Yellow", "Blue", "Violet", "Orange"];
+  const BEDWARS_CX = WORLD_W * 0.5;
+  const BEDWARS_CY = WORLD_H * 0.5;
+  const BEACON_VIS_RADIUS = 28;
+  const BEACON_MAX_HP = 20;
+  const BEACON_DIST_FRAC = 0.88;
+  const BEACON_BREAK_COOLDOWN_MS = 900;
   const SIGNATURE_BOSS_COLOR = "#666";
   const SIGNATURE_BOSS_IMAGE_DIR = "signature_bosses/";
   const SIGNATURE_BOSS_IMAGE_FILES = {
@@ -1281,14 +1426,15 @@
   };
 
   const TOTAL_DOTS = 16 + SIGNATURE_BOSS_COUNT;
+  const GUN_GAME_FIGHTER_COUNT = 12;
   const SIGNATURE_BOSSES = [
-    { name: "Dogshot", gunId: "dogshot_smash_pistol" },
-    { name: "Snowstorm", gunId: "snowstorm_smg" },
-    { name: "Swift", gunId: "swift_burst_assault_rifle" },
-    { name: "Crackshot", gunId: "crackshot_shotgun" },
-    { name: "Zeus", gunId: "zeus_drum_sg" },
-    { name: "Foxly", gunId: "foxly_assault_rifle" },
-    { name: "Meowie", gunId: "meowie_rpg" },
+    { name: "Dogshot", gunId: "revolver" },
+    { name: "Snowstorm", gunId: "smg" },
+    { name: "Swift", gunId: "famas" },
+    { name: "Crackshot", gunId: "tactical_shotgun" },
+    { name: "Zeus", gunId: "auto_shotgun" },
+    { name: "Foxly", gunId: "scar" },
+    { name: "Meowie", gunId: "rpg" },
   ];
   const INV_SLOTS = 5;
 
@@ -1301,183 +1447,159 @@
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
   const GUN_IMAGE_DIR = "supergun_gun/";
+  const GUN_LOOT_W = 1 / 27;
   const GUN_IMAGE_NAMES = {
     pistol: "pistol",
+    revolver: "revolver",
+    auto_pistol: "auto pistol",
     smg: "submachine gun",
     suppressed_smg: "suppresed smg",
-    combat_shotgun: "combat shotgun",
+    rapid_fire_smg: "rapid fire smg",
     tactical_shotgun: "tactical shotgun",
-    strike_shotgun: "strike shotgun",
     pump_shotgun: "pump shotgun",
-    drum_shotgun: "drum shotgun",
-    famas: "famas",
+    double_barrel_shotgun: "double barrel shotgun",
+    combat_shotgun: "combat shotgun",
+    auto_shotgun: "auto shotgun",
     assault_rifle: "assault rifle",
-    modulated_assault_rifle: "modulated assault rifle",
-    scoped_assault_rifle: "scoped ar",
-    thermal_scoped_assault_rifle: "thermal scoped assault rifle",
-    suppressed_assault_rifle: "suppresed assault rifle",
-    sweep_assault_rifle: "sweep assault rifle",
-    burst_assault_rifle: "burst assualt rifle",
     scar: "SCAR",
-    sniper: "sniper",
-    revolver: "revolver",
+    famas: "famas",
+    aug: "aug",
+    tactical_ar: "tactical ar",
+    heavy_ar: "heavy ar",
+    scoped_assault_rifle: "scoped ar",
+    lmg: "machine gun",
+    minigun: "minigun",
+    tommy_gun: "tommy gun",
+    bolt_action_sniper: "sniper",
+    heavy_sniper: "heavy sniper rifle",
+    semi_auto_sniper: "semi auto sniper rifle",
+    dmr: "DMR",
+    tactical_dmr: "tactical DMR",
     rpg: "RPG",
-    dogshot_smash_pistol: "dogshot's smash pistol",
-    snowstorm_smg: "snowstorm's smg",
-    swift_burst_assault_rifle: "swift's burst ar",
-    crackshot_shotgun: "crackshot's shotgun",
-    zeus_drum_sg: "zeus's drum shotgun",
-    foxly_assault_rifle: "foxly's assault rifle",
-    meowie_rpg: "meowie rpg",
-    overcharge_shotgun: "charge shotgun",
-    breacher_shotgun: "breacher shotgun",
-    overdrive_shotgun: "overdrive shotgun",
-    machine_gun: "machine gun",
   };
   const GUN_IMAGE_ALT_NAMES = {
-    machine_gun: ["machine gun", "Machine Gun", "machine_gun"],
-    suppressed_smg: ["suppresed smg", "suppressed smg", "Suppressed SMG", "suppressed_smg"],
-    overcharge_shotgun: ["charge shotgun", "overcharge shotgun", "Overcharge Shotgun"],
-    breacher_shotgun: ["breacher shotgun", "Breacher Shotgun", "breacher_shotgun"],
-    overdrive_shotgun: ["overdrive shotgun", "Overdrive Shotgun", "overdrive_shotgun"],
-    dogshot_smash_pistol: ["dogshot's smash pistol", "dogshots smash pistol", "Dogshot's Smash Pistol"],
-    snowstorm_smg: ["snowstorm's smg", "snowstorms smg", "Snowstorm's SMG"],
-    swift_burst_assault_rifle: ["swift's burst ar", "swifts burst ar", "Swift's Burst AR"],
-    crackshot_shotgun: ["crackshot's shotgun", "crackshots shotgun", "Crackshot's Shotgun"],
-    zeus_drum_sg: ["zeus's drum shotgun", "zeus drum shotgun", "Zeus' Drum SG", "zues's drum shotgun"],
-    foxly_assault_rifle: ["foxly's assault rifle", "foxlys assault rifle", "Foxly's Assault Rifle"],
-    meowie_rpg: ["meowie rpg", "Meowie's RPG", "meowie_rpg", "cats claw", "cat's claw", "Cat's Claw", "cats_claw", "Cats Claw", "cats claw.jpg.png", "cats claw.png"],
-    drum_shotgun: ["drum shotgun", "Drum Shotgun", "drum_shotgun"],
-    strike_shotgun: ["strike shotgun", "Strike Shotgun", "strike_shotgun"],
-    sweep_assault_rifle: ["sweep ar", "sweep assault rifle", "Sweep Assault Rifle", "sweep_assault_rifle"],
-    scoped_assault_rifle: ["scoped ar", "scoped assault rifle", "Scoped AR", "Scoped Assault Rifle", "scoped_assault_rifle"],
-    thermal_scoped_assault_rifle: ["thermal scoped assault rifle", "thermal scoped ar", "Thermal Scoped AR", "thermal_scoped_assault_rifle"],
-    suppressed_assault_rifle: ["suppressed assault rifle", "suppresed assault rifle", "suppressed ar", "Suppressed AR", "suppressed_assault_rifle"],
-    modulated_assault_rifle: ["modulated assault rifle", "modulated ar", "Modulated AR", "modulated_assault_rifle"],
+    pistol: ["pistol", "Pistol"],
+    revolver: ["revolver", "Revolver"],
+    auto_pistol: ["auto pistol", "Auto Pistol", "autopistol"],
+    smg: ["submachine gun", "SMG", "smg"],
+    suppressed_smg: ["suppresed smg", "suppressed smg", "Suppressed SMG"],
+    rapid_fire_smg: ["rapid fire smg", "Rapid Fire SMG", "rapidfire smg"],
+    tactical_shotgun: ["tactical shotgun", "Tactical Shotgun"],
+    pump_shotgun: ["pump shotgun", "Pump Shotgun"],
+    double_barrel_shotgun: ["double barrel shotgun", "Double Barrel Shotgun", "double-barrel shotgun"],
+    combat_shotgun: ["combat shotgun", "Combat Shotgun"],
+    auto_shotgun: ["auto shotgun", "Auto Shotgun"],
+    assault_rifle: ["assault rifle", "AR", "Assault Rifle"],
+    scar: ["SCAR", "scar"],
+    famas: ["famas", "FAMAS"],
+    aug: ["aug", "AUG"],
+    tactical_ar: ["tactical ar", "Tactical AR", "tactical assault rifle", "Tacical assault rifle"],
+    heavy_ar: ["heavy ar", "Heavy AR", "heavy assault rifle"],
+    scoped_assault_rifle: ["scoped ar", "scoped assault rifle", "Scoped AR"],
+    lmg: ["machine gun", "LMG", "lmg", "Machine Gun", "light machine gun"],
+    minigun: ["minigun", "Minigun", "mini gun"],
+    tommy_gun: ["tommy gun", "Tommy Gun", "tommygun", "drum gun"],
+    bolt_action_sniper: ["sniper", "bolt action sniper rifle", "Bolt Action Sniper"],
+    heavy_sniper: ["heavy sniper rifle", "Heavy Sniper", "heavy sniper"],
+    semi_auto_sniper: ["semi auto sniper rifle", "Semi Auto Sniper", "semi-auto sniper"],
+    dmr: ["DMR", "dmr"],
+    tactical_dmr: ["tactical DMR", "Tactical DMR", "tactical dmr"],
+    rpg: ["RPG", "rpg"],
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
   const GUN_TYPES = [
-    { id: "pistol", label: "Pistol", w: 0.10, dmgMul: 0.5, fireMul: 0.57, spreadMul: 1.3, bloomPerShot: 14 },
-    { id: "revolver", label: "Revolver", w: 0.14, dmgMul: 1.05, dmgMulHi: 1.05, fireMul: 2.56, spreadMul: 0.65, bloomPerShot: 8 },
-    { id: "smg", label: "SMG", w: 0.09, dmgMul: 0.278, fireMul: 0.257, spreadMul: 1.15, bloomPerShot: 18 },
-    { id: "suppressed_smg", label: "Suppressed SMG", w: 0.065, dmgMul: 0.455, dmgMulHi: 0.455, fireMul: 0.481, spreadMul: 0.92, bloomPerShot: 7 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: 0.08, dmgMul: 1.22, dmgMulHi: 1.22, fireMul: 2.26, spreadMul: 0.95, bloomPerShot: 16 },
-    { id: "famas", label: "FAMAS", w: 0.08, dmgMul: 0.674, dmgMulHi: 0.674, fireMul: 0.70, spreadMul: 0.88, bloomPerShot: 10, burstSize: 3, burstShotMs: 80, burstPauseMs: 471 },
-    { id: "tactical_shotgun", label: "Tactical Shotgun", w: 0.08, dmgMul: 1.6, dmgMulHi: 1.6, fireMul: 2.56, spreadMul: 1.35, bloomPerShot: 24 },
-    { id: "overdrive_shotgun", label: "Overdrive Shotgun", w: 0.06, dmgMul: 1.34, dmgMulHi: 1.34, fireMul: 3.346, spreadMul: 1.12, bloomPerShot: 14 },
-    { id: "strike_shotgun", label: "Strike Shotgun", w: 0.065, dmgMul: 81 / 55, dmgMulHi: 81 / 55, fireMul: 2.198, spreadMul: 1.45, bloomPerShot: 11 },
-    { id: "assault_rifle", label: "Assault Rifle", w: 0.10, dmgMul: 0.6, fireMul: 0.70, spreadMul: 1, bloomPerShot: 13 },
-    { id: "modulated_assault_rifle", label: "Modulated AR", w: 0.055, dmgMul: 0.636, dmgMulHi: 0.636, fireMul: 0.70, spreadMul: 0.94, bloomPerShot: 12 },
-    { id: "machine_gun", label: "Machine Gun", w: 0.055, dmgMul: 0.455, dmgMulHi: 0.455, fireMul: 0.549, spreadMul: 1.28, bloomPerShot: 8 },
-    { id: "suppressed_assault_rifle", label: "Suppressed AR", w: 0.085, dmgMul: 0.57, dmgMulHi: 0.57, fireMul: 0.693, spreadMul: 0.9, bloomPerShot: 10 },
-    { id: "sweep_assault_rifle", label: "Sweep Assault Rifle", w: 0.09, dmgMul: 0.57, dmgMulHi: 0.57, fireMul: 0.549, spreadMul: 1.12, bloomPerShot: 14 },
-    { id: "burst_assault_rifle", label: "Burst AR", w: 0.14, dmgMul: 0.670, dmgMulHi: 0.670, fireMul: 0.70, spreadMul: 0.92, bloomPerShot: 6, burstSize: 3, burstShotMs: 80, burstPauseMs: 471 },
-    { id: "scoped_assault_rifle", label: "Scoped AR", w: 0.075, dmgMul: 0.822, dmgMulHi: 0.822, fireMul: 1, spreadMul: 0.72, bloomPerShot: 7, burstSize: 3, burstShotMs: 120, burstPauseMs: 1000 },
-    { id: "thermal_scoped_assault_rifle", label: "Thermal Scoped AR", w: 0.02, dmgMul: 0.705, dmgMulHi: 0.705, fireMul: 0.962, spreadMul: 0.66, bloomPerShot: 8 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: 0.07, dmgMul: 1.67, dmgMulHi: 1.68, fireMul: 5.5, spreadMul: 1.4, bloomPerShot: 9 },
-    { id: "overcharge_shotgun", label: "Overcharge Shotgun", w: 0.06, dmgMul: 1, fireMul: 4.525, spreadMul: 0.85, bloomPerShot: 0 },
-    { id: "breacher_shotgun", label: "Breacher Shotgun", w: 0.05, dmgMul: 0.545, dmgMulHi: 0.545, fireMul: 3.846, spreadMul: 1.25, bloomPerShot: 14 },
-    { id: "drum_shotgun", label: "Drum Shotgun", w: 0.055, dmgMul: 0.364, dmgMulHi: 0.364, fireMul: 1, spreadMul: 1.05, bloomPerShot: 3, pellets: 1, burstSize: 8, burstShotMs: 48, burstPauseMs: 392 },
-    { id: "scar", label: "SCAR", w: 0.06, dmgMul: 0.655, dmgMulHi: 0.655, fireMul: 0.699, spreadMul: 0.95, bloomPerShot: 14 },
-    { id: "sniper", label: "Sniper", w: 0.04, dmgMul: 1.05, fireMul: 5.13, spreadMul: 0.5, bloomPerShot: 2 },
-    { id: "rpg", label: "RPG", w: 0.02, dmgMul: 2.03, dmgMulHi: 2.03, fireMul: 5.13, spreadMul: 0.05, bloomPerShot: 0 },
-    { id: "dogshot_smash_pistol", label: "Dogshot's Smash Pistol", w: 0.008, bloomPerShot: 4, fireMul: 0.72, spreadMul: 0.65 },
-    { id: "snowstorm_smg", label: "Snowstorm's SMG", w: 0.008, bloomPerShot: 3 },
-    { id: "swift_burst_assault_rifle", label: "Swift's Burst AR", w: 0.008, bloomPerShot: 2 },
-    { id: "crackshot_shotgun", label: "Crackshot's Shotgun", w: 0.008, bloomPerShot: 5 },
-    { id: "zeus_drum_sg", label: "Zeus' Drum SG", w: 0.006, bloomPerShot: 3 },
-    { id: "foxly_assault_rifle", label: "Foxly's Assault Rifle", w: 0.008, bloomPerShot: 3 },
-    { id: "meowie_rpg", label: "Meowie's RPG", w: 0.006, bloomPerShot: 1 },
+    { id: "tactical_shotgun", label: "Tactical Shotgun", w: GUN_LOOT_W, rareDmg: 81, bloomPerShot: 12, shotsPerSec: 1.5, holdToShoot: false, rangeBand: "close", spreadMul: 1.35 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: GUN_LOOT_W, rareDmg: 93, bloomPerShot: 6, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "close", spreadMul: 1.4 },
+    { id: "double_barrel_shotgun", label: "Double Barrel Shotgun", w: GUN_LOOT_W, rareDmg: 58, bloomPerShot: 16, shotsPerSec: 3, holdToShoot: false, rangeBand: "very_close", spreadMul: 1.5 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: GUN_LOOT_W, rareDmg: 65, bloomPerShot: 14, shotsPerSec: 1.7, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.95 },
+    { id: "auto_shotgun", label: "Auto Shotgun", w: GUN_LOOT_W, rareDmg: 73, bloomPerShot: 14, shotsPerSec: 1.6, holdToShoot: true, rangeBand: "close", spreadMul: 1.2 },
+    { id: "assault_rifle", label: "Assault Rifle", w: GUN_LOOT_W, rareDmg: 32, bloomPerShot: 10, shotsPerSec: 5.5, holdToShoot: true, rangeBand: "all", spreadMul: 1 },
+    { id: "scar", label: "SCAR", w: GUN_LOOT_W, rareDmg: 38, bloomPerShot: 9, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.95 },
+    { id: "famas", label: "FAMAS", w: GUN_LOOT_W, rareDmg: 35, bloomPerShot: 6, shotsPerSec: 5, holdToShoot: true, rangeBand: "close_mid", spreadMul: 0.88, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
+    { id: "aug", label: "AUG", w: GUN_LOOT_W, rareDmg: 39, bloomPerShot: 5, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.82, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
+    { id: "tactical_ar", label: "Tactical AR", w: GUN_LOOT_W, rareDmg: 21, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
+    { id: "heavy_ar", label: "Heavy AR", w: GUN_LOOT_W, rareDmg: 40, bloomPerShot: 7, shotsPerSec: 3.75, holdToShoot: true, rangeBand: "short_mid", spreadMul: 0.9 },
+    { id: "scoped_assault_rifle", label: "Scoped AR", w: GUN_LOOT_W, rareDmg: 39, bloomPerShot: 8, shotsPerSec: 4, holdToShoot: true, rangeBand: "mid_long", spreadMul: 0.72 },
+    { id: "smg", label: "SMG", w: GUN_LOOT_W, rareDmg: 17, bloomPerShot: 16, shotsPerSec: 14, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.15 },
+    { id: "suppressed_smg", label: "Suppressed SMG", w: GUN_LOOT_W, rareDmg: 24, bloomPerShot: 10, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 0.92 },
+    { id: "rapid_fire_smg", label: "Rapid Fire SMG", w: GUN_LOOT_W, rareDmg: 14, bloomPerShot: 18, shotsPerSec: 16, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.25 },
+    { id: "lmg", label: "LMG", w: GUN_LOOT_W, rareDmg: 25, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.28 },
+    { id: "minigun", label: "Minigun", w: GUN_LOOT_W, rareDmg: 19, bloomPerShot: 17, shotsPerSec: 11, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.5, infiniteMag: true },
+    { id: "tommy_gun", label: "Tommy Gun", w: GUN_LOOT_W, rareDmg: 22, bloomPerShot: 13, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
+    { id: "pistol", label: "Pistol", w: GUN_LOOT_W, rareDmg: 26, bloomPerShot: 11, shotsPerSec: 6.5, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.3 },
+    { id: "revolver", label: "Revolver", w: GUN_LOOT_W, rareDmg: 50, bloomPerShot: 5, shotsPerSec: 2, holdToShoot: false, rangeBand: "mid", spreadMul: 0.65 },
+    { id: "auto_pistol", label: "Auto Pistol", w: GUN_LOOT_W, rareDmg: 18, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
+    { id: "bolt_action_sniper", label: "Bolt Action Sniper Rifle", w: GUN_LOOT_W, rareDmg: 110, bloomPerShot: 2, shotsPerSec: 0.7, holdToShoot: false, rangeBand: "long", spreadMul: 0.5 },
+    { id: "heavy_sniper", label: "Heavy Sniper Rifle", w: GUN_LOOT_W, rareDmg: 120, bloomPerShot: 1, shotsPerSec: 0.64, holdToShoot: false, rangeBand: "long", spreadMul: 0.4 },
+    { id: "semi_auto_sniper", label: "Semi Auto Sniper Rifle", w: GUN_LOOT_W, rareDmg: 97, bloomPerShot: 4, shotsPerSec: 1.2, holdToShoot: false, rangeBand: "long", spreadMul: 0.55 },
+    { id: "dmr", label: "DMR", w: GUN_LOOT_W, rareDmg: 50, bloomPerShot: 5, shotsPerSec: 2.5, holdToShoot: false, rangeBand: "all", spreadMul: 0.7 },
+    { id: "tactical_dmr", label: "Tactical DMR", w: GUN_LOOT_W, rareDmg: 45, bloomPerShot: 6, shotsPerSec: 2.85, holdToShoot: false, rangeBand: "all", spreadMul: 0.78 },
+    { id: "rpg", label: "RPG", w: GUN_LOOT_W, rareDmg: 100, bloomPerShot: 2, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.05, explodeRadiusMul: 12 },
   ];
 
   const GUN_RELOAD_STATS = {
-    pistol: { magSize: 8, reloadSec: 1.2 },
-    revolver: { magSize: 16, reloadSec: 1.6 },
-    smg: { magSize: 36, reloadSec: 1.78 },
+    tactical_shotgun: { magSize: 8, reloadSec: 5 },
+    pump_shotgun: { magSize: 5, reloadSec: 4 },
+    double_barrel_shotgun: { magSize: 2, reloadSec: 4 },
+    combat_shotgun: { magSize: 8, reloadSec: 4.75 },
+    auto_shotgun: { magSize: 8, reloadSec: 5 },
+    assault_rifle: { magSize: 30, reloadSec: 2.5 },
+    scar: { magSize: 30, reloadSec: 2.5 },
+    famas: { magSize: 20, reloadSec: 2.5 },
+    aug: { magSize: 20, reloadSec: 2 },
+    tactical_ar: { magSize: 30, reloadSec: 2 },
+    heavy_ar: { magSize: 25, reloadSec: 2.75 },
+    scoped_assault_rifle: { magSize: 30, reloadSec: 2.5 },
+    smg: { magSize: 35, reloadSec: 2 },
     suppressed_smg: { magSize: 36, reloadSec: 2 },
-    combat_shotgun: { magSize: 12, reloadSec: 3 },
-    tactical_shotgun: { magSize: 18, reloadSec: 3.5 },
-    overdrive_shotgun: { magSize: 20, reloadSec: 1.9 },
-    pump_shotgun: { magSize: 8, reloadSec: 2.25 },
-    overcharge_shotgun: { magSize: 3, reloadSec: 2.2 },
-    breacher_shotgun: { magSize: 4, reloadSec: 2.5 },
-    strike_shotgun: { magSize: 6, reloadSec: 2.35 },
-    drum_shotgun: { magSize: 40, reloadSec: 3 },
-    famas: { magSize: 20, reloadSec: 1.75 },
-    assault_rifle: { magSize: 30, reloadSec: 1.5 },
-    modulated_assault_rifle: { magSize: 30, reloadSec: 1.5 },
-    machine_gun: { magSize: 60, reloadSec: 3.25 },
-    suppressed_assault_rifle: { magSize: 30, reloadSec: 1.25 },
-    sweep_assault_rifle: { magSize: 30, reloadSec: 1.25 },
-    burst_assault_rifle: { magSize: 20, reloadSec: 1.75 },
-    scoped_assault_rifle: { magSize: 17, reloadSec: 1.5 },
-    thermal_scoped_assault_rifle: { magSize: 15, reloadSec: 1.5 },
-    scar: { magSize: 30, reloadSec: 1.5 },
-    sniper: { magSize: 1, reloadSec: 1.85 },
-    rpg: { magSize: 1, reloadSec: 2 },
-    dogshot_smash_pistol: { magSize: 10, reloadSec: 0.65 },
-    snowstorm_smg: { magSize: 45, reloadSec: 3.1 },
-    swift_burst_assault_rifle: { magSize: 30, reloadSec: 1.62 },
-    crackshot_shotgun: { magSize: 16, reloadSec: 1.5 },
-    zeus_drum_sg: { magSize: 40, reloadSec: 2.2 },
-    foxly_assault_rifle: { magSize: 35, reloadSec: 1 },
-    meowie_rpg: { magSize: 5, reloadSec: 0.25 },
+    rapid_fire_smg: { magSize: 36, reloadSec: 1.65 },
+    lmg: { magSize: 60, reloadSec: 4 },
+    minigun: { magSize: 9999, reloadSec: 0 },
+    tommy_gun: { magSize: 40, reloadSec: 3 },
+    pistol: { magSize: 8, reloadSec: 1.4 },
+    revolver: { magSize: 6, reloadSec: 2.2 },
+    auto_pistol: { magSize: 8, reloadSec: 2 },
+    bolt_action_sniper: { magSize: 1, reloadSec: 3 },
+    heavy_sniper: { magSize: 1, reloadSec: 4 },
+    semi_auto_sniper: { magSize: 7, reloadSec: 2.47 },
+    dmr: { magSize: 10, reloadSec: 2.5 },
+    tactical_dmr: { magSize: 14, reloadSec: 2.5 },
+    rpg: { magSize: 1, reloadSec: 3.5 },
   };
 
   const GUN_INDEX_BLURBS = {
-    pistol: "Weakest gun. Common starter pick.",
-    revolver: "Hard-hitting, slow fire rate.",
-    smg: "Very fast fire, high bloom.",
-    suppressed_smg: "Very high fire rate, strong damage, heavy ammo use. Short bursts stay accurate to mid range — ideal run-and-gun.",
-    combat_shotgun: "Heavy close-range damage.",
-    tactical_shotgun: "Heavy close-range damage, slower fire than Combat SG.",
-    overdrive_shotgun: "Damage rises as the mag empties — last shots hit hardest. Mid-close range, slightly fast fire.",
-    pump_shotgun: "One heavy slug per shot, very slow.",
-    overcharge_shotgun: "Hold to charge, release to fire. Rare: 90 dmg tap, 135 full charge, 0.85/sec.",
-    breacher_shotgun: "Weak vs players. Destroys walls in 1 hit.",
-    drum_shotgun: "8-round fast burst, then 1s pause.",
-    strike_shotgun: "Heavy close-range slug. Damage falls off sharply at distance.",
-    famas: "3-round burst with strong range.",
-    assault_rifle: "Balanced full-auto rifle.",
-    modulated_assault_rifle: "Press F to swap modes: rapid light fire (Tactical SG speed) or slow heavy fire (Revolver speed).",
-    machine_gun: "Fast sustained fire, 60-round mag. Strong close-mid; bloom builds quickly — poor at long range. Great for shredding walls.",
-    suppressed_assault_rifle: "Accurate full-auto, lower bloom.",
-    sweep_assault_rifle: "Full-auto tuned for closer fights.",
-    burst_assault_rifle: "3-round burst, fast and accurate.",
-    scoped_assault_rifle: "3-round precision burst, long range.",
-    thermal_scoped_assault_rifle: "Semi-auto, high long-range damage. Epic+ chests only.",
-    scar: "Strong, balanced rifle.",
-    sniper: "Heavy hit per shot, very slow fire. Rare: 110 dmg, 0.75/sec.",
-    rpg: "Explosive area damage. 2 hits to break walls.",
-    dogshot_smash_pistol: "Mythic revolver — Dogshot's signature. Fast and hard-hitting.",
-    snowstorm_smg: "Mythic SMG — Snowstorm's signature.",
-    swift_burst_assault_rifle: "Mythic Burst AR — Swift's signature.",
-    crackshot_shotgun: "Mythic Tactical SG — Crackshot's signature.",
-    zeus_drum_sg: "Mythic Drum SG — Zeus' signature.",
-    foxly_assault_rifle: "Mythic SCAR — Foxly's signature.",
-    meowie_rpg: "Mythic RPG — Meowie's signature. Very fast reload.",
+    tactical_shotgun: "Rare 81 dmg. Close range. Click to shoot.",
+    pump_shotgun: "Rare 93 dmg. Close range. Slow click-to-shoot slug.",
+    double_barrel_shotgun: "Rare 58 dmg. Very close. Two-shot burst click.",
+    combat_shotgun: "Rare 65 dmg. Short-mid range. Click to shoot.",
+    auto_shotgun: "Rare 73 dmg. Close range. Hold to shoot.",
+    assault_rifle: "Rare 32 dmg. All range. Hold to shoot.",
+    scar: "Rare 38 dmg. All range. Hold to shoot.",
+    famas: "Rare 35 dmg. Close/mid. 5-round burst, 0.5s pause.",
+    aug: "Rare 39 dmg. All range. 5-round burst, 0.5s pause.",
+    tactical_ar: "Rare 21 dmg. Mid/short. Fast hold-to-shoot.",
+    heavy_ar: "Rare 40 dmg. Mid/short. Slow hold-to-shoot.",
+    scoped_assault_rifle: "Rare 39 dmg. Mid-long. Hold to shoot.",
+    smg: "Rare 17 dmg. Mid-short. High bloom spray.",
+    suppressed_smg: "Rare 24 dmg. Mid-short. Tighter SMG.",
+    rapid_fire_smg: "Rare 14 dmg. Mid-short. Fastest SMG, heaviest bloom.",
+    lmg: "Rare 25 dmg. Mid-short. 60-round hold spray.",
+    minigun: "Rare 19 dmg. Mid-short. Infinite mag, high bloom.",
+    tommy_gun: "Rare 22 dmg. Mid-short. 40-round hold spray.",
+    pistol: "Rare 26 dmg. Short-mid. Hold to shoot.",
+    revolver: "Rare 50 dmg. Mid. Click to shoot.",
+    auto_pistol: "Rare 18 dmg. Mid-short. Hold to shoot.",
+    bolt_action_sniper: "Rare 110 dmg at long range. Weak up close. Hits hardest past one screen.",
+    heavy_sniper: "Rare 120 dmg at long range. Weak up close. Hits hardest past one screen.",
+    semi_auto_sniper: "Rare 97 dmg at long range. Weak up close. Hits hardest past one screen.",
+    dmr: "Rare 50 dmg. All range. Click to shoot.",
+    tactical_dmr: "Rare 45 dmg. All range. Faster DMR click.",
+    rpg: "Rare 100 dmg splash. Hurts you too. Short-mid rocket.",
   };
 
-  const SIGNATURE_GUN_BASE = {
-    dogshot_smash_pistol: "revolver",
-    snowstorm_smg: "smg",
-    swift_burst_assault_rifle: "burst_assault_rifle",
-    crackshot_shotgun: "tactical_shotgun",
-    zeus_drum_sg: "drum_shotgun",
-    foxly_assault_rifle: "scar",
-    meowie_rpg: "rpg",
-  };
-
-  const ART_SPRITE_GUN_IDS = new Set(["meowie_rpg"]);
-  const SIGNATURE_GUN_IDS = new Set([
-    "dogshot_smash_pistol",
-    "snowstorm_smg",
-    "swift_burst_assault_rifle",
-    "crackshot_shotgun",
-    "zeus_drum_sg",
-    "foxly_assault_rifle",
-    "meowie_rpg",
-  ]);
+  const SIGNATURE_GUN_BASE = {};
+  const ART_SPRITE_GUN_IDS = new Set();
+  const SIGNATURE_GUN_IDS = new Set();
 
   const CHEST_DROP_WEIGHTS = [
     ["common", 0.22],
@@ -1537,7 +1659,8 @@
   const WALL_PLACE_MAX_DIST = 400;
   const MED_USE_MS = 450;
   const BLOOM_DECAY_PER_SEC = 55;
-  const BLOOM_SPREAD_FACTOR = 2;
+  const BLOOM_SPREAD_FACTOR = 1.75;
+  const BLOOM_PER_SHOT_SCALE = 0.85;
 
   const canvas = document.getElementById("game");
   const ctx = canvas.getContext("2d");
@@ -1592,9 +1715,12 @@
   const tabRegister = document.getElementById("tabRegister");
   const tabPlayMain = document.getElementById("tabPlay");
   const tabIndexMain = document.getElementById("tabIndex");
+  const tabAnalysisMain = document.getElementById("tabAnalysis");
   const tabWikiMain = document.getElementById("tabWiki");
   const playPanel = document.getElementById("playPanel");
   const indexPanel = document.getElementById("indexPanel");
+  const analysisPanel = document.getElementById("analysisPanel");
+  const analysisList = document.getElementById("analysisList");
   const weaponIndexList = document.getElementById("weaponIndexList");
   const wikiLinkRow = document.getElementById("wikiLinkRow");
 
@@ -1645,13 +1771,22 @@
   let spectateMode = false;
   let spectateTargetId = null;
   let defeatStatsRecorded = false;
+  let killFeed = [];
+  let gunStatsRuntime = {};
+  let rarityStatsRuntime = {};
+  let gunStatsSaveTimer = null;
   let lastTs = 0;
   let gameStartTime = 0;
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
   let gameMode = "battle_royale";
+  let gunGameVariant = "damage_up";
+  let gunGameLadder = [];
+  let activeMapIds = [];
+  let teamsCount = 4;
   let teamMeta = [];
   let beds = [];
+  let bedwarsBeaconAlive = [];
   let revengeKilledBy = new Map();
   let playerName = "You";
   let playerColor = "#4af0ff";
@@ -1735,30 +1870,157 @@
   const lobbyCompetitive = document.getElementById("lobbyCompetitive");
   const gameModeSelect = document.getElementById("gameModeSelect");
   const teamSizeRow = document.getElementById("teamSizeRow");
+  const teamsCountSelect = document.getElementById("teamsCountSelect");
+  const menuColorField = document.getElementById("menuColorField");
   const gameModeDesc = document.getElementById("gameModeDesc");
+  const gunGameVariantRow = document.getElementById("gunGameVariantRow");
+  const gunGameVariantSelect = document.getElementById("gunGameVariantSelect");
+  const mapSelectA = document.getElementById("mapSelectA");
+  const mapSelectB = document.getElementById("mapSelectB");
   const menuModeTag = document.getElementById("menuModeTag");
   const teamChartHud = document.getElementById("teamChartHud");
+  const teamChartTitle = document.getElementById("teamChartTitle");
   const teamChartList = document.getElementById("teamChartList");
+  const leftHud = document.getElementById("leftHud");
 
   const GAME_MODE_DESCRIPTIONS = {
     battle_royale: "Classic free-for-all. Be the last dot alive.",
-    teams: "Your team shares your color with AI allies. 9 teams fight — 22 AI bots plus you. Eliminate every other team to win.",
-    bedwars: "Same team rules as Teams, plus a bed. Die while your bed lives and you respawn with no gun. Beds break after 25 shots. No bed = final death.",
+    teams: "2–6 teams, 11 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins.",
+    bedwars: "2–6 teams with wedge territories from the map center. Each team has a beacon — respawn with no gun while it stands. Enemy beacons break after 20 shots. Defenders stay in their wedge; attackers roam. Last team standing wins.",
     revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot.",
+    gun_game: "Everyone starts on the first gun in the ladder. A kill moves you to the next gun. First player to get a kill with the last gun wins. Everyone respawns until that happens.",
   };
 
   function isTeamGameMode() {
     return gameMode === "teams" || gameMode === "bedwars";
   }
 
+  function isGunGameMode() {
+    return gameMode === "gun_game";
+  }
+
   function readGameModeFromMenu() {
     const val = gameModeSelect && gameModeSelect.value;
-    if (val === "teams" || val === "bedwars" || val === "revenge") return val;
+    if (val === "teams" || val === "bedwars" || val === "revenge" || val === "gun_game") return val;
     return "battle_royale";
   }
 
-  function readTeamSizeFromMenu() {
-    return TEAM_MODE_TEAM_COUNT;
+  function readGunGameVariantFromMenu() {
+    const val = gunGameVariantSelect && gunGameVariantSelect.value;
+    if (val === "damage_down" || val === "speed_up" || val === "speed_down") return val;
+    return "damage_up";
+  }
+
+  function readTeamsCountFromMenu() {
+    const el = teamsCountSelect;
+    if (!el) return 4;
+    return clamp(parseInt(el.value, 10) || 4, 2, 6);
+  }
+
+  function shuffleInPlace(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      const tmp = arr[i];
+      arr[i] = arr[j];
+      arr[j] = tmp;
+    }
+  }
+
+  function bedwarsNormAngle(a) {
+    return ((a % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+  }
+
+  function bedwarsTeamAngleBounds(teamId) {
+    const n = Math.max(2, teamsCount);
+    const slice = (Math.PI * 2) / n;
+    const a0 = teamId * slice;
+    const a1 = (teamId + 1) * slice;
+    return { a0, a1, bisect: (a0 + a1) * 0.5, slice };
+  }
+
+  function bedwarsMaxRayFromCenterInRect(cx, cy, ang, w, h) {
+    const c = Math.cos(ang);
+    const s = Math.sin(ang);
+    const eps = 1e-5;
+    let maxT = 1e12;
+    if (c > eps) maxT = Math.min(maxT, (w - cx - 8) / c);
+    if (c < -eps) maxT = Math.min(maxT, (8 - cx) / c);
+    if (s > eps) maxT = Math.min(maxT, (h - cy - 8) / s);
+    if (s < -eps) maxT = Math.min(maxT, (8 - cy) / s);
+    return Math.max(60, maxT);
+  }
+
+  function bedwarsCircDist(a, b) {
+    let d = Math.abs(a - b) % (Math.PI * 2);
+    if (d > Math.PI) d = Math.PI * 2 - d;
+    return d;
+  }
+
+  function bedwarsClampDefenderInWedge(e) {
+    const { a0, slice, bisect } = bedwarsTeamAngleBounds(e.teamId);
+    const r = e.radius;
+    const pad = 5;
+    const minFromCenter = r + pad;
+    const a0n = bedwarsNormAngle(a0);
+    const a1n = bedwarsNormAngle(a0 + slice);
+    const dx = e.x - BEDWARS_CX;
+    const dy = e.y - BEDWARS_CY;
+    let distVal = Math.hypot(dx, dy);
+    let ang = distVal > 1e-4 ? Math.atan2(dy, dx) : bisect;
+    ang = bedwarsNormAngle(ang);
+    let w = (ang - a0n + Math.PI * 2) % (Math.PI * 2);
+    if (w > slice + 1e-4) {
+      ang = bedwarsCircDist(ang, a0n) <= bedwarsCircDist(ang, a1n) ? a0n : a1n;
+    } else {
+      w = clamp(w, 0, Math.max(1e-4, slice));
+      ang = bedwarsNormAngle(a0n + w);
+    }
+    const maxRay = bedwarsMaxRayFromCenterInRect(BEDWARS_CX, BEDWARS_CY, ang, WORLD_W, WORLD_H) * 0.98;
+    if (distVal < 1e-3) distVal = minFromCenter;
+    else distVal = clamp(distVal, minFromCenter, maxRay - r - pad);
+    e.x = BEDWARS_CX + Math.cos(ang) * distVal;
+    e.y = BEDWARS_CY + Math.sin(ang) * distVal;
+  }
+
+  function defendersPerTeamBedwars(teamCount) {
+    const n = Math.max(2, Math.min(6, teamCount | 0));
+    if (n >= 4) return 1;
+    if (n === 3) return 2;
+    return 3;
+  }
+
+  function bedwarsBeaconSlot(teamId) {
+    const { bisect } = bedwarsTeamAngleBounds(teamId);
+    const maxRay = bedwarsMaxRayFromCenterInRect(BEDWARS_CX, BEDWARS_CY, bisect, WORLD_W, WORLD_H);
+    const distPos = Math.max(
+      BEACON_VIS_RADIUS + 48,
+      maxRay * BEACON_DIST_FRAC - BEACON_VIS_RADIUS - 24
+    );
+    return {
+      x: BEDWARS_CX + Math.cos(bisect) * distPos,
+      y: BEDWARS_CY + Math.sin(bisect) * distPos,
+    };
+  }
+
+  function teamBedwarsEliminated(teamId) {
+    return !getTeamBed(teamId) && !teamHasAliveMembers(teamId);
+  }
+
+  function getTeamsStillInMatch() {
+    if (gameMode === "bedwars") {
+      const ids = new Set();
+      for (let t = 0; t < teamsCount; t++) {
+        if (!teamBedwarsEliminated(t)) ids.add(t);
+      }
+      return ids;
+    }
+    return getAliveTeamIds();
+  }
+
+  function playerTeamStillFighting() {
+    if (!player || player.teamId == null) return false;
+    if (gameMode === "bedwars") return !teamBedwarsEliminated(player.teamId);
+    return teamHasAliveMembers(player.teamId);
   }
 
   function getTeamSlotCounts(totalFighters, teamCount) {
@@ -1772,6 +2034,9 @@
   }
 
   function getTeamColor(teamId) {
+    if (isTeamGameMode() && teamId != null) {
+      return TEAM_COLORS[teamId % TEAM_COLORS.length];
+    }
     if (teamId === PLAYER_TEAM_ID) return playerColor;
     const meta = teamMeta.find((m) => m.teamId === teamId);
     if (meta) return meta.color;
@@ -1779,6 +2044,13 @@
   }
 
   function getTeamLabel(teamId) {
+    if (isTeamGameMode() && teamId != null) {
+      const tn = TEAM_NAMES[teamId] || ("Team " + (teamId + 1));
+      if (player && player.teamId === teamId) return tn + " (" + playerName + ")";
+      const meta = teamMeta.find((m) => m.teamId === teamId);
+      if (meta && meta.captainName) return tn + " · " + meta.captainName;
+      return tn;
+    }
     const meta = teamMeta.find((m) => m.teamId === teamId);
     if (!meta) return "Team " + (teamId + 1);
     if (teamId === PLAYER_TEAM_ID) return meta.captainName || playerName;
@@ -1789,25 +2061,77 @@
     return dots.filter((d) => d.teamId === teamId && (!aliveOnly || d.alive)).length;
   }
 
+  function escapeHudText(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/"/g, "&quot;");
+  }
+
+  function updateGunGameBoardHud() {
+    if (!teamChartHud || !teamChartList) return;
+    if (leftHud) leftHud.classList.add("gun-game-board");
+    teamChartHud.classList.remove("hidden");
+    const n = gunGameLadder.length;
+    if (teamChartTitle) teamChartTitle.textContent = "Gun ladder (" + n + ")";
+    const rows = dots.slice().sort((a, b) => {
+      const gi = (b.gunGameIndex | 0) - (a.gunGameIndex | 0);
+      if (gi) return gi;
+      const k = (b.kills | 0) - (a.kills | 0);
+      if (k) return k;
+      return String(a.name).localeCompare(String(b.name));
+    });
+    teamChartList.innerHTML = rows.map((d, i) => {
+      const idx = d.gunGameIndex | 0;
+      const last = n > 0 && idx >= n - 1;
+      const meta = n ? getGunTypeMeta(gunGameLadder[idx]) : null;
+      const gunName = meta ? meta.label : "—";
+      const isYou = !!(player && d.id === player.id);
+      const isP2 = !!(player2 && d.id === player2.id);
+      const cls = "team-chart-row" + (isYou ? " you" : "") + (last ? " last-gun" : "");
+      const tag = isYou ? " (you)" : (isP2 ? " (P2)" : "");
+      const color = String(d.color || "#888").replace(/"/g, "");
+      return (
+        '<div class="' + cls + '">' +
+        '<span style="color:#666;width:14px;flex-shrink:0;">' + (i + 1) + "</span>" +
+        '<span class="team-chart-dot" style="background:' + color + '"></span>' +
+        '<span class="team-chart-name">' + escapeHudText(d.name) + tag + "</span>" +
+        '<span class="team-chart-gun">' + (idx + 1) + " · " + escapeHudText(gunName) + "</span>" +
+        "</div>"
+      );
+    }).join("");
+  }
+
   function updateTeamChartHud() {
     if (!teamChartHud || !teamChartList) return;
+    if (isGunGameMode()) {
+      updateGunGameBoardHud();
+      return;
+    }
+    if (leftHud) leftHud.classList.remove("gun-game-board");
     if (!isTeamGameMode() || !teamMeta.length) {
       teamChartHud.classList.add("hidden");
       teamChartList.innerHTML = "";
       return;
     }
     teamChartHud.classList.remove("hidden");
+    if (teamChartTitle) teamChartTitle.textContent = "Teams (" + teamMeta.length + ")";
     const rows = teamMeta.map((meta) => {
       const alive = countTeamMembers(meta.teamId, true);
       const total = meta.totalSlots || 0;
       const isYou = player && player.teamId === meta.teamId;
-      const eliminated = alive <= 0;
+      const eliminated = gameMode === "bedwars"
+        ? teamBedwarsEliminated(meta.teamId)
+        : alive <= 0;
+      const beaconNote = gameMode === "bedwars"
+        ? (getTeamBed(meta.teamId) ? " · beacon" : " · no beacon")
+        : "";
       const cls = "team-chart-row" + (isYou ? " you" : "") + (eliminated ? " eliminated" : "");
       const label = getTeamLabel(meta.teamId);
       return (
         '<div class="' + cls + '">' +
         '<span class="team-chart-dot" style="background:' + meta.color.replace(/"/g, "") + '"></span>' +
-        "<span>" + label + (isYou ? " (you)" : "") + "</span>" +
+        "<span>" + escapeHudText(label) + (isYou ? " (you)" : "") + beaconNote + "</span>" +
         '<span style="margin-left:auto;color:#888;">' + alive + "/" + total + "</span>" +
         "</div>"
       );
@@ -1819,14 +2143,22 @@
     const mode = readGameModeFromMenu();
     const teamMode = mode === "teams" || mode === "bedwars";
     if (teamSizeRow) teamSizeRow.hidden = !teamMode;
+    if (gunGameVariantRow) gunGameVariantRow.hidden = mode !== "gun_game";
+    if (menuColorField) menuColorField.hidden = teamMode;
     if (gameModeDesc) gameModeDesc.textContent = GAME_MODE_DESCRIPTIONS[mode] || "";
+    if (menuDotPreview) {
+      if (teamMode) menuDotPreview.style.background = TEAM_COLORS[0];
+      else if (colorInput) menuDotPreview.style.background = colorInput.value;
+    }
     if (menuModeTag) {
       if (mode === "battle_royale") {
         menuModeTag.textContent = "16-dot arena · 7 hidden hunters · ~50s to cross · last dot wins";
       } else if (mode === "teams") {
-        menuModeTag.textContent = "9 teams · 22 AI + you · team chart in-game";
+        menuModeTag.textContent = "2–6 teams · 11 fighters · team chart + minimap";
       } else if (mode === "bedwars") {
-        menuModeTag.textContent = "Team bedwars · protect your bed · 25 hits breaks a bed";
+        menuModeTag.textContent = "Wedge territories · beacons · 20 shots breaks a beacon";
+      } else if (mode === "gun_game") {
+        menuModeTag.textContent = "12-dot FFA · assigned guns · respawn · last-gun kill wins";
       } else {
         menuModeTag.textContent = "Revenge free-for-all · avenge your killer to respawn";
       }
@@ -1836,16 +2168,23 @@
       if (mode === "teams") btnStart.textContent = "Start teams";
       else if (mode === "bedwars") btnStart.textContent = "Start bedwars";
       else if (mode === "revenge") btnStart.textContent = "Start revenge";
+      else if (mode === "gun_game") btnStart.textContent = "Start gun game";
       else btnStart.textContent = twoPlayerCheck && twoPlayerCheck.checked ? "Start two player" : "Start solo";
     }
     if (p2ModeFields && twoPlayerCheck) {
-      const hideP2TeamRadios = readGameModeFromMenu() === "teams" || readGameModeFromMenu() === "bedwars";
+      const hideP2TeamRadios = mode === "teams" || mode === "bedwars" || mode === "gun_game";
       p2ModeFields.style.display = twoPlayerCheck.checked && !hideP2TeamRadios ? "" : "none";
     }
   }
 
   if (gameModeSelect) {
     gameModeSelect.addEventListener("change", updateGameModeMenuUI);
+  }
+  if (teamsCountSelect) {
+    teamsCountSelect.addEventListener("change", updateGameModeMenuUI);
+  }
+  if (gunGameVariantSelect) {
+    gunGameVariantSelect.addEventListener("change", updateGameModeMenuUI);
   }
 
   menuDotPreview.style.background = colorInput.value;
@@ -1854,13 +2193,21 @@
     twoPlayerCheck.addEventListener("change", () => {
       const on = twoPlayerCheck.checked;
       if (p2Fields) p2Fields.classList.toggle("visible", on);
-      if (p2ModeFields) p2ModeFields.classList.toggle("visible", on && !(readGameModeFromMenu() === "teams" || readGameModeFromMenu() === "bedwars"));
+      if (p2ModeFields) p2ModeFields.classList.toggle("visible", on && !(readGameModeFromMenu() === "teams" || readGameModeFromMenu() === "bedwars" || readGameModeFromMenu() === "gun_game"));
       updateGameModeMenuUI();
     });
   }
 
   function viewHalfW() {
     return (twoPlayerMode || spectateMode) ? VIEW_W * 0.5 : VIEW_W;
+  }
+
+  function getSpectateTargetsOrdered() {
+    const alive = getAliveSpectateTargets();
+    if (!isTeamGameMode() || player == null || player.teamId == null) return alive;
+    const mates = alive.filter((d) => d.teamId === player.teamId);
+    const rest = alive.filter((d) => d.teamId !== player.teamId);
+    return mates.concat(rest);
   }
 
   function getAliveSpectateTargets() {
@@ -1872,12 +2219,17 @@
   }
 
   function pickRandomSpectateTarget() {
-    const alive = getAliveSpectateTargets();
-    if (!alive.length) {
+    const ordered = getSpectateTargetsOrdered();
+    if (!ordered.length) {
       spectateTargetId = null;
       return null;
     }
-    const pick = alive[randInt(0, alive.length - 1)];
+    let pool = ordered;
+    if (isTeamGameMode() && player && player.teamId != null) {
+      const mates = ordered.filter((d) => d.teamId === player.teamId);
+      if (mates.length) pool = mates;
+    }
+    const pick = pool[randInt(0, pool.length - 1)];
     spectateTargetId = pick.id;
     return pick;
   }
@@ -1889,15 +2241,15 @@
   }
 
   function cycleSpectateTarget(delta) {
-    const alive = getAliveSpectateTargets();
-    if (!alive.length) {
+    const ordered = getSpectateTargetsOrdered();
+    if (!ordered.length) {
       spectateTargetId = null;
       return;
     }
-    let idx = alive.findIndex((d) => d.id === spectateTargetId);
+    let idx = ordered.findIndex((d) => d.id === spectateTargetId);
     if (idx < 0) idx = 0;
-    idx = (idx + delta + alive.length) % alive.length;
-    spectateTargetId = alive[idx].id;
+    idx = (idx + delta + ordered.length) % ordered.length;
+    spectateTargetId = ordered[idx].id;
   }
 
   function clearMovementKeys() {
@@ -1940,7 +2292,7 @@
     endSummary.textContent = summary + " Use ← → arrow keys to switch who you watch.";
     renderEndLeaderboard();
     if (opts.record !== false && player) {
-      recordGameResult(false, player.kills | 0);
+      recordGameResult(false, player.kills | 0, opts.place);
       defeatStatsRecorded = true;
     }
   }
@@ -2066,8 +2418,50 @@
       displayName: displayName || "You",
       dotColor: "#4af0ff",
       difficulty: "intermediate",
-      stats: { games: 0, wins: 0, kills: 0 },
+      stats: { games: 0, wins: 0, kills: 0, placeSum: 0, placeCount: 0, bestPlace: 0, top5: 0 },
+      gunStats: {},
+      rarityStats: {},
     };
+  }
+
+  function normalizeGunStatsMap(raw) {
+    const out = {};
+    if (!raw || typeof raw !== "object") return out;
+    for (const id of Object.keys(raw)) {
+      const row = raw[id];
+      if (!row || typeof row !== "object") continue;
+      out[id] = {
+        shots: Math.max(0, row.shots | 0),
+        kills: Math.max(0, row.kills | 0),
+        deaths: Math.max(0, row.deaths | 0),
+      };
+    }
+    return out;
+  }
+
+  function normalizeCareerStats(raw) {
+    const s = raw && typeof raw === "object" ? raw : {};
+    const best = s.bestPlace | 0;
+    return {
+      games: Math.max(0, s.games | 0),
+      wins: Math.max(0, s.wins | 0),
+      kills: Math.max(0, s.kills | 0),
+      placeSum: Math.max(0, Number(s.placeSum) || 0),
+      placeCount: Math.max(0, s.placeCount | 0),
+      bestPlace: best > 0 ? best : 0,
+      top5: Math.max(0, s.top5 | 0),
+    };
+  }
+
+  function normalizeRarityStatsMap(raw) {
+    const out = {};
+    if (!raw || typeof raw !== "object") return out;
+    for (const id of Object.keys(raw)) {
+      if (!RARITIES[id]) continue;
+      const row = raw[id];
+      out[id] = { shots: Math.max(0, row && row.shots | 0) };
+    }
+    return out;
   }
 
   function loadProfile(slug) {
@@ -2079,11 +2473,9 @@
           displayName: String(p.displayName || d.displayName).slice(0, 16),
           dotColor: /^#[0-9a-fA-F]{6}$/.test(p.dotColor) ? p.dotColor : d.dotColor,
           difficulty: BOT_DIFFICULTY_ORDER.includes(p.difficulty) ? p.difficulty : d.difficulty,
-          stats: {
-            games: Math.max(0, p.stats && p.stats.games | 0),
-            wins: Math.max(0, p.stats && p.stats.wins | 0),
-            kills: Math.max(0, p.stats && p.stats.kills | 0),
-          },
+          stats: normalizeCareerStats(p.stats),
+          gunStats: normalizeGunStatsMap(p.gunStats),
+          rarityStats: normalizeRarityStatsMap(p.rarityStats),
         };
       }
     } catch (_) {}
@@ -2126,8 +2518,42 @@
       displayName: (nameInput.value || "You").trim().slice(0, 12) || "You",
       dotColor: colorInput.value || "#4af0ff",
       difficulty: BOT_DIFFICULTY_ORDER.includes(diff) ? diff : "intermediate",
-      stats: currentUserSlug ? loadProfile(currentUserSlug).stats : { games: 0, wins: 0, kills: 0 },
+      stats: currentUserSlug ? loadProfile(currentUserSlug).stats : normalizeCareerStats(null),
+      gunStats: currentUserSlug ? gunStatsRuntime : {},
+      rarityStats: currentUserSlug ? rarityStatsRuntime : {},
     };
+  }
+
+  function hydrateGunStatsRuntime() {
+    if (!currentUserSlug) {
+      gunStatsRuntime = {};
+      rarityStatsRuntime = {};
+      return;
+    }
+    const profile = loadProfile(currentUserSlug);
+    gunStatsRuntime = normalizeGunStatsMap(profile.gunStats);
+    rarityStatsRuntime = normalizeRarityStatsMap(profile.rarityStats);
+  }
+
+  function flushGunStatsNow() {
+    if (gunStatsSaveTimer) {
+      clearTimeout(gunStatsSaveTimer);
+      gunStatsSaveTimer = null;
+    }
+    if (!currentUserSlug) return;
+    const profile = loadProfile(currentUserSlug);
+    profile.gunStats = gunStatsRuntime;
+    profile.rarityStats = rarityStatsRuntime;
+    saveProfile(currentUserSlug, profile);
+  }
+
+  function persistGunStatsSoon() {
+    if (!currentUserSlug) return;
+    if (gunStatsSaveTimer) return;
+    gunStatsSaveTimer = setTimeout(() => {
+      gunStatsSaveTimer = null;
+      flushGunStatsNow();
+    }, 900);
   }
 
   function saveProfileFromMenu() {
@@ -2135,6 +2561,8 @@
     const cur = loadProfile(currentUserSlug);
     const next = profileFromMenu();
     next.stats = cur.stats;
+    next.gunStats = gunStatsRuntime;
+    next.rarityStats = rarityStatsRuntime;
     saveProfile(currentUserSlug, next);
     try {
       localStorage.setItem(botDifficultyStorageKey(currentUserSlug), next.difficulty);
@@ -2164,10 +2592,13 @@
       loggedInName.textContent = acc ? acc.displayName : currentUserSlug;
       const profile = loadProfile(currentUserSlug);
       applyProfileToMenu(profile);
+      hydrateGunStatsRuntime();
       refreshAccountStatsUI();
       if (onlineConnected) registerOnlinePlayer();
       else connectOnline();
     } else {
+      gunStatsRuntime = {};
+      rarityStatsRuntime = {};
       updateOnlineMenuUI();
     }
   }
@@ -2369,17 +2800,30 @@
     }
     if (opts.record !== false && player) {
       if (opts.won || !defeatStatsRecorded) {
-        recordGameResult(!!opts.won, player.kills | 0);
+        recordGameResult(!!opts.won, player.kills | 0, opts.place);
       }
     }
   }
 
-  function recordGameResult(won, kills) {
+  function recordGameResult(won, kills, place) {
     if (!currentUserSlug) return;
     const profile = loadProfile(currentUserSlug);
     profile.stats.games += 1;
     profile.stats.kills += kills | 0;
     if (won) profile.stats.wins += 1;
+    let recPlace = place;
+    if (won && (recPlace == null || recPlace < 1)) recPlace = 1;
+    recPlace = recPlace | 0;
+    if (recPlace > 0) {
+      profile.stats.placeSum += recPlace;
+      profile.stats.placeCount += 1;
+      if (!profile.stats.bestPlace || recPlace < profile.stats.bestPlace) {
+        profile.stats.bestPlace = recPlace;
+      }
+      if (recPlace <= 5) profile.stats.top5 += 1;
+    }
+    profile.gunStats = gunStatsRuntime;
+    profile.rarityStats = rarityStatsRuntime;
     saveProfile(currentUserSlug, profile);
     refreshAccountStatsUI();
   }
@@ -2402,6 +2846,8 @@
       if (currentUserSlug) {
         const profile = loadProfile(currentUserSlug);
         profile.difficulty = id;
+        profile.gunStats = gunStatsRuntime;
+        profile.rarityStats = rarityStatsRuntime;
         saveProfile(currentUserSlug, profile);
       }
     } catch (_) {}
@@ -2683,10 +3129,18 @@
     const stats = document.createElement("p");
     stats.className = "weapon-index-stats";
     if (reload) {
-      stats.textContent = reload.magSize + " before reload · " + reload.reloadSec + "s reload";
-      if (typeof meta.bloomPerShot === "number") {
-        stats.textContent += " · " + meta.bloomPerShot + " bloom";
-      }
+      const parts = [];
+      if (typeof meta.rareDmg === "number") parts.push(meta.rareDmg + " dmg");
+      if (meta.shotsPerSec > 0) parts.push(meta.shotsPerSec + "/sec");
+      if (meta.infiniteMag) parts.push("∞ mag");
+      else parts.push(reload.magSize + " mag");
+      if (meta.infiniteMag) parts.push("no reload");
+      else parts.push(reload.reloadSec + "s reload");
+      if (getGunBloomPerShot(meta.id) > 0) parts.push("+" + Math.round(getGunBloomPerShot(meta.id)) + " bloom");
+      if (meta.holdToShoot === false) parts.push("click");
+      else if (meta.holdToShoot === true) parts.push("hold");
+      if (meta.rangeBand) parts.push(String(meta.rangeBand).replace("_", "-"));
+      stats.textContent = parts.join(" · ");
     } else {
       stats.textContent = "Reload stats vary";
     }
@@ -2722,8 +3176,10 @@
     weaponIndexList.replaceChildren();
     const standard = GUN_TYPES.filter((t) => !isSignatureGun(t.id));
     const signature = GUN_TYPES.filter((t) => isSignatureGun(t.id));
-    weaponIndexList.appendChild(renderWeaponIndexSection("Standard weapons", standard));
-    weaponIndexList.appendChild(renderWeaponIndexSection("Signature weapons", signature));
+    weaponIndexList.appendChild(renderWeaponIndexSection("Weapons", standard));
+    if (signature.length) {
+      weaponIndexList.appendChild(renderWeaponIndexSection("Signature weapons", signature));
+    }
   }
 
   function getWikiUrl() {
@@ -2743,43 +3199,291 @@
     wikiLinkRow.innerHTML =
       'Wiki: <a href="' + wikiUrl.replace(/"/g, "&quot;") +
       '" target="_blank" rel="noopener noreferrer">Google Sites</a>' +
-      ' · <a href="' + gunsWikiUrl + '">Gun pages</a>' +
-      ' · <a href="' + gunsWikiUrl + '#modulated-ar">Modulated AR</a>';
+      ' · <a href="' + gunsWikiUrl + '">Gun pages</a>';
+  }
+
+  function pickTopGunStat(field) {
+    let bestId = null;
+    let bestVal = 0;
+    for (const id of Object.keys(gunStatsRuntime)) {
+      const val = (gunStatsRuntime[id] && gunStatsRuntime[id][field]) | 0;
+      if (val > bestVal) {
+        bestVal = val;
+        bestId = id;
+      }
+    }
+    return bestId ? { typeId: bestId, count: bestVal } : null;
+  }
+
+  function renderAnalysisCard(title, emptyText, stat, field) {
+    const card = document.createElement("article");
+    card.className = "analysis-stat";
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    card.appendChild(heading);
+    if (!stat) {
+      const empty = document.createElement("p");
+      empty.className = "analysis-empty";
+      empty.textContent = emptyText;
+      card.appendChild(empty);
+      return card;
+    }
+    const meta = getGunTypeMeta(stat.typeId);
+    const img = document.createElement("img");
+    img.alt = meta.label;
+    img.loading = "lazy";
+    bindInventoryGunImage(img, meta.id);
+    card.appendChild(img);
+    const gunName = document.createElement("div");
+    gunName.className = "analysis-gun";
+    gunName.textContent = meta.label;
+    card.appendChild(gunName);
+    const count = document.createElement("div");
+    count.className = "analysis-count";
+    const countNoun = field === "shots"
+      ? (stat.count === 1 ? "shot fired" : "shots fired")
+      : field === "deaths"
+        ? (stat.count === 1 ? "death" : "deaths")
+        : (stat.count === 1 ? "kill" : "kills");
+    count.textContent = stat.count + " " + countNoun;
+    card.appendChild(count);
+    return card;
+  }
+
+  function gunClassLabel(typeId) {
+    const id = String(typeId || "");
+    if (id.indexOf("shotgun") >= 0) return "Shotgun";
+    if (id === "smg" || id.indexOf("_smg") >= 0) return "SMG";
+    if (id.indexOf("sniper") >= 0) return "Sniper";
+    if (id === "dmr" || id.indexOf("_dmr") >= 0) return "DMR";
+    if (id === "rpg") return "Explosive";
+    if (id === "pistol" || id === "revolver" || id === "auto_pistol") return "Pistol";
+    if (id === "lmg" || id === "minigun" || id === "tommy_gun") return "LMG";
+    return "Assault Rifle";
+  }
+
+  function sumGunStatField(field) {
+    let n = 0;
+    for (const id of Object.keys(gunStatsRuntime)) {
+      n += (gunStatsRuntime[id] && gunStatsRuntime[id][field]) | 0;
+    }
+    return n;
+  }
+
+  function pickTopGunClass() {
+    const byClass = {};
+    for (const id of Object.keys(gunStatsRuntime)) {
+      const shots = (gunStatsRuntime[id] && gunStatsRuntime[id].shots) | 0;
+      if (shots <= 0) continue;
+      const cls = gunClassLabel(id);
+      byClass[cls] = (byClass[cls] || 0) + shots;
+    }
+    let best = null;
+    let bestVal = 0;
+    for (const cls of Object.keys(byClass)) {
+      if (byClass[cls] > bestVal) {
+        bestVal = byClass[cls];
+        best = cls;
+      }
+    }
+    return best ? { label: best, shots: bestVal } : null;
+  }
+
+  function pickTopRarity() {
+    let bestId = null;
+    let bestVal = 0;
+    for (const id of Object.keys(RARITIES)) {
+      const val = (rarityStatsRuntime[id] && rarityStatsRuntime[id].shots) | 0;
+      if (val > bestVal) {
+        bestVal = val;
+        bestId = id;
+      }
+    }
+    if (!bestId) return null;
+    const r = RARITIES[bestId];
+    return { id: bestId, label: r.label, color: r.color, shots: bestVal };
+  }
+
+  function renderMetricCard(title, value, note, emptyText, valueColor) {
+    const card = document.createElement("article");
+    card.className = "analysis-stat metric";
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    card.appendChild(heading);
+    if (value == null) {
+      const empty = document.createElement("p");
+      empty.className = "analysis-empty";
+      empty.textContent = emptyText;
+      card.appendChild(empty);
+      return card;
+    }
+    const gunName = document.createElement("div");
+    gunName.className = "analysis-gun";
+    gunName.textContent = value;
+    if (valueColor) gunName.style.color = valueColor;
+    card.appendChild(gunName);
+    if (note) {
+      const count = document.createElement("div");
+      count.className = "analysis-count";
+      count.textContent = note;
+      card.appendChild(count);
+    }
+    return card;
+  }
+
+  function renderAnalysisSection(title) {
+    const section = document.createElement("section");
+    section.className = "analysis-section";
+    const heading = document.createElement("h2");
+    heading.textContent = title;
+    section.appendChild(heading);
+    const row = document.createElement("div");
+    row.className = "analysis-card-row";
+    section.appendChild(row);
+    return { section, row };
+  }
+
+  function renderAnalysis() {
+    if (!analysisList) return;
+    analysisList.replaceChildren();
+    if (!currentUserSlug) {
+      const empty = document.createElement("p");
+      empty.className = "analysis-empty";
+      empty.textContent = "Log in to track placement, wins, kills, and the guns you use.";
+      analysisList.appendChild(empty);
+      return;
+    }
+    flushGunStatsNow();
+    hydrateGunStatsRuntime();
+    const stats = normalizeCareerStats(loadProfile(currentUserSlug).stats);
+    const deaths = sumGunStatField("deaths");
+    const shots = sumGunStatField("shots");
+    const career = renderAnalysisSection("Career");
+    career.row.appendChild(renderMetricCard(
+      "Average placement",
+      stats.placeCount > 0 ? (stats.placeSum / stats.placeCount).toFixed(1) : null,
+      stats.placeCount > 0 ? "from " + stats.placeCount + (stats.placeCount === 1 ? " match" : " matches") : "",
+      "Play a match to record placement."
+    ));
+    career.row.appendChild(renderMetricCard(
+      "Best placement",
+      stats.bestPlace > 0 ? placementLabel(stats.bestPlace) : null,
+      stats.bestPlace === 1 ? "Victory" : "",
+      "No placements saved yet."
+    ));
+    career.row.appendChild(renderMetricCard(
+      "Win rate",
+      stats.games > 0 ? ((stats.wins / stats.games) * 100).toFixed(1) + "%" : null,
+      stats.games > 0 ? stats.wins + " wins in " + stats.games + (stats.games === 1 ? " game" : " games") : "",
+      "No games recorded yet."
+    ));
+    career.row.appendChild(renderMetricCard(
+      "Top 5 rate",
+      stats.placeCount > 0 ? ((stats.top5 / stats.placeCount) * 100).toFixed(1) + "%" : null,
+      stats.placeCount > 0 ? stats.top5 + " top-five finishes" : "",
+      "No placements saved yet."
+    ));
+    career.row.appendChild(renderMetricCard(
+      "Kills per game",
+      stats.games > 0 ? (stats.kills / stats.games).toFixed(1) : null,
+      stats.games > 0 ? stats.kills + " total kills" : "",
+      "No games recorded yet."
+    ));
+    career.row.appendChild(renderMetricCard(
+      "K / D",
+      (stats.kills > 0 || deaths > 0) ? (deaths > 0 ? (stats.kills / deaths).toFixed(2) : stats.kills.toFixed(2)) : null,
+      deaths + (deaths === 1 ? " death" : " deaths") + " · " + stats.kills + (stats.kills === 1 ? " kill" : " kills"),
+      "Get a kill or die once to start this."
+    ));
+    analysisList.appendChild(career.section);
+
+    const guns = renderAnalysisSection("Guns");
+    guns.row.appendChild(renderAnalysisCard(
+      "Most used gun",
+      "No shots recorded yet. Play a match and fire a gun.",
+      pickTopGunStat("shots"),
+      "shots"
+    ));
+    guns.row.appendChild(renderAnalysisCard(
+      "Most kills",
+      "No kills recorded yet.",
+      pickTopGunStat("kills"),
+      "kills"
+    ));
+    guns.row.appendChild(renderAnalysisCard(
+      "Kills you the most",
+      "You have not died to a gun yet.",
+      pickTopGunStat("deaths"),
+      "deaths"
+    ));
+    const topClass = pickTopGunClass();
+    guns.row.appendChild(renderMetricCard(
+      "Most used class",
+      topClass ? topClass.label : null,
+      topClass ? topClass.shots + (topClass.shots === 1 ? " shot fired" : " shots fired") : "",
+      "Fire a gun to track your favorite class."
+    ));
+    const topRarity = pickTopRarity();
+    guns.row.appendChild(renderMetricCard(
+      "Most common rarity",
+      topRarity ? topRarity.label : null,
+      topRarity ? topRarity.shots + (topRarity.shots === 1 ? " shot fired" : " shots fired") : "",
+      "Fire a gun to track the rarity you use most.",
+      topRarity ? topRarity.color : ""
+    ));
+    guns.row.appendChild(renderMetricCard(
+      "Shots fired",
+      shots > 0 ? String(shots) : null,
+      shots > 0 ? "across all guns" : "",
+      "No shots recorded yet."
+    ));
+    analysisList.appendChild(guns.section);
   }
 
   function setMainMenuTab(tab) {
     const indexOn = tab === "index";
+    const analysisOn = tab === "analysis";
     const playOn = tab === "play";
     if (tabPlayMain) tabPlayMain.classList.toggle("active", playOn);
     if (tabIndexMain) tabIndexMain.classList.toggle("active", indexOn);
+    if (tabAnalysisMain) tabAnalysisMain.classList.toggle("active", analysisOn);
     if (tabWikiMain) tabWikiMain.classList.remove("active");
     if (playPanel) playPanel.hidden = !playOn;
     if (indexPanel) indexPanel.hidden = !indexOn;
-    if (menuScreen) menuScreen.classList.toggle("menu-index-open", indexOn);
+    if (analysisPanel) analysisPanel.hidden = !analysisOn;
+    if (menuScreen) menuScreen.classList.toggle("menu-index-open", indexOn || analysisOn);
     if (indexOn) {
       updateWikiLinkRow();
       renderWeaponIndex();
     }
-    const hash = indexOn ? "#index" : "#play";
+    if (analysisOn) renderAnalysis();
+    const hash = analysisOn ? "#analysis" : (indexOn ? "#index" : "#play");
     if (location.hash !== hash) {
       history.replaceState(null, "", hash);
     }
+  }
+
+  function tabFromHash() {
+    if (location.hash === "#index") return "index";
+    if (location.hash === "#analysis") return "analysis";
+    return "play";
   }
 
   function initMainMenuTabs() {
     updateWikiLinkRow();
     if (tabPlayMain) tabPlayMain.addEventListener("click", () => setMainMenuTab("play"));
     if (tabIndexMain) tabIndexMain.addEventListener("click", () => setMainMenuTab("index"));
+    if (tabAnalysisMain) tabAnalysisMain.addEventListener("click", () => setMainMenuTab("analysis"));
     if (tabWikiMain) tabWikiMain.addEventListener("click", goToWiki);
     window.addEventListener("hashchange", () => {
       if (location.hash === "#wiki") {
         goToWiki();
         return;
       }
-      setMainMenuTab(location.hash === "#index" ? "index" : "play");
+      setMainMenuTab(tabFromHash());
     });
     if (location.hash === "#wiki") goToWiki();
-    else if (location.hash === "#index") setMainMenuTab("index");
+    else setMainMenuTab(tabFromHash());
   }
 
   function gunImageUrl(typeId) {
@@ -2982,7 +3686,7 @@
       w: meta.w,
       bloomPerShot: typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : base.bloomPerShot,
     };
-    ["dmgMul", "dmgMulHi", "fireMul", "spreadMul", "burstSize", "burstShotMs", "burstPauseMs", "pellets"].forEach((key) => {
+    ["dmgMul", "dmgMulHi", "fireMul", "spreadMul", "burstSize", "burstShotMs", "burstPauseMs", "pellets", "rareDmg", "shotsPerSec", "holdToShoot", "rangeBand", "infiniteMag", "explodeRadiusMul"].forEach((key) => {
       if (meta[key] != null) merged[key] = meta[key];
     });
     return merged;
@@ -2994,7 +3698,10 @@
 
   function getGunBloomPerShot(typeId) {
     const meta = getGunTypeMeta(typeId);
-    return typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : 0;
+    const raw = typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : 0;
+    if (raw <= 0) return 0;
+    if (typeof meta.rareDmg === "number") return raw;
+    return raw * BLOOM_PER_SHOT_SCALE;
   }
 
   function getEffectiveSpread(e, gun) {
@@ -3015,6 +3722,37 @@
   }
 
   const MIN_GUN_FIRE_MS = 64;
+  const SLOW_FIRE_RATE_CUTOFF_SHOTS_SEC = 2.25;
+  const SLOW_FIRE_RATE_BUFF = 1.35;
+
+  function applySlowFireRateBuff(fireMs) {
+    const ms = Math.max(MIN_GUN_FIRE_MS, fireMs);
+    if (1000 / ms < SLOW_FIRE_RATE_CUTOFF_SHOTS_SEC) {
+      return Math.max(MIN_GUN_FIRE_MS, Math.round(ms / SLOW_FIRE_RATE_BUFF));
+    }
+    return ms;
+  }
+
+  function getBurstSustainedShotsPerSec(meta) {
+    const burstSize = meta.burstSize || 1;
+    const burstShotMs = meta.burstShotMs || 55;
+    const burstPauseMs = meta.burstPauseMs || 220;
+    const cycleMs = burstSize * burstShotMs + burstPauseMs;
+    return burstSize / Math.max(cycleMs / 1000, 0.08);
+  }
+
+  function getEffectiveBurstTiming(meta) {
+    const burstShotMs = meta.burstShotMs || 55;
+    const burstPauseMs = meta.burstPauseMs || 220;
+    if (getBurstSustainedShotsPerSec(meta) < SLOW_FIRE_RATE_CUTOFF_SHOTS_SEC) {
+      return {
+        burstShotMs: Math.max(MIN_GUN_FIRE_MS, Math.round(burstShotMs / SLOW_FIRE_RATE_BUFF)),
+        burstPauseMs: Math.max(0, Math.round(burstPauseMs / SLOW_FIRE_RATE_BUFF)),
+      };
+    }
+    return { burstShotMs, burstPauseMs };
+  }
+
   const OVERCHARGE_MAX_SEC = 25;
   const MODULATED_FAST_FIRE_MUL = 0.70;
   const MODULATED_HEAVY_FIRE_MUL = 1.55;
@@ -3057,15 +3795,64 @@
   function getModulatedFireMs(gun, heavy) {
     const r = RARITIES[gun.rarity] || RARITIES.rare;
     const mul = heavy ? MODULATED_HEAVY_FIRE_MUL : MODULATED_FAST_FIRE_MUL;
-    return Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * mul));
+    return applySlowFireRateBuff(Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * mul)));
   }
 
   function getModulatedDamageMul(heavy) {
     return heavy ? MODULATED_HEAVY_DMG_MUL : MODULATED_FAST_DMG_MUL;
   }
 
+  function getGunFireMsFromMeta(typeMeta, rarityId) {
+    if (typeMeta && typeMeta.shotsPerSec > 0) {
+      return Math.max(MIN_GUN_FIRE_MS, Math.round(1000 / typeMeta.shotsPerSec));
+    }
+    const r = RARITIES[rarityId] || RARITIES.rare;
+    const fireMul = (typeMeta && typeMeta.fireMul) || 1;
+    return applySlowFireRateBuff(Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * fireMul)));
+  }
+
+  function isInfiniteMagGun(gun) {
+    if (!gun) return false;
+    return !!getGunTypeMeta(gun.type).infiniteMag;
+  }
+
+  function isHoldToShootGun(gun) {
+    if (!gun) return true;
+    const meta = getGunTypeMeta(gun.type);
+    return meta.holdToShoot !== false;
+  }
+
+  const RANGE_BAND_DIST = {
+    very_close: 200,
+    close: 320,
+    close_mid: 520,
+    short_mid: 480,
+    mid: 640,
+    mid_long: 800,
+    long: 920,
+  };
+
+  function applyRangeBand(rangeBand, dmg, distance) {
+    if (!rangeBand || rangeBand === "all") return dmg;
+    const maxDist = RANGE_BAND_DIST[rangeBand];
+    if (!maxDist) return dmg;
+    const t = clamp(1 - distance / maxDist, 0, 1);
+    return dmg * (0.35 + 0.65 * t);
+  }
+
+  const RARITY_DMG_STEP = {
+    common: -6,
+    uncommon: -3,
+    rare: 0,
+    epic: 3,
+    legendary: 6,
+    mythic: 9,
+  };
+
   function getEntityFireMs(e, gun) {
     if (isModulatedAR(gun.type)) return getModulatedFireMs(gun, getModulatedHeavyMode(e));
+    const meta = getGunTypeMeta(gun.type);
+    if (meta.shotsPerSec > 0) return getGunFireMsFromMeta(meta, gun.rarity);
     return gun.fireMs;
   }
 
@@ -3144,15 +3931,20 @@
   }
 
   function isExplosiveGun(gun) {
-    return gun && (gun.type === "rpg" || gun.type === "meowie_rpg");
+    return gun && gun.type === "rpg";
   }
 
   function isRpgGun(gun) {
-    return gun && (gun.type === "rpg" || gun.type === "meowie_rpg");
+    return gun && gun.type === "rpg";
+  }
+
+  function isSniperGun(typeId) {
+    return typeId === "bolt_action_sniper" || typeId === "heavy_sniper" || typeId === "semi_auto_sniper";
   }
 
   function getExplodeRadius(gunType) {
-    if (gunType === "meowie_rpg") return MEOWIE_RPG_EXPLODE_RADIUS;
+    const meta = getGunTypeMeta(gunType);
+    if (meta.explodeRadiusMul > 0) return DOT_R * meta.explodeRadiusMul;
     return RPG_EXPLODE_RADIUS;
   }
 
@@ -3164,14 +3956,19 @@
 
   function applyGunTypeDistanceModifier(type, dmg, distance) {
     type = resolveGunBehaviorType(type);
+    const meta = getGunTypeMeta(type);
+    if (meta.rangeBand) return applyRangeBand(meta.rangeBand, dmg, distance);
     switch (type) {
       case "pistol":
+      case "auto_pistol":
         return dmg * 0.95;
       case "revolver": {
         const t = clamp(1 - Math.abs(distance - 280) / 420, 0, 1);
         return dmg * (0.88 + 0.18 * t);
       }
-      case "smg": {
+      case "smg":
+      case "rapid_fire_smg":
+      case "tommy_gun": {
         const t = clamp(1 - distance / 360, 0, 1);
         return dmg * (0.82 + 0.22 * t);
       }
@@ -3179,67 +3976,40 @@
         const t = clamp(1 - distance / 420, 0, 1);
         return dmg * (0.72 + 0.28 * t);
       }
-      case "combat_shotgun": {
+      case "combat_shotgun":
+      case "auto_shotgun": {
         const t = clamp(1 - distance / 420, 0, 1);
         return dmg * (0.42 + 0.58 * t);
       }
-      case "tactical_shotgun": {
+      case "tactical_shotgun":
+      case "double_barrel_shotgun": {
         const t = clamp(1 - distance / 300, 0, 1);
         return dmg * (0.38 + 0.62 * t);
-      }
-      case "overdrive_shotgun": {
-        const t = clamp(1 - distance / 340, 0, 1);
-        return dmg * (0.42 + 0.58 * t);
-      }
-      case "strike_shotgun": {
-        const t = clamp(1 - distance / VIEW_W, 0, 1);
-        return dmg * (7 / 29 + (22 / 29) * t);
-      }
-      case "drum_shotgun": {
-        const t = clamp(1 - distance / 260, 0, 1);
-        return dmg * (0.35 + 0.75 * t);
       }
       case "famas": {
         const t = clamp((distance - 140) / 750, 0, 1);
         return dmg * (0.92 + 0.14 * t);
       }
-      case "sweep_assault_rifle": {
-        const t = clamp((distance - 80) / 550, 0, 1);
-        return dmg * (0.68 + 0.38 * t);
-      }
-      case "scoped_assault_rifle": {
+      case "scoped_assault_rifle":
+      case "aug":
+      case "dmr":
+      case "tactical_dmr": {
         const t = clamp((distance - 100) / 620, 0, 1);
         return dmg * (0.75 + 0.42 * t);
       }
-      case "thermal_scoped_assault_rifle": {
-        const t = clamp((distance - 80) / 580, 0, 1);
-        return dmg * (0.72 + 0.48 * t);
-      }
-      case "suppressed_assault_rifle": {
-        const close = clamp(1 - distance / 250, 0, 1) * 0.06;
-        const far = clamp((distance - 200) / 500, 0, 1) * 0.08;
-        return dmg * (0.9 + close + far);
-      }
       case "assault_rifle":
-      case "modulated_assault_rifle":
-      case "burst_assault_rifle":
+      case "tactical_ar":
+      case "heavy_ar":
       case "scar":
         return dmg;
-      case "machine_gun": {
+      case "lmg":
+      case "minigun": {
         const t = clamp(1 - distance / 440, 0, 1);
         return dmg * (0.58 + 0.42 * t);
       }
       case "pump_shotgun": {
         const t = clamp(1 - distance / 150, 0, 1);
         return dmg * (0.55 + 0.45 * t);
-      }
-      case "overcharge_shotgun": {
-        const t = clamp(1 - distance / 320, 0, 1);
-        return dmg * (0.48 + 0.52 * t);
-      }
-      case "breacher_shotgun": {
-        const t = clamp(1 - distance / 240, 0, 1);
-        return dmg * (0.32 + 0.48 * t);
       }
       case "rpg": {
         const t = clamp((distance - 80) / 650, 0, 1);
@@ -3267,11 +4037,9 @@
     if (isSignatureGun(meta.id)) {
       return { ...makeGun("mythic", meta.id, { lockRarity: true }), ammo, reloadShotsLeft };
     }
-    let rarityId = gun.rarity;
-    if (rarityId === "mythic" && !isSignatureGun(meta.id)) {
-      rarityId = "legendary";
-    }
+    const rarityId = gun.rarity;
     const r = RARITIES[rarityId] || RARITIES.rare;
+    const band = gunDamageBandFor(meta.id, rarityId);
     return {
       ...synced,
       rarity: rarityId,
@@ -3279,13 +4047,16 @@
       label: r.label,
       type: meta.id,
       typeLabel: meta.label,
+      dmgMin: band.dmgMin,
+      dmgMax: band.dmgMax,
+      fireMs: getGunFireMsFromMeta(getGunTypeMeta(meta.id), rarityId),
       ammo,
       reloadShotsLeft,
     };
   }
 
   function hasInfiniteAmmo(e) {
-    return !!(e && (e.isAI || e.isBoss));
+    return !!(e && (e.isAI || e.isBoss || isGunGameMode()));
   }
 
   function getGunReloadStats(typeId) {
@@ -3338,6 +4109,7 @@
 
   function canReloadGun(gun) {
     if (!gun || !isGunItem(gun)) return false;
+    if (isInfiniteMagGun(gun)) return false;
     if (getGunAmmo(gun) <= 0) return false;
     return getReloadShotsLeft(gun) < getShotsBeforeReload(gun.type);
   }
@@ -3397,6 +4169,34 @@
     return true;
   }
 
+  /** Inclusive max−min for a rolled shot: 1 (light), 2 (mid), or 3 (heavy). */
+  function gunDamageRollWidth(center) {
+    if (center >= 80) return 3;
+    if (center >= 30) return 2;
+    return 1;
+  }
+
+  function tightDamageBand(center) {
+    const mid = Math.max(1, Math.round(center));
+    const width = gunDamageRollWidth(mid);
+    const loOff = Math.floor(width / 2);
+    const dmgMin = Math.max(1, mid - loOff);
+    return { dmgMin, dmgMax: dmgMin + width };
+  }
+
+  function gunDamageBandFor(typeId, rarityId) {
+    const typeMeta = getGunTypeMeta(typeId);
+    if (typeof typeMeta.rareDmg === "number") {
+      const step = RARITY_DMG_STEP[rarityId] || 0;
+      const dmg = Math.max(1, Math.round(typeMeta.rareDmg + step));
+      return { dmgMin: dmg, dmgMax: dmg };
+    }
+    const r = RARITIES[rarityId] || RARITIES.rare;
+    const dmgMul = typeMeta.dmgMul || 1;
+    const dmgMulHi = typeMeta.dmgMulHi ?? dmgMul;
+    return tightDamageBand((r.dmg[0] * dmgMul + r.dmg[1] * dmgMulHi) * 0.5);
+  }
+
   function applyAmmoPackToCurrentGun(e, pack) {
     if (!e || !pack || !pack.amount) return false;
     const i = e.invIndex;
@@ -3410,33 +4210,42 @@
     return true;
   }
 
+  function applyAmmoToInventoryGun(e, amount) {
+    if (!e || !amount) return false;
+    if (applyAmmoPackToCurrentGun(e, { amount })) return true;
+    if (!e.inventory) return false;
+    for (let i = 0; i < INV_SLOTS; i++) {
+      const item = e.inventory[i];
+      if (!item || !isGunItem(item)) continue;
+      syncGunAmmoFields(item);
+      item.ammo = getGunAmmo(item) + amount;
+      e.inventory[i] = normalizeGun(item);
+      if (e.isPlayer) refreshInventoryHud();
+      return true;
+    }
+    return false;
+  }
+
   function makeGun(rarityId, forcedTypeId, opts) {
     opts = opts || {};
     const typeId = forcedTypeId || pickGunTypeId();
     const typeMeta = getGunTypeMeta(typeId);
-    if (isSignatureGun(typeMeta.id)) {
-      rarityId = "mythic";
-    } else if (typeMeta.id === "thermal_scoped_assault_rifle") {
-      rarityId = pickWeighted(THERMAL_SCOPED_AR_RARITY_WEIGHTS);
-    } else if (rarityId === "mythic" && !isSignatureGun(typeMeta.id)) {
-      rarityId = "legendary";
+    if (!opts.lockRarity) {
+      if (isSignatureGun(typeMeta.id)) rarityId = "mythic";
+      else if (rarityId === "mythic") rarityId = "legendary";
     }
     const r = RARITIES[rarityId] || RARITIES.rare;
-    const dmgMul = typeMeta.dmgMul || 1;
-    const dmgMulHi = typeMeta.dmgMulHi ?? dmgMul;
-    const fireMul = typeMeta.fireMul || 1;
     const spreadMul = typeMeta.spreadMul || 1;
-    let dmgLo = r.dmg[0];
-    let dmgHi = r.dmg[1];
+    const band = gunDamageBandFor(typeMeta.id, rarityId);
     return {
       rarity: rarityId,
       color: r.color,
       label: r.label,
       type: typeMeta.id,
       typeLabel: typeMeta.label,
-      dmgMin: Math.max(1, Math.round(dmgLo * dmgMul)),
-      dmgMax: Math.max(1, Math.round(dmgHi * dmgMulHi)),
-      fireMs: Math.max(MIN_GUN_FIRE_MS, Math.round(r.fireMs * fireMul)),
+      dmgMin: band.dmgMin,
+      dmgMax: band.dmgMax,
+      fireMs: getGunFireMsFromMeta(typeMeta, rarityId),
       spread: r.spread * spreadMul,
       ammo: GUN_START_AMMO,
       reloadShotsLeft: getShotsBeforeReload(typeMeta.id),
@@ -3448,9 +4257,6 @@
     const typeMeta = getGunTypeMeta(typeId);
     if (isSignatureGun(typeMeta.id)) {
       return makeGun("mythic", typeMeta.id, { lockRarity: true });
-    }
-    if (typeMeta.id === "thermal_scoped_assault_rifle") {
-      return makeGun(pickWeighted(THERMAL_SCOPED_AR_RARITY_WEIGHTS), "thermal_scoped_assault_rifle");
     }
     return makeGun(pickWeighted(BOT_GUN_RARITY_WEIGHTS), typeId);
   }
@@ -3466,14 +4272,18 @@
 
   function equipBotSpawnLoadout(bot) {
     bot.inventory[0] = makeGun("common");
-    bot.inventory[1] = makeGun("uncommon");
-    const extraRoll = Math.random();
-    if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE) {
-      bot.inventory[2] = makeGun("epic");
-    } else if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE + BOT_SPAWN_EXTRA_RARE_CHANCE) {
-      bot.inventory[2] = makeGun("rare");
+    if (gameMode !== "bedwars") {
+      bot.inventory[1] = makeGun("uncommon");
+      const extraRoll = Math.random();
+      if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE) {
+        bot.inventory[2] = makeGun("epic");
+      } else if (extraRoll < BOT_SPAWN_EXTRA_EPIC_CHANCE + BOT_SPAWN_EXTRA_RARE_CHANCE) {
+        bot.inventory[2] = makeGun("rare");
+      }
+      bot.invIndex = randInt(0, 1);
+    } else {
+      bot.invIndex = 0;
     }
-    bot.invIndex = randInt(0, 1);
   }
 
   function rollGunBaseDamage(g) {
@@ -3481,32 +4291,29 @@
   }
 
   function getSniperFarRange() {
-    return Math.hypot(VIEW_W, VIEW_H) * 1.08;
+    return VIEW_W * 1.2;
   }
 
-  function getSniperDamageCurve(rarityId) {
-    const r = RARITIES[rarityId] || RARITIES.rare;
-    const rare = RARITIES.rare;
-    const closeScale = r.dmg[0] / rare.dmg[0];
-    const farScale = r.dmg[1] / rare.dmg[1];
-    return {
-      close: Math.max(1, Math.round(SNIPER_RARE_CLOSE_DMG * closeScale)),
-      far: Math.max(1, Math.round(SNIPER_RARE_FAR_DMG * farScale)),
-    };
+  function sniperPeakDamage(gun) {
+    const g = normalizeGun(gun);
+    const band = gunDamageBandFor(g.type, g.rarity);
+    return (band.dmgMin + band.dmgMax) * 0.5;
   }
 
-  function sniperDamageByDistance(rarityId, distance) {
-    const { close, far } = getSniperDamageCurve(rarityId);
+  function sniperDamageByDistance(gun, distance) {
+    const peak = sniperPeakDamage(gun);
+    const close = peak * SNIPER_CLOSE_DMG_MUL;
     const farRange = getSniperFarRange();
-    const t = clamp((distance - SNIPER_CLOSE_RANGE) / (farRange - SNIPER_CLOSE_RANGE), 0, 1);
-    return close + (far - close) * t;
+    const t = clamp((distance - SNIPER_CLOSE_RANGE) / Math.max(1, farRange - SNIPER_CLOSE_RANGE), 0, 1);
+    return close + (peak - close) * t;
   }
 
   function gunDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
-    if (g.type === "sniper") {
-      return sniperDamageByDistance(g.rarity, distance);
+    if (isSniperGun(g.type)) {
+      return sniperDamageByDistance(g, distance);
     }
+    const meta = getGunTypeMeta(g.type);
     if (isOverchargeShotgun(g.type)) {
       const base = typeof g.chargeDamage === "number"
         ? g.chargeDamage
@@ -3535,9 +4342,10 @@
 
   function gunExpectedDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
-    if (g.type === "sniper") {
-      return sniperDamageByDistance(g.rarity, distance);
+    if (isSniperGun(g.type)) {
+      return sniperDamageByDistance(g, distance);
     }
+    const meta = getGunTypeMeta(g.type);
     if (isOverchargeShotgun(g.type)) {
       return applyGunTypeDistanceModifier(g.type, overchargeDamageAtSec(10, g.rarity), distance);
     }
@@ -3641,9 +4449,8 @@
     const pellets = getPelletCount(g);
     const dmg = gunExpectedDamageAtDistance(g, shotDistance) * pellets;
     if (meta.burstSize > 1) {
-      const burstShotMs = meta.burstShotMs || 55;
-      const burstPauseMs = meta.burstPauseMs || 220;
-      const cycleMs = meta.burstSize * burstShotMs + burstPauseMs;
+      const burstTiming = getEffectiveBurstTiming(meta);
+      const cycleMs = meta.burstSize * burstTiming.burstShotMs + burstTiming.burstPauseMs;
       return (dmg * meta.burstSize) / Math.max(cycleMs / 1000, 0.08);
     }
     if (isModulatedAR(g.type)) {
@@ -3655,6 +4462,7 @@
   }
 
   function aiSelectWeapon(d) {
+    if (isGunGameMode()) return;
     const slots = [];
     for (let i = 0; i < INV_SLOTS; i++) {
       if (d.inventory[i] && isGunItem(d.inventory[i])) slots.push(i);
@@ -3683,6 +4491,7 @@
   }
 
   function addGunToEntity(e, gun, opts) {
+    if (isGunGameMode()) return false;
     gun = normalizeGun(gun);
     if (!gun) return false;
     if (e.isAI && !e.isBoss) gun = fitGunForRegularBot(gun);
@@ -3747,8 +4556,19 @@
   function dropVictimLoot(victim) {
     for (let i = 0; i < INV_SLOTS; i++) {
       const item = victim.inventory[i];
-      if (item) dropItemOnGround(victim.x, victim.y, item);
+      if (item) {
+        dropItemOnGround(victim.x, victim.y, item);
+        victim.inventory[i] = null;
+      }
     }
+    victim.invIndex = 0;
+  }
+
+  function clearVictimInventory(victim) {
+    victim.inventory = [null, null, null, null, null];
+    victim.invIndex = 0;
+    cancelEntityReload(victim);
+    cancelOvercharge(victim);
   }
 
   function spawnDot(opts) {
@@ -3795,6 +4615,7 @@
       aimY: 0,
       bloomLevel: 0,
       bloomGunType: null,
+      semiShotLocked: false,
       chargeStartAt: 0,
       chargeGunType: null,
       aiOverchargeStartAt: 0,
@@ -3804,6 +4625,9 @@
       modulatedHeavy: false,
       teamId: typeof opts.teamId === "number" ? opts.teamId : null,
       isTeamCaptain: !!opts.isTeamCaptain,
+      bedwarsRole: opts.bedwarsRole || null,
+      collisionLockUntil: 0,
+      gunGameIndex: 0,
     };
   }
 
@@ -3839,41 +4663,84 @@
     return nextId;
   }
 
-  function spawnTeamBeds() {
+  function onBeaconDestroyed(bed, now) {
+    bedwarsBeaconAlive[bed.teamId] = false;
+    damageTexts.push({
+      x: bed.x,
+      y: bed.y - 28,
+      text: "BEACON DESTROYED",
+      color: "#ffb347",
+      life: 1.2,
+      maxLife: 1.2,
+      big: true,
+    });
+    for (const o of dots) {
+      if (o.teamId === bed.teamId) {
+        o.collisionLockUntil = Math.max(o.collisionLockUntil || 0, now + BEACON_BREAK_COOLDOWN_MS);
+      }
+    }
+    checkWin();
+  }
+
+  function spawnBedwarsBeacons() {
     beds = [];
-    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
-      const members = dots.filter((d) => d.teamId === t);
-      if (!members.length) continue;
-      const ax = members.reduce((s, d) => s + d.x, 0) / members.length;
-      const ay = members.reduce((s, d) => s + d.y, 0) / members.length;
+    bedwarsBeaconAlive = [];
+    for (let t = 0; t < teamsCount; t++) {
+      const slot = bedwarsBeaconSlot(t);
+      bedwarsBeaconAlive[t] = true;
       beds.push({
         teamId: t,
-        x: clamp(ax, 80, WORLD_W - 80),
-        y: clamp(ay - 48, 80, WORLD_H - 80),
-        hp: BED_MAX_HP,
-        maxHp: BED_MAX_HP,
+        x: slot.x,
+        y: slot.y,
+        hp: BEACON_MAX_HP,
+        maxHp: BEACON_MAX_HP,
       });
+    }
+  }
+
+  function setupBedwarsRoles() {
+    const needDef = defendersPerTeamBedwars(teamsCount);
+    for (let t = 0; t < teamsCount; t++) {
+      const members = dots.filter((d) => d.teamId === t);
+      shuffleInPlace(members);
+      const dn = Math.min(needDef, members.length);
+      for (let k = 0; k < members.length; k++) {
+        members[k].bedwarsRole = k < dn ? "defender" : "attacker";
+      }
+    }
+    for (const e of dots) {
+      if (e.bedwarsRole === "defender") {
+        const { bisect, slice } = bedwarsTeamAngleBounds(e.teamId);
+        const maxRay = bedwarsMaxRayFromCenterInRect(BEDWARS_CX, BEDWARS_CY, bisect, WORLD_W, WORLD_H);
+        const rEnt = e.radius;
+        const distPos = clamp(maxRay * 0.36, rEnt + 85, maxRay * 0.52);
+        const j = rand(-0.14, 0.14) * slice;
+        const ang = bisect + j;
+        e.x = BEDWARS_CX + Math.cos(ang) * distPos;
+        e.y = BEDWARS_CY + Math.sin(ang) * distPos;
+      }
     }
   }
 
   function spawnTeamMatch(startId) {
     let nextId = startId;
     teamMeta = [];
-    const humanCount = (twoPlayerMode ? 2 : 1) + (onlineMode && onlineHost ? 1 : 0);
-    const totalFighters = TEAM_MODE_AI_COUNT + humanCount;
-    const slotCounts = getTeamSlotCounts(totalFighters, TEAM_MODE_TEAM_COUNT);
+    teamsCount = readTeamsCountFromMenu();
+    bedwarsBeaconAlive = [];
+    const totalFighters = TEAM_MODE_FIGHTER_COUNT;
+    const slotCounts = getTeamSlotCounts(totalFighters, teamsCount);
     const usedBotNames = new Set();
 
-    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
+    for (let t = 0; t < teamsCount; t++) {
       teamMeta.push({
         teamId: t,
-        color: t === PLAYER_TEAM_ID ? playerColor : AI_COLORS[(t - 1) % AI_COLORS.length],
+        color: TEAM_COLORS[t % TEAM_COLORS.length],
         captainName: null,
         totalSlots: slotCounts[t],
       });
     }
 
-    for (let t = 0; t < TEAM_MODE_TEAM_COUNT; t++) {
+    for (let t = 0; t < teamsCount; t++) {
       const meta = teamMeta[t];
       for (let s = 0; s < meta.totalSlots; s++) {
         if (t === PLAYER_TEAM_ID && s === 0) {
@@ -3932,8 +4799,10 @@
       }
     }
 
-    nextId = spawnBosses(nextId);
-    if (gameMode === "bedwars") spawnTeamBeds();
+    if (gameMode === "bedwars") {
+      spawnBedwarsBeacons();
+      setupBedwarsRoles();
+    }
     return nextId;
   }
 
@@ -3968,6 +4837,92 @@
     return nextId;
   }
 
+  function gunGameTypeStat(meta, kind) {
+    if (kind === "speed") {
+      const spd = Number(meta.shotsPerSec);
+      return Number.isFinite(spd) ? spd : 1;
+    }
+    const dmg = Number(meta.rareDmg);
+    return Number.isFinite(dmg) ? dmg : 30;
+  }
+
+  function buildGunGameLadder(variant) {
+    const guns = GUN_TYPES.filter((t) => !isSignatureGun(t.id));
+    const speed = variant === "speed_up" || variant === "speed_down";
+    const desc = variant === "damage_down" || variant === "speed_down";
+    guns.sort((a, b) => {
+      const av = gunGameTypeStat(a, speed ? "speed" : "damage");
+      const bv = gunGameTypeStat(b, speed ? "speed" : "damage");
+      if (av !== bv) return desc ? bv - av : av - bv;
+      return String(a.label).localeCompare(String(b.label));
+    });
+    return guns.map((t) => t.id);
+  }
+
+  function equipGunGameLoadout(e) {
+    if (!e || !gunGameLadder.length) return;
+    const idx = clamp(e.gunGameIndex | 0, 0, gunGameLadder.length - 1);
+    e.gunGameIndex = idx;
+    const typeId = gunGameLadder[idx];
+    e.inventory = [makeGun("rare", typeId), null, null, null, null];
+    e.invIndex = 0;
+    cancelEntityReload(e);
+    cancelOvercharge(e);
+    e.bloomLevel = 0;
+    e.bloomGunType = typeId;
+    e.burstShotsLeft = 0;
+    e.burstPauseUntil = 0;
+    e.semiShotLocked = false;
+    if (e.isPlayer) {
+      updateAmmoHud(e);
+      refreshInventoryHud();
+    }
+  }
+
+  function gunGameProgressLine(e) {
+    if (!e || !gunGameLadder.length) return "";
+    const n = gunGameLadder.length;
+    const i = (e.gunGameIndex | 0) + 1;
+    const cur = getGunTypeMeta(gunGameLadder[e.gunGameIndex | 0]);
+    const nextId = gunGameLadder[(e.gunGameIndex | 0) + 1];
+    const next = nextId ? getGunTypeMeta(nextId) : null;
+    const curName = cur ? cur.label : "Gun";
+    if (next) return "Gun <strong>" + i + "/" + n + "</strong> · " + curName + " → " + next.label;
+    return "Gun <strong>" + i + "/" + n + "</strong> · " + curName + " · LAST GUN";
+  }
+
+  function spawnGunGameMatch(startId) {
+    let nextId = startId;
+    player = spawnDotSpread({ id: nextId++, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 }, dots);
+    dots.push(player);
+
+    if (twoPlayerMode) {
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
+      dots.push(player2);
+    } else if (onlineMode && onlineHost) {
+      player2 = spawnDotSpread({ id: nextId++, name: player2Name, color: player2Color, isPlayer: true, playerSlot: 2 }, dots);
+      dots.push(player2);
+    }
+
+    const humanExtra = (twoPlayerMode ? 1 : 0) + (onlineMode && onlineHost ? 1 : 0);
+    const aiCount = Math.max(3, GUN_GAME_FIGHTER_COUNT - 1 - humanExtra);
+    const usedBotNames = new Set();
+    for (let i = 0; i < aiCount; i++) {
+      const bot = spawnDotSpread({
+        id: nextId++,
+        name: makeBotName(usedBotNames),
+        color: AI_COLORS[i % AI_COLORS.length],
+        isAI: true,
+      }, dots);
+      dots.push(bot);
+    }
+    for (const d of dots) {
+      d.gunGameIndex = 0;
+      equipGunGameLoadout(d);
+    }
+    return nextId;
+  }
+
   function getEntityAimWorld(e) {
     if (!e) return { x: 0, y: 0 };
     if (e.playerSlot === 1) {
@@ -3993,9 +4948,11 @@
   function pickSpreadSpawnPoint(dots, opts) {
     const pad = (opts.isBoss ? BOSS_R : DOT_R) + 8;
     const minDist = opts.isBoss ? 340 : SPAWN_MIN_DIST;
-    for (let t = 0; t < 160; t++) {
+    const r = opts.isBoss ? BOSS_R : DOT_R;
+    for (let t = 0; t < 220; t++) {
       const x = rand(pad, WORLD_W - pad);
       const y = rand(pad, WORLD_H - pad);
+      if (pointBlockedByWalls(x, y, r)) continue;
       let ok = true;
       for (const d of dots) {
         if (dist(x, y, d.x, d.y) < minDist) {
@@ -4005,7 +4962,17 @@
       }
       if (ok) return { x, y };
     }
-    return { x: rand(pad, WORLD_W - pad), y: rand(pad, WORLD_H - pad) };
+    for (let t = 0; t < 80; t++) {
+      const x = rand(pad, WORLD_W - pad);
+      const y = rand(pad, WORLD_H - pad);
+      if (!pointBlockedByWalls(x, y, r)) return { x, y };
+    }
+    for (let gy = pad; gy < WORLD_H - pad; gy += 72) {
+      for (let gx = pad; gx < WORLD_W - pad; gx += 72) {
+        if (!pointBlockedByWalls(gx, gy, r)) return { x: gx, y: gy };
+      }
+    }
+    return { x: WORLD_W * 0.5, y: WORLD_H * 0.5 };
   }
 
   function spawnDotSpread(opts, dots) {
@@ -4026,6 +4993,7 @@
     beds = [];
     revengeKilledBy = new Map();
     matchStandings = [];
+    killFeed = [];
     clearSpectateMode();
     defeatStatsRecorded = false;
     clearMovementKeys();
@@ -4056,16 +5024,24 @@
     if (!opts.onlineMode) saveDifficulty(diffId);
     aiTune = getAiTune(diffId);
     gameMode = opts.gameMode || readGameModeFromMenu();
+    gunGameVariant = opts.gunGameVariant || readGunGameVariantFromMenu();
+    gunGameLadder = isGunGameMode() ? buildGunGameLadder(gunGameVariant) : [];
+    if (isGunGameMode()) twoPlayerTeamMode = false;
     if (isTeamGameMode()) {
       twoPlayerTeamMode = true;
+      teamsCount = readTeamsCountFromMenu();
+      playerColor = TEAM_COLORS[PLAYER_TEAM_ID];
     }
     teamMeta = [];
 
     player2 = null;
     let nextId = 0;
     dots = [];
+    spawnMapStructures(opts.mapIds || readActiveMapIds());
     if (isTeamGameMode()) {
       nextId = spawnTeamMatch(0);
+    } else if (isGunGameMode()) {
+      nextId = spawnGunGameMatch(0);
     } else {
       nextId = spawnBattleRoyaleMatch(0);
     }
@@ -4076,6 +5052,7 @@
 
     const used = [];
     function farEnough(x, y, minD) {
+      if (pointBlockedByWalls(x, y, 18)) return false;
       for (const p of used) {
         if (dist(x, y, p.x, p.y) < minD) return false;
       }
@@ -4086,6 +5063,7 @@
     }
 
     for (let c = 0; c < CHEST_COUNT; c++) {
+      if (isGunGameMode()) break;
       let x, y, tries = 0;
       do {
         x = rand(80, WORLD_W - 80);
@@ -4097,6 +5075,7 @@
     }
 
     for (let c = 0; c < MED_CHEST_COUNT; c++) {
+      if (isGunGameMode()) break;
       let x, y, tries = 0;
       do {
         x = rand(80, WORLD_W - 80);
@@ -4108,6 +5087,7 @@
     }
 
     for (let c = 0; c < AMMO_BASKET_COUNT; c++) {
+      if (isGunGameMode()) break;
       let x, y, tries = 0;
       do {
         x = rand(80, WORLD_W - 80);
@@ -4260,6 +5240,8 @@
       ammoEl.classList.remove("empty");
       if (!gun) {
         ammoEl.textContent = "Ammo: —";
+      } else if (isInfiniteMagGun(gun)) {
+        ammoEl.textContent = "Ammo: ∞";
       } else {
         ammoEl.textContent = "Ammo: " + getGunAmmo(gun);
         if (getGunAmmo(gun) <= 0) ammoEl.classList.add("empty");
@@ -4269,6 +5251,10 @@
     reloadEl.classList.remove("needs-reload", "reloading");
     if (!gun) {
       reloadEl.textContent = "Before reload: —";
+      return;
+    }
+    if (isInfiniteMagGun(gun)) {
+      reloadEl.textContent = "Before reload: ∞";
       return;
     }
     if (entity.chargeStartAt && isOverchargeShotgun(gun.type)) {
@@ -4298,16 +5284,18 @@
     }
     if (gameMode === "bedwars" && entity.teamId != null) {
       const bed = getTeamBed(entity.teamId);
-      const bedText = bed ? ("Bed: " + bed.hp + " HP") : "Bed: destroyed";
+      const roleLabel = entity.bedwarsRole === "defender" ? "Defender" : entity.bedwarsRole === "attacker" ? "Attacker" : "";
+      const bedText = bed ? ("Beacon: " + bed.hp + "/" + bed.maxHp) : "Beacon: destroyed";
+      const roleText = roleLabel ? roleLabel + " · " : "";
       if (!hasInfiniteAmmo(entity) && isEntityReloading(entity, now)) {
         const left = Math.max(0, (entity.reloadUntil - now) / 1000);
-        reloadEl.textContent = "Reloading " + left.toFixed(1) + "s · " + bedText;
+        reloadEl.textContent = "Reloading " + left.toFixed(1) + "s · " + roleText + bedText;
         reloadEl.classList.add("reloading");
         return;
       }
       const leftShots = getReloadShotsLeft(gun);
       const interval = getShotsBeforeReload(gun.type);
-      reloadEl.textContent = bedText + " · Before reload: " + leftShots + " / " + interval;
+      reloadEl.textContent = roleText + bedText + " · Before reload: " + leftShots + " / " + interval;
       if (!hasInfiniteAmmo(entity) && gunNeedsReloadVisual(gun)) reloadEl.classList.add("needs-reload");
       return;
     }
@@ -4329,6 +5317,11 @@
 
   function updateHud() {
     if (!player) return;
+    if (isTeamGameMode()) {
+      for (const d of dots) {
+        if (d.teamId != null) d.color = TEAM_COLORS[d.teamId % TEAM_COLORS.length];
+      }
+    }
     const pct = clamp(player.health / MAX_HEALTH, 0, 1) * 100;
     healthBarFill.style.width = pct + "%";
     const hp = Math.ceil(player.health);
@@ -4338,21 +5331,28 @@
       gameMode === "teams" ? "Teams"
         : gameMode === "bedwars" ? "Bedwars"
           : gameMode === "revenge" ? "Revenge"
-            : (twoPlayerMode ? (twoPlayerTeamMode ? "2P Team" : "2P VS") : "Battle Royale");
+            : gameMode === "gun_game" ? "Gun Game"
+              : (twoPlayerMode ? (twoPlayerTeamMode ? "2P Team" : "2P VS") : "Battle Royale");
     let aliveLine = "Alive <strong>" + alive.length + "</strong>";
-    if (isTeamGameMode() && player && player.teamId != null) {
+    if (isGunGameMode() && player) {
+      aliveLine = gunGameProgressLine(player);
+    } else if (isTeamGameMode() && player && player.teamId != null) {
       const allyAlive = countTeamMembers(player.teamId, true);
-      const teamsAlive = getAliveTeamIds().size;
-      aliveLine = "Your team <strong>" + allyAlive + "</strong> · Teams left <strong>" + teamsAlive + "</strong>";
+      const teamsAlive = getTeamsStillInMatch().size;
+      const teamName = TEAM_NAMES[player.teamId] || ("Team " + (player.teamId + 1));
+      aliveLine = teamName + " <strong>" + allyAlive + "</strong> alive · Teams left <strong>" + teamsAlive + "</strong>";
     }
     const modeTag = ' · <span style="color:#9ad4ff">' + modeLabel + "</span>";
     const twoTag = twoPlayerMode
       ? (twoPlayerTeamMode ? ' · <span style="color:#b8f0c8">Team</span>' : ' · <span style="color:#f0c0c8">VS</span>')
       : "";
+    const mapTag = activeMapIds.length
+      ? ' · <span style="color:#d4c4a8">' + activeMapIds.map((id) => MAP_LABELS[id] || id).join(" + ") + "</span>"
+      : "";
     hud.innerHTML =
       '<div class="hud-name">' + playerName + (twoPlayerMode ? " (P1)" : "") + "</div>" +
       '<div class="hud-line">' + aliveLine +
-      modeTag + twoTag +
+      modeTag + twoTag + mapTag +
       " · Kills <strong>" + player.kills + "</strong></div>";
     updateWallChargesHud(player, wallChargesHud);
     updateAmmoHud(player);
@@ -4364,7 +5364,8 @@
       if (healthLabelP2) healthLabelP2.textContent = Math.ceil(player2.health) + " / " + MAX_HEALTH;
       hudP2.innerHTML =
         '<div class="hud-name">' + player2Name + " (P2)</div>" +
-        '<div class="hud-line">Kills <strong>' + player2.kills + "</strong></div>";
+        '<div class="hud-line">' + (isGunGameMode() ? gunGameProgressLine(player2) + " · " : "") +
+        "Kills <strong>" + player2.kills + "</strong></div>";
       updateWallChargesHud(player2, wallChargesHudP2);
       updateAmmoHud(player2);
     } else if (onlineMode && !onlineHost && player2 && hud) {
@@ -4428,19 +5429,25 @@
       color: gun.color,
       life: 2.4,
     });
+    recordLocalGunShot(e, gun);
   }
 
   function tryShoot(e, aimX, aimY, now, accuracy) {
     const gun = currentGun(e);
     if (!gun) return;
     if (isOverchargeShotgun(gun.type)) return;
-    if (!hasInfiniteAmmo(e)) {
+    if (!e.isAI && !isHoldToShootGun(gun)) {
+      if (e.semiShotLocked) return;
+      e.semiShotLocked = true;
+    }
+    if (!hasInfiniteAmmo(e) && !isInfiniteMagGun(gun)) {
       if (isEntityReloading(e, now)) return;
       if (getReloadShotsLeft(gun) <= 0) return;
       if (getGunAmmo(gun) <= 0) return;
     }
     const meta = getGunTypeMeta(gun.type);
     const burstSize = meta.burstSize || 0;
+    const burstTiming = burstSize > 1 ? getEffectiveBurstTiming(meta) : null;
     if (e.burstGunType !== gun.type) {
       e.burstShotsLeft = 0;
       e.burstPauseUntil = 0;
@@ -4450,7 +5457,7 @@
       if (e.burstShotsLeft <= 0) {
         if (now < e.burstPauseUntil) return;
         e.burstShotsLeft = burstSize;
-      } else if (now - e.lastShot < (meta.burstShotMs || 55)) {
+      } else if (now - e.lastShot < (burstTiming ? burstTiming.burstShotMs : (meta.burstShotMs || 55))) {
         return;
       }
     } else if (now - e.lastShot < getEntityFireMs(e, gun)) {
@@ -4467,13 +5474,13 @@
       ? getModulatedDamageMul(getModulatedHeavyMode(e))
       : null;
     e.lastShot = now;
-    if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
+    if (!hasInfiniteAmmo(e) && !isInfiniteMagGun(gun)) consumeGunAmmo(e, 1);
     addBloomOnShot(e, gun);
     if (e.isPlayer) updateAmmoHud(e);
     if (burstSize > 1) {
       e.burstShotsLeft--;
       if (e.burstShotsLeft <= 0) {
-        e.burstPauseUntil = now + (meta.burstPauseMs || 220);
+        e.burstPauseUntil = now + (burstTiming ? burstTiming.burstPauseMs : (meta.burstPauseMs || 220));
       }
     }
     let ang = Math.atan2(aimY - e.y, aimX - e.x);
@@ -4482,7 +5489,7 @@
       ang += rand(-err, err);
     }
     const explosive = isExplosiveGun(gun);
-    const spd = explosive ? 420 : 520;
+    const spd = explosive ? 420 : (isSniperGun(gun.type) ? SNIPER_BULLET_SPEED : 520);
     const pellets = getPelletCount(gun);
     const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
     const shotSpread = getEffectiveSpread(e, gun);
@@ -4517,17 +5524,20 @@
         gun: pelletGun,
         explosive,
         color: explosive ? (isMeowieRpg(gun) ? gun.color : "#ff6b35") : gun.color,
-        life: explosive ? 3.2 : 2.4,
+        life: explosive ? 3.2 : (isSniperGun(gun.type) ? SNIPER_BULLET_LIFE : 2.4),
       });
     }
+    recordLocalGunShot(e, gun);
   }
 
   function canPickupGroundGun(e, g, now) {
+    if (isGunGameMode()) return false;
     if (g.noPickupId === e.id && now < g.noPickupUntil) return false;
     return true;
   }
 
   function dropCurrentWeapon(e) {
+    if (isGunGameMode()) return false;
     const gun = currentGun(e);
     if (!gun) return false;
     cancelOvercharge(e);
@@ -4647,6 +5657,305 @@
     return Math.abs(lx) <= w.len * 0.5 && Math.abs(ly) <= w.thick * 0.5;
   }
 
+  function bulletPathHitsWall(x0, y0, x1, y1, w) {
+    const cos = Math.cos(-w.angle);
+    const sin = Math.sin(-w.angle);
+    function loc(x, y) {
+      const dx = x - w.x;
+      const dy = y - w.y;
+      return { x: dx * cos - dy * sin, y: dx * sin + dy * cos };
+    }
+    const a = loc(x0, y0);
+    const b = loc(x1, y1);
+    const hl = w.len * 0.5 + 2;
+    const ht = w.thick * 0.5 + 2;
+    if (Math.abs(a.x) <= hl && Math.abs(a.y) <= ht) return true;
+    if (Math.abs(b.x) <= hl && Math.abs(b.y) <= ht) return true;
+    let t0 = 0;
+    let t1 = 1;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    function clip(p, q) {
+      if (Math.abs(p) < 1e-9) return q >= 0;
+      const r = q / p;
+      if (p < 0) {
+        if (r > t1) return false;
+        if (r > t0) t0 = r;
+      } else {
+        if (r < t0) return false;
+        if (r < t1) t1 = r;
+      }
+      return true;
+    }
+    return clip(-dx, a.x + hl) && clip(dx, hl - a.x) && clip(-dy, a.y + ht) && clip(dy, ht - a.y);
+  }
+
+  const MAP_IDS = ["none", "arena", "canyon", "storage", "maze", "pyramids", "coral", "chilltown"];
+  const MAP_LABELS = {
+    arena: "Arena",
+    canyon: "Canyon",
+    storage: "Storage",
+    maze: "Maze",
+    pyramids: "Pyramids",
+    coral: "Coral",
+    chilltown: "Chilltown",
+  };
+  const MAP_THEMES = {
+    arena: { fill: "#4a4540", stroke: "#8a8378", lightFill: "#6a6560", lightStroke: "#b0a89c", mini: "#888" },
+    canyon: { fill: "#6a3e28", stroke: "#c48a5a", lightFill: "#8a5a38", lightStroke: "#e0b080", mini: "#b86" },
+    storage: { fill: "#3a3530", stroke: "#7a6a58", lightFill: "#6a5a48", lightStroke: "#c4a070", mini: "#975" },
+    maze: { fill: "#2c3a32", stroke: "#5a7a64", lightFill: "#3d5a48", lightStroke: "#8ab89a", mini: "#5a8" },
+    pyramids: { fill: "#8a6a38", stroke: "#d4b06a", lightFill: "#b89050", lightStroke: "#f0d090", mini: "#ca8" },
+    coral: { fill: "#5a3a52", stroke: "#c070a0", lightFill: "#3a6a68", lightStroke: "#80d0c8", mini: "#c6a" },
+    chilltown: { fill: "#3a4450", stroke: "#7a8a9a", lightFill: "#5a6870", lightStroke: "#b0c0c8", mini: "#89a" },
+  };
+
+  function readMapIdFromSelect(el) {
+    const val = el && el.value;
+    if (MAP_IDS.indexOf(val) >= 0) return val;
+    return "none";
+  }
+
+  function readActiveMapIds() {
+    const a = readMapIdFromSelect(mapSelectA);
+    const b = readMapIdFromSelect(mapSelectB);
+    const ids = [];
+    if (a && a !== "none") ids.push(a);
+    if (b && b !== "none" && b !== a) ids.push(b);
+    return ids;
+  }
+
+  function wxFrac(t) { return t * WORLD_W; }
+  function wyFrac(t) { return t * WORLD_H; }
+
+  function addMapBlock(cx, cy, w, h, light, theme) {
+    const len = Math.max(12, w);
+    const thick = Math.max(12, h);
+    walls.push({
+      x: cx,
+      y: cy,
+      len,
+      thick,
+      angle: 0,
+      hp: light ? WALL_MAX_HP : 9999,
+      maxHp: light ? WALL_MAX_HP : 9999,
+      indestructible: !light,
+      mapWall: true,
+      light: !!light,
+      ownerId: -1,
+      fill: light ? theme.lightFill : theme.fill,
+      stroke: light ? theme.lightStroke : theme.stroke,
+      mini: theme.mini,
+    });
+  }
+
+  function addMapSeg(x1, y1, x2, y2, thick, light, theme) {
+    const dx = x2 - x1;
+    const dy = y2 - y1;
+    const len = Math.hypot(dx, dy);
+    if (len < 8) return;
+    walls.push({
+      x: (x1 + x2) * 0.5,
+      y: (y1 + y2) * 0.5,
+      len,
+      thick: Math.max(10, thick),
+      angle: Math.atan2(dy, dx),
+      hp: light ? WALL_MAX_HP : 9999,
+      maxHp: light ? WALL_MAX_HP : 9999,
+      indestructible: !light,
+      mapWall: true,
+      light: !!light,
+      ownerId: -1,
+      fill: light ? theme.lightFill : theme.fill,
+      stroke: light ? theme.lightStroke : theme.stroke,
+      mini: theme.mini,
+    });
+  }
+
+  function addMapRing(cx, cy, rx, ry, thick, count, light, theme, gapEvery) {
+    const n = Math.max(6, count);
+    for (let i = 0; i < n; i++) {
+      if (gapEvery && (i % gapEvery) === 0) continue;
+      const a0 = (i / n) * Math.PI * 2;
+      const a1 = ((i + 1) / n) * Math.PI * 2;
+      addMapSeg(
+        cx + Math.cos(a0) * rx, cy + Math.sin(a0) * ry,
+        cx + Math.cos(a1) * rx, cy + Math.sin(a1) * ry,
+        thick, light, theme
+      );
+    }
+  }
+
+  function addMapFrame(x, y, w, h, thick, light, theme, gaps) {
+    const x0 = x - w * 0.5;
+    const y0 = y - h * 0.5;
+    const x1 = x + w * 0.5;
+    const y1 = y + h * 0.5;
+    const skip = gaps || {};
+    if (!skip.n) addMapSeg(x0, y0, x1, y0, thick, light, theme);
+    if (!skip.e) addMapSeg(x1, y0, x1, y1, thick, light, theme);
+    if (!skip.s) addMapSeg(x0, y1, x1, y1, thick, light, theme);
+    if (!skip.w) addMapSeg(x0, y0, x0, y1, thick, light, theme);
+  }
+
+  function buildMapArena(theme) {
+    const cx = wxFrac(0.5);
+    const cy = wyFrac(0.5);
+    addMapRing(cx, cy, wxFrac(0.42), wyFrac(0.4), 42, 24, false, theme, 6);
+    addMapRing(cx, cy, wxFrac(0.24), wyFrac(0.22), 22, 14, true, theme, 3);
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2 + 0.2;
+      addMapBlock(cx + Math.cos(a) * wxFrac(0.14), cy + Math.sin(a) * wyFrac(0.13), wxFrac(0.035), wyFrac(0.05), i % 2 === 0, theme);
+    }
+  }
+
+  function buildMapCanyon(theme) {
+    const left = [
+      [0.02, 0.05, 0.22, 0.22], [0.02, 0.24, 0.18, 0.2], [0.02, 0.48, 0.26, 0.18],
+      [0.02, 0.68, 0.2, 0.28], [0.18, 0.08, 0.1, 0.12], [0.16, 0.55, 0.12, 0.1],
+    ];
+    const right = [
+      [0.76, 0.04, 0.22, 0.2], [0.8, 0.26, 0.18, 0.22], [0.72, 0.5, 0.26, 0.16],
+      [0.78, 0.7, 0.2, 0.26], [0.7, 0.18, 0.1, 0.1], [0.68, 0.62, 0.1, 0.12],
+    ];
+    for (const r of left.concat(right)) {
+      addMapBlock(wxFrac(r[0] + r[2] * 0.5), wyFrac(r[1] + r[3] * 0.5), wxFrac(r[2]), wyFrac(r[3]), false, theme);
+    }
+    addMapSeg(wxFrac(0.32), wyFrac(0.28), wxFrac(0.62), wyFrac(0.3), 28, false, theme);
+    addMapSeg(wxFrac(0.38), wyFrac(0.58), wxFrac(0.68), wyFrac(0.55), 28, false, theme);
+    const rocks = [[0.4, 0.18], [0.48, 0.42], [0.55, 0.72], [0.36, 0.78], [0.6, 0.2], [0.44, 0.6]];
+    for (let i = 0; i < rocks.length; i++) {
+      addMapBlock(wxFrac(rocks[i][0]), wyFrac(rocks[i][1]), wxFrac(0.045), wyFrac(0.06), true, theme);
+    }
+  }
+
+  function buildMapStorage(theme) {
+    addMapFrame(wxFrac(0.5), wyFrac(0.5), wxFrac(0.9), wyFrac(0.86), 36, false, theme, { n: true });
+    for (let i = 0; i < 6; i++) {
+      const x = wxFrac(0.16 + i * 0.13);
+      addMapBlock(x, wyFrac(0.28), wxFrac(0.045), wyFrac(0.32), false, theme);
+      addMapBlock(x, wyFrac(0.72), wxFrac(0.045), wyFrac(0.28), false, theme);
+    }
+    const crates = [[0.22, 0.5], [0.35, 0.5], [0.48, 0.5], [0.61, 0.5], [0.74, 0.5], [0.28, 0.14], [0.55, 0.86]];
+    for (const c of crates) {
+      addMapBlock(wxFrac(c[0]), wyFrac(c[1]), wxFrac(0.04), wyFrac(0.05), true, theme);
+    }
+  }
+
+  function buildMapMaze(theme) {
+    const grid = [
+      "################",
+      "#  #     #     #",
+      "#  ### # ### # #",
+      "#    # #   # # #",
+      "#### # ### # # #",
+      "#    #     #   #",
+      "# ###### ##### #",
+      "#      #     # #",
+      "### ## ### #   #",
+      "#      #   ### #",
+      "#  ####        #",
+      "################",
+    ];
+    const rows = grid.length;
+    const cols = grid[0].length;
+    const x0 = 0.06;
+    const y0 = 0.06;
+    const cw = 0.88 / cols;
+    const ch = 0.88 / rows;
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        if (grid[r][c] !== "#") continue;
+        const light = r > 0 && r < rows - 1 && c > 0 && c < cols - 1 && ((r + c) % 5 === 0);
+        addMapBlock(wxFrac(x0 + (c + 0.5) * cw), wyFrac(y0 + (r + 0.5) * ch), wxFrac(cw * 0.92), wyFrac(ch * 0.92), light, theme);
+      }
+    }
+  }
+
+  function buildMapPyramids(theme) {
+    const sites = [[0.26, 0.42], [0.72, 0.32], [0.55, 0.72]];
+    for (const s of sites) {
+      const cx = wxFrac(s[0]);
+      const cy = wyFrac(s[1]);
+      addMapFrame(cx, cy, wxFrac(0.22), wyFrac(0.22), 34, false, theme, {});
+      addMapFrame(cx, cy, wxFrac(0.14), wyFrac(0.14), 26, false, theme, { e: true });
+      addMapFrame(cx, cy, wxFrac(0.07), wyFrac(0.07), 20, true, theme, {});
+      addMapBlock(cx, cy, wxFrac(0.03), wyFrac(0.035), true, theme);
+    }
+  }
+
+  function buildMapCoral(theme) {
+    const clusters = [
+      [0.22, 0.28, 0.08], [0.48, 0.22, 0.07], [0.74, 0.3, 0.09],
+      [0.3, 0.55, 0.08], [0.62, 0.52, 0.1], [0.2, 0.78, 0.07],
+      [0.5, 0.78, 0.08], [0.78, 0.72, 0.08], [0.42, 0.42, 0.05],
+    ];
+    for (let ci = 0; ci < clusters.length; ci++) {
+      const c = clusters[ci];
+      const cx = wxFrac(c[0]);
+      const cy = wyFrac(c[1]);
+      const r = wxFrac(c[2]);
+      addMapRing(cx, cy, r, r * (WORLD_H / WORLD_W), 24, 8, ci % 3 === 0, theme, 4);
+      addMapBlock(cx + r * 0.15, cy, wxFrac(0.03), wyFrac(0.04), true, theme);
+      addMapBlock(cx - r * 0.2, cy + wyFrac(0.03), wxFrac(0.028), wyFrac(0.036), ci % 2 === 0, theme);
+    }
+  }
+
+  function buildMapChilltown(theme) {
+    const buildings = [
+      [0.18, 0.2, 0.14, 0.16], [0.4, 0.18, 0.12, 0.14], [0.62, 0.2, 0.16, 0.14],
+      [0.82, 0.22, 0.1, 0.16], [0.16, 0.48, 0.12, 0.14], [0.82, 0.5, 0.12, 0.16],
+      [0.18, 0.78, 0.14, 0.12], [0.4, 0.8, 0.14, 0.12], [0.64, 0.78, 0.12, 0.14],
+      [0.82, 0.78, 0.1, 0.12], [0.5, 0.48, 0.1, 0.1],
+    ];
+    for (const b of buildings) {
+      addMapBlock(wxFrac(b[0]), wyFrac(b[1]), wxFrac(b[2]), wyFrac(b[3]), false, theme);
+    }
+    addMapSeg(wxFrac(0.28), wyFrac(0.36), wxFrac(0.28), wyFrac(0.64), 16, true, theme);
+    addMapSeg(wxFrac(0.72), wyFrac(0.36), wxFrac(0.72), wyFrac(0.64), 16, true, theme);
+    addMapSeg(wxFrac(0.32), wyFrac(0.36), wxFrac(0.46), wyFrac(0.36), 16, true, theme);
+    addMapSeg(wxFrac(0.54), wyFrac(0.36), wxFrac(0.68), wyFrac(0.36), 16, true, theme);
+    addMapSeg(wxFrac(0.32), wyFrac(0.62), wxFrac(0.68), wyFrac(0.62), 16, true, theme);
+    addMapBlock(wxFrac(0.5), wyFrac(0.62), wxFrac(0.04), wyFrac(0.04), true, theme);
+  }
+
+  function spawnMapStructures(ids) {
+    activeMapIds = ids || [];
+    for (const id of activeMapIds) {
+      const theme = MAP_THEMES[id];
+      if (!theme) continue;
+      if (id === "arena") buildMapArena(theme);
+      else if (id === "canyon") buildMapCanyon(theme);
+      else if (id === "storage") buildMapStorage(theme);
+      else if (id === "maze") buildMapMaze(theme);
+      else if (id === "pyramids") buildMapPyramids(theme);
+      else if (id === "coral") buildMapCoral(theme);
+      else if (id === "chilltown") buildMapChilltown(theme);
+    }
+  }
+
+  function circleHitsWall(x, y, r, w) {
+    const cos = Math.cos(-w.angle);
+    const sin = Math.sin(-w.angle);
+    const lx = (x - w.x) * cos - (y - w.y) * sin;
+    const ly = (x - w.x) * sin + (y - w.y) * cos;
+    const hl = w.len * 0.5;
+    const ht = w.thick * 0.5;
+    const cx = clamp(lx, -hl, hl);
+    const cy = clamp(ly, -ht, ht);
+    const dx = lx - cx;
+    const dy = ly - cy;
+    return dx * dx + dy * dy < r * r;
+  }
+
+  function pointBlockedByWalls(x, y, r) {
+    const rad = (r || 16) + 8;
+    for (const w of walls) {
+      if (circleHitsWall(x, y, rad, w)) return true;
+    }
+    return false;
+  }
+
   function triggerExplosion(b, shotOwner) {
     const gun = b.gun;
     const gunType = gun && gun.type ? gun.type : "rpg";
@@ -4660,6 +5969,7 @@
     for (let w = walls.length - 1; w >= 0; w--) {
       const wall = walls[w];
       if (dist(b.x, b.y, wall.x, wall.y) > radius + wallExtentRadius(wall)) continue;
+      if (wall.indestructible) continue;
       const wallDmg = isMeowie ? rollGunBaseDamage(gun) : RPG_WALL_DMG;
       wall.hp -= wallDmg;
       damageTexts.push({
@@ -4676,7 +5986,7 @@
 
     for (const d of dots) {
       if (!d.alive) continue;
-      if (shotOwner && (d.id === shotOwner.id || areTeammates(shotOwner, d))) continue;
+      if (shotOwner && d.id !== shotOwner.id && areTeammates(shotOwner, d)) continue;
       const dDist = dist(b.x, b.y, d.x, d.y);
       if (dDist > radius + d.radius) continue;
       const dmg = isMeowie
@@ -4693,7 +6003,7 @@
         maxLife: playerHit ? 1.35 : 0.9,
         big: playerHit,
       });
-      if (d.health <= 0) killEntity(shotOwner, d);
+      if (d.health <= 0) killEntity(shotOwner, d, gun);
     }
   }
 
@@ -5028,6 +6338,119 @@
     }
   }
 
+  function isLocalTrackedPlayer(e) {
+    return !!(e && e.isPlayer && e.playerSlot === 1);
+  }
+
+  function formatGunLabel(gun) {
+    if (!gun) return "an unknown gun";
+    const rarity = gun.label || (RARITIES[gun.rarity] && RARITIES[gun.rarity].label) || "";
+    const type = gun.typeLabel || (getGunTypeMeta(gun.type) && getGunTypeMeta(gun.type).label) || gun.type || "gun";
+    return (rarity ? rarity + " " : "") + type;
+  }
+
+  function snapshotKillGun(gun) {
+    if (!gun) return null;
+    const ng = normalizeGun(gun) || gun;
+    return {
+      type: ng.type,
+      typeLabel: ng.typeLabel,
+      rarity: ng.rarity,
+      label: ng.label,
+      color: ng.color,
+    };
+  }
+
+  function bumpGunStat(typeId, field) {
+    if (!currentUserSlug || !typeId) return;
+    if (!gunStatsRuntime[typeId]) gunStatsRuntime[typeId] = { shots: 0, kills: 0, deaths: 0 };
+    gunStatsRuntime[typeId][field] = (gunStatsRuntime[typeId][field] | 0) + 1;
+    persistGunStatsSoon();
+  }
+
+  function recordLocalGunShot(e, gun) {
+    if (!isLocalTrackedPlayer(e) || !gun || !gun.type) return;
+    bumpGunStat(gun.type, "shots");
+    if (gun.rarity && RARITIES[gun.rarity]) {
+      if (!rarityStatsRuntime[gun.rarity]) rarityStatsRuntime[gun.rarity] = { shots: 0 };
+      rarityStatsRuntime[gun.rarity].shots = (rarityStatsRuntime[gun.rarity].shots | 0) + 1;
+    }
+  }
+
+  function formatPlayerDeathLine(victim) {
+    if (!victim || !victim.lastDeath) return "";
+    const d = victim.lastDeath;
+    if (d.self) return "You died to your own " + d.gunLabel + ".";
+    if (d.killerName) return d.killerName + " killed you with " + d.gunLabel + ".";
+    return "You were eliminated.";
+  }
+
+  function withDeathLine(victim, extra) {
+    const death = formatPlayerDeathLine(victim);
+    if (!extra) return death;
+    if (!death) return extra;
+    return death + " " + extra;
+  }
+
+  function pushKillFeed(killer, victim, gun) {
+    if (!victim) return;
+    const gunLabel = formatGunLabel(gun);
+    let line;
+    if (killer && killer.id === victim.id) {
+      line = victim.name + " eliminated themselves with " + gunLabel;
+    } else if (killer) {
+      line = killer.name + " eliminated " + victim.name + " with " + gunLabel;
+    } else {
+      line = victim.name + " was eliminated";
+    }
+    killFeed.push({ line, life: 4.6 });
+    if (killFeed.length > 8) killFeed.splice(0, killFeed.length - 8);
+  }
+
+  function updateKillFeed(dt) {
+    for (let i = killFeed.length - 1; i >= 0; i--) {
+      killFeed[i].life -= dt;
+      if (killFeed[i].life <= 0) killFeed.splice(i, 1);
+    }
+  }
+
+  function drawKillFeed() {
+    if (!killFeed.length) return;
+    ctx.save();
+    ctx.textAlign = "center";
+    const x = VIEW_W * 0.5;
+    let y = (spectateMode || twoPlayerMode) ? 34 : 22;
+    for (let i = 0; i < killFeed.length; i++) {
+      const item = killFeed[i];
+      ctx.globalAlpha = Math.min(1, item.life / 0.4);
+      ctx.font = "bold 13px system-ui, sans-serif";
+      ctx.strokeStyle = "rgba(0,0,0,0.8)";
+      ctx.lineWidth = 4;
+      ctx.strokeText(item.line, x, y);
+      ctx.fillStyle = "#f4f4f8";
+      ctx.fillText(item.line, x, y);
+      y += 18;
+    }
+    ctx.restore();
+  }
+
+  function drawLocalDeathBanner() {
+    if (!player || player.alive) return;
+    const line = formatPlayerDeathLine(player);
+    if (!line) return;
+    const paneW = (twoPlayerMode || spectateMode) ? VIEW_W * 0.5 : VIEW_W;
+    ctx.save();
+    ctx.textAlign = "center";
+    ctx.font = "bold 15px system-ui, sans-serif";
+    ctx.globalAlpha = 0.95;
+    ctx.strokeStyle = "rgba(0,0,0,0.85)";
+    ctx.lineWidth = 5;
+    ctx.strokeText(line, paneW * 0.5, VIEW_H - 28);
+    ctx.fillStyle = "#ffd0d0";
+    ctx.fillText(line, paneW * 0.5, VIEW_H - 28);
+    ctx.restore();
+  }
+
   function applyKillRewards(killer) {
     if (!killer) return;
     killer.kills++;
@@ -5036,7 +6459,19 @@
     } else if (!killer.isPlayer) {
       killer.health = clamp(killer.health + KILL_HEAL * 0.5, 0, killer.maxHealth);
     }
-    if (killer.isAI) aiSelectWeapon(killer);
+    if (!hasInfiniteAmmo(killer) && applyAmmoToInventoryGun(killer, KILL_AMMO)) {
+      damageTexts.push({
+        x: killer.x + rand(-8, 8),
+        y: killer.y - killer.radius - 26,
+        text: "+" + KILL_AMMO + " AMMO",
+        color: "#f0e6a8",
+        life: 0.9,
+        maxLife: 0.9,
+        big: !!killer.isPlayer,
+      });
+      if (killer.isPlayer) updateAmmoHud(killer);
+    }
+    if (killer.isAI && !isGunGameMode()) aiSelectWeapon(killer);
   }
 
   function respawnEntityEmpty(victim, x, y, label) {
@@ -5071,7 +6506,7 @@
   function respawnBedwars(victim) {
     const bed = getTeamBed(victim.teamId);
     if (!bed) return false;
-    dropVictimLoot(victim);
+    clearVictimInventory(victim);
     respawnEntityEmpty(
       victim,
       clamp(bed.x + rand(-28, 28), 40, WORLD_W - 40),
@@ -5079,6 +6514,76 @@
       "RESPAWN"
     );
     return true;
+  }
+
+  function respawnGunGame(victim) {
+    const savedIndex = victim.gunGameIndex | 0;
+    const pt = pickSpreadSpawnPoint(dots, victim);
+    respawnEntityEmpty(victim, pt.x, pt.y, "RESPAWN");
+    victim.gunGameIndex = savedIndex;
+    equipGunGameLoadout(victim);
+    return true;
+  }
+
+  function rankGunGameFinish(winner) {
+    ensureWinnerPlaced(winner);
+    const others = dots.filter((d) => d.id !== winner.id);
+    others.sort((a, b) => {
+      const gi = (b.gunGameIndex | 0) - (a.gunGameIndex | 0);
+      if (gi) return gi;
+      return (b.kills | 0) - (a.kills | 0);
+    });
+    for (let i = 0; i < others.length; i++) {
+      const d = others[i];
+      if (d.finishPlace != null) continue;
+      d.finishPlace = i + 2;
+      matchStandings.push({
+        id: d.id,
+        name: d.name,
+        place: d.finishPlace,
+        isPlayer: !!d.isPlayer,
+      });
+    }
+  }
+
+  function gunGameWin(winner) {
+    if (!winner || !running) return;
+    rankGunGameFinish(winner);
+    const lastMeta = getGunTypeMeta(gunGameLadder[gunGameLadder.length - 1]);
+    const lastName = lastMeta ? lastMeta.label : "the last gun";
+    const won = winner.isPlayer && winner.playerSlot === 1;
+    let title = winner.name + " wins!";
+    if (won) title = "Victory!";
+    else if (winner.isPlayer && winner.playerSlot === 2) title = player2Name + " wins!";
+    showEndOverlay({
+      title,
+      place: player ? player.finishPlace : null,
+      summary: winner.name + " got the last-gun kill with " + lastName + "." + killsSummaryLine(),
+      won,
+    });
+  }
+
+  function advanceGunGame(killer) {
+    if (!isGunGameMode() || !killer) return false;
+    const last = gunGameLadder.length - 1;
+    if (last < 0) return false;
+    const idx = killer.gunGameIndex | 0;
+    if (idx >= last) {
+      gunGameWin(killer);
+      return true;
+    }
+    killer.gunGameIndex = idx + 1;
+    equipGunGameLoadout(killer);
+    damageTexts.push({
+      x: killer.x,
+      y: killer.y - killer.radius - 22,
+      text: "GUN UP",
+      color: killer.color,
+      life: 1.05,
+      maxLife: 1.05,
+      big: !!killer.isPlayer,
+    });
+    return false;
   }
 
   function processRevengeOnKillerDeath(deadKiller) {
@@ -5093,8 +6598,23 @@
     }
   }
 
-  function killEntity(killer, victim) {
+  function killEntity(killer, victim, killGun) {
     if (!victim || !victim.alive) return;
+    const gunSnap = snapshotKillGun(killGun);
+    const selfKill = !!(killer && killer.id === victim.id);
+    victim.lastDeath = {
+      killerName: killer && !selfKill ? killer.name : null,
+      self: selfKill,
+      gunLabel: formatGunLabel(gunSnap),
+      gunType: gunSnap ? gunSnap.type : null,
+    };
+    if (killer && !selfKill && isLocalTrackedPlayer(killer) && gunSnap) {
+      bumpGunStat(gunSnap.type, "kills");
+    }
+    if (isLocalTrackedPlayer(victim) && gunSnap) {
+      bumpGunStat(gunSnap.type, "deaths");
+    }
+    pushKillFeed(killer, victim, gunSnap);
 
     if (gameMode === "revenge" && killer && killer.id !== victim.id && !victim.isBoss) {
       revengeKilledBy.set(victim.id, killer.id);
@@ -5103,13 +6623,20 @@
     if (gameMode === "bedwars" && victim.teamId != null && !victim.isBoss) {
       const bed = getTeamBed(victim.teamId);
       if (bed) {
-        dropVictimLoot(victim);
         applyKillRewards(killer);
         pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
         if (respawnBedwars(victim)) {
           return;
         }
       }
+    }
+
+    if (isGunGameMode()) {
+      applyKillRewards(killer);
+      pushDotsAwayFromPoint(victim.x, victim.y, 28, victim.id);
+      const won = !selfKill && advanceGunGame(killer);
+      if (!won) respawnGunGame(victim);
+      return;
     }
 
     recordPlacement(victim);
@@ -5146,9 +6673,10 @@
       if (player && player.teamId === winningTeamId) ensureWinnerPlaced(player);
       if (player2 && player2.teamId === winningTeamId) ensureWinnerPlaced(player2);
       const ally = dots.find((d) => d.alive && d.teamId === winningTeamId);
+      const teamName = TEAM_NAMES[winningTeamId] || ("Team " + (winningTeamId + 1));
       const headline = ally
-        ? ally.name + " secured the win for your team!"
-        : "Your team cleared the arena!";
+        ? ally.name + " secured the win for " + teamName + "!"
+        : teamName + " cleared the arena!";
       showEndOverlay({
         title: "Team Victory!",
         place: 1,
@@ -5159,7 +6687,7 @@
       showEndOverlay({
         title: "Defeat",
         place: player ? player.finishPlace : null,
-        summary: "Another team won the match." + killsSummaryLine(),
+        summary: withDeathLine(player, "Another team won the match." + killsSummaryLine()),
         won: false,
         record: !defeatStatsRecorded,
       });
@@ -5168,9 +6696,10 @@
 
   function checkWin() {
     if (!running) return;
+    if (isGunGameMode()) return;
 
     if (isTeamGameMode()) {
-      const teamsAlive = getAliveTeamIds();
+      const teamsAlive = getTeamsStillInMatch();
       if (teamsAlive.size <= 1) {
         if (teamsAlive.size === 1) {
           showTeamModeVictory([...teamsAlive][0]);
@@ -5200,7 +6729,7 @@
         return;
       }
       if (alive.length === 1 && !alive[0].isPlayer) {
-        let summary = alive[0].name + " won the arena." + killsSummaryLine();
+        let summary = withDeathLine(player, alive[0].name + " won the arena." + killsSummaryLine());
         showEndOverlay({
           title: "Defeat",
           place: player ? player.finishPlace : null,
@@ -5241,6 +6770,7 @@
         let summary = winner.name + " won the arena.";
         if (twoPlayerMode || onlineMode) summary += killsSummaryLine();
         else summary += " You had " + (player ? player.kills : 0) + " kills.";
+        summary = withDeathLine(player, summary);
         showEndOverlay({
           title: "Defeat",
           place: player ? player.finishPlace : null,
@@ -5295,6 +6825,9 @@
     e.x = clamp(e.x, e.radius, WORLD_W - e.radius);
     e.y = clamp(e.y, e.radius, WORLD_H - e.radius);
     resolveEntityWallCollisions(e);
+    if (gameMode === "bedwars" && e.bedwarsRole === "defender" && e.alive) {
+      bedwarsClampDefenderInWedge(e);
+    }
   }
 
   function updatePlayer(dt, now) {
@@ -5313,6 +6846,7 @@
     applyEntityMovement(player, mx, my, dt);
 
     const gun = currentGun(player);
+    if (!shootMouseDown) player.semiShotLocked = false;
     if (gun && isOverchargeShotgun(gun.type)) {
       if (shootMouseDown) beginOverchargeIfNeeded(player, now);
       if (player.isPlayer) updateAmmoHud(player);
@@ -5333,6 +6867,7 @@
 
     const gun = currentGun(player2);
     const p2Shooting = !!(p2ShootMouseDown || p2ShootHeld);
+    if (!p2Shooting) player2.semiShotLocked = false;
     if (gun && isOverchargeShotgun(gun.type)) {
       if (p2Shooting) beginOverchargeIfNeeded(player2, now);
       if (player2.isPlayer) updateAmmoHud(player2);
@@ -5351,6 +6886,7 @@
     updateEntityReload(player2, now);
     applyEntityMovement(player2, ri.mx || 0, ri.my || 0, dt);
     const gun = currentGun(player2);
+    if (!ri.shoot) player2.semiShotLocked = false;
     if (gun && isOverchargeShotgun(gun.type)) {
       if (ri.shoot) beginOverchargeIfNeeded(player2, now);
       else if (player2.chargeStartAt) releaseOverchargeShot(player2, ri.aimX, ri.aimY, now);
@@ -5448,7 +6984,11 @@
         kills: d.kills | 0,
       })),
       bullets: bullets.map((b) => ({ x: b.x, y: b.y, color: b.color })),
-      walls: walls.map((w) => ({ x: w.x, y: w.y, len: w.len, thick: w.thick, angle: w.angle, hp: w.hp, maxHp: w.maxHp })),
+      walls: walls.map((w) => ({
+        x: w.x, y: w.y, len: w.len, thick: w.thick, angle: w.angle, hp: w.hp, maxHp: w.maxHp,
+        mapWall: !!w.mapWall, indestructible: !!w.indestructible, light: !!w.light,
+        fill: w.fill, stroke: w.stroke, mini: w.mini,
+      })),
       chests: chests.map((c) => ({ x: c.x, y: c.y, open: !!c.open, kind: c.kind })),
       groundGuns: groundGuns.map((g) => ({ x: g.x, y: g.y, gun: serializeInvSlot(g.gun) })),
       groundMeds: groundMeds.map((m) => ({ x: m.x, y: m.y, potion: serializeInvSlot(m.potion) })),
@@ -6044,6 +7584,7 @@
     damageTexts = [];
     walls = [];
     matchStandings = [];
+    killFeed = [];
     player = spawnDot({ id: 9999, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
     dots.push(player);
     player2 = null;
@@ -6076,6 +7617,7 @@
         teamMode: cfg.teamMode !== false,
         opponentName: cfg.guestName || cfg.opponentName,
         opponentColor: cfg.guestColor || cfg.opponentColor,
+        mapIds: readActiveMapIds(),
       });
     } else {
       onlineGuestSynced = false;
@@ -6292,6 +7834,9 @@
     d.x = clamp(d.x, d.radius, WORLD_W - d.radius);
     d.y = clamp(d.y, d.radius, WORLD_H - d.radius);
     resolveEntityWallCollisions(d);
+    if (gameMode === "bedwars" && d.bedwarsRole === "defender") {
+      bedwarsClampDefenderInWedge(d);
+    }
   }
 
   function updateAIInteractions(d, now) {
@@ -6339,7 +7884,7 @@
       if (aim) {
         d.aiTarget = aim;
         const shootChance = spectateMode ? 0.98 : 0.48;
-        if (dist(d.x, d.y, aim.x, aim.y) < tune.shootRange && Math.random() < shootChance) {
+        if (dist(d.x, d.y, aim.x, aim.y) < (isSniperGun(gun.type) ? Math.max(tune.shootRange, getSniperFarRange() + 40) : tune.shootRange) && Math.random() < shootChance) {
           if (isOverchargeShotgun(gun.type)) {
             if (!d.aiOverchargeStartAt) {
               d.aiOverchargeStartAt = now;
@@ -6373,6 +7918,8 @@
   function updateBullets(dt, now) {
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
+      const prevX = b.x;
+      const prevY = b.y;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
       b.life -= dt;
@@ -6384,11 +7931,21 @@
       let hitWall = false;
       for (let w = walls.length - 1; w >= 0; w--) {
         const wall = walls[w];
-        if (!bulletHitsWall(b, wall)) continue;
+        if (!bulletPathHitsWall(prevX, prevY, b.x, b.y, wall)) continue;
         if (b.explosive) {
           triggerExplosion(b, shotOwner);
+        } else if (wall.indestructible) {
+          damageTexts.push({
+            x: wall.x + rand(-6, 6),
+            y: wall.y - wallExtentRadius(wall) - 4,
+            text: "—",
+            color: "#888",
+            life: 0.35,
+            maxLife: 0.35,
+            big: false,
+          });
         } else {
-          const wallDmg = getBulletWallDamage(b.gun);
+          const wallDmg = wall.mapWall ? 1 : getBulletWallDamage(b.gun);
           wall.hp -= wallDmg;
           damageTexts.push({
             x: wall.x + rand(-6, 6),
@@ -6412,28 +7969,18 @@
           const bed = beds[bi];
           if (bed.hp <= 0) continue;
           if (shotOwner && shotOwner.teamId != null && shotOwner.teamId === bed.teamId) continue;
-          if (dist(b.x, b.y, bed.x, bed.y) > 22) continue;
+          if (dist(b.x, b.y, bed.x, bed.y) > BEACON_VIS_RADIUS) continue;
           bed.hp -= 1;
           damageTexts.push({
             x: bed.x + rand(-8, 8),
             y: bed.y - 16,
-            text: bed.hp > 0 ? String(bed.hp) : "BED!",
+            text: bed.hp > 0 ? String(bed.hp) : "×",
             color: getTeamColor(bed.teamId),
             life: 0.55,
             maxLife: 0.55,
             big: false,
           });
-          if (bed.hp <= 0) {
-            damageTexts.push({
-              x: bed.x,
-              y: bed.y - 28,
-              text: "BED DESTROYED",
-              color: "#ffb347",
-              life: 1.2,
-              maxLife: 1.2,
-              big: true,
-            });
-          }
+          if (bed.hp <= 0) onBeaconDestroyed(bed, now);
           bullets.splice(i, 1);
           hitWall = true;
           break;
@@ -6466,7 +8013,7 @@
           });
           bullets.splice(i, 1);
           if (d.health <= 0) {
-            killEntity(shotOwner, d);
+            killEntity(shotOwner, d, b.gun);
           }
           break;
         }
@@ -6502,21 +8049,54 @@
   function drawMinimap() {
     const mw = minimap.width;
     const mh = minimap.height;
-    const sx = mw / WORLD_W;
-    const sy = mh / WORLD_H;
+    const pad = 4;
+    const sx = (mw - pad * 2) / WORLD_W;
+    const sy = (mh - pad * 2) / WORLD_H;
     mctx.fillStyle = "#080808";
     mctx.fillRect(0, 0, mw, mh);
     mctx.strokeStyle = "#333";
     mctx.strokeRect(0.5, 0.5, mw - 1, mh - 1);
 
-    for (const w of walls) {
-      mctx.fillStyle = "#556";
-      mctx.fillRect(w.x * sx - 1, w.y * sy - 1, 3, 3);
+    if (gameMode === "bedwars" && teamsCount > 1) {
+      mctx.strokeStyle = "rgba(255,200,120,0.35)";
+      mctx.lineWidth = 1;
+      const mcx = pad + BEDWARS_CX * sx;
+      const mcy = pad + BEDWARS_CY * sy;
+      const diag = Math.hypot(mw - pad * 2, mh - pad * 2) * 1.1;
+      for (let k = 0; k < teamsCount; k++) {
+        const ang = (k * Math.PI * 2) / teamsCount;
+        mctx.beginPath();
+        mctx.moveTo(mcx, mcy);
+        mctx.lineTo(mcx + Math.cos(ang) * diag, mcy + Math.sin(ang) * diag);
+        mctx.stroke();
+      }
+      for (const bed of beds) {
+        if (bed.hp <= 0) continue;
+        const bx = pad + bed.x * sx;
+        const by = pad + bed.y * sy;
+        mctx.fillStyle = getTeamColor(bed.teamId);
+        mctx.fillRect(bx - 3, by - 3, 6, 6);
+        mctx.strokeStyle = "rgba(255,255,255,0.5)";
+        mctx.strokeRect(bx - 3.5, by - 3.5, 7, 7);
+      }
+    } else {
+      for (const bed of beds) {
+        if (bed.hp <= 0) continue;
+        mctx.fillStyle = getTeamColor(bed.teamId);
+        mctx.fillRect(pad + bed.x * sx - 2, pad + bed.y * sy - 2, 4, 4);
+      }
     }
-    for (const bed of beds) {
-      if (bed.hp <= 0) continue;
-      mctx.fillStyle = getTeamColor(bed.teamId);
-      mctx.fillRect(bed.x * sx - 2, bed.y * sy - 2, 4, 4);
+
+    for (const w of walls) {
+      const x = pad + w.x * sx;
+      const y = pad + w.y * sy;
+      mctx.save();
+      mctx.translate(x, y);
+      mctx.rotate(w.angle || 0);
+      mctx.fillStyle = w.mini || (w.light ? "#9ab" : "#667");
+      mctx.globalAlpha = w.light ? 0.75 : 0.95;
+      mctx.fillRect(-(w.len * sx) * 0.5, -(w.thick * sy) * 0.5, Math.max(1.2, w.len * sx), Math.max(1.2, w.thick * sy));
+      mctx.restore();
     }
     for (const ch of chests) {
       if (ch.open) continue;
@@ -6527,28 +8107,36 @@
       } else {
         mctx.fillStyle = "#8B6914";
       }
-      mctx.fillRect(ch.x * sx - 1, ch.y * sy - 1, 3, 3);
+      mctx.fillRect(pad + ch.x * sx - 1, pad + ch.y * sy - 1, 3, 3);
     }
     for (const d of dots) {
       if (!d.alive || d.hideOnMinimap) continue;
-      mctx.fillStyle = d.isPlayer
-        ? (d.playerSlot === 2 ? player2Color : playerColor)
-        : d.isSignatureBoss ? SIGNATURE_BOSS_COLOR : d.isBoss ? "#e74c3c" : d.color;
-      const r = d.isBoss ? 3.5 : d.isPlayer ? 3 : 2;
+      const hl = isTeamGameMode() ? d.teamId === (player && player.teamId) : d.isPlayer;
+      mctx.fillStyle = isTeamGameMode()
+        ? d.color
+        : (d.isPlayer
+          ? (d.playerSlot === 2 ? player2Color : playerColor)
+          : d.isSignatureBoss ? SIGNATURE_BOSS_COLOR : d.isBoss ? "#e74c3c" : d.color);
+      const r = hl ? 3.1 : (d.isBoss ? 3.5 : d.isPlayer ? 3 : 2);
       mctx.beginPath();
-      mctx.arc(d.x * sx, d.y * sy, r, 0, Math.PI * 2);
+      mctx.arc(pad + d.x * sx, pad + d.y * sy, r, 0, Math.PI * 2);
       mctx.fill();
+      if (hl) {
+        mctx.strokeStyle = "rgba(255,255,255,0.9)";
+        mctx.lineWidth = 1.25;
+        mctx.stroke();
+      }
     }
     mctx.strokeStyle = "rgba(255,255,255,0.85)";
     mctx.lineWidth = 1;
     const vw = viewHalfW();
-    mctx.strokeRect(camX * sx, camY * sy, vw * sx, VIEW_H * sy);
+    mctx.strokeRect(pad + camX * sx, pad + camY * sy, vw * sx, VIEW_H * sy);
     if (twoPlayerMode) {
       mctx.strokeStyle = "rgba(253,203,110,0.85)";
-      mctx.strokeRect(camX2 * sx, camY2 * sy, vw * sx, VIEW_H * sy);
+      mctx.strokeRect(pad + camX2 * sx, pad + camY2 * sy, vw * sx, VIEW_H * sy);
     } else if (spectateMode) {
       mctx.strokeStyle = "rgba(255,255,255,0.85)";
-      mctx.strokeRect(camX2 * sx, camY2 * sy, vw * sx, VIEW_H * sy);
+      mctx.strokeRect(pad + camX2 * sx, pad + camY2 * sy, vw * sx, VIEW_H * sy);
     }
   }
 
@@ -6659,21 +8247,62 @@
     }
 
     for (const w of walls) {
-      drawWallShape(w, "#3d4555", "#6a7a94", w.hp / w.maxHp);
+      if (w.mapWall) {
+        drawWallShape(
+          w,
+          w.fill || "#4a4038",
+          w.stroke || "#8a8078",
+          w.indestructible ? null : (w.maxHp ? w.hp / w.maxHp : null)
+        );
+      } else {
+        drawWallShape(w, "#3d4555", "#6a7a94", w.hp / w.maxHp);
+      }
+    }
+
+    if (gameMode === "bedwars" && teamsCount > 1) {
+      ctx.strokeStyle = "rgba(255, 200, 120, 0.22)";
+      ctx.lineWidth = 2;
+      for (let k = 0; k < teamsCount; k++) {
+        const ang = (k * Math.PI * 2) / teamsCount;
+        const L = bedwarsMaxRayFromCenterInRect(BEDWARS_CX, BEDWARS_CY, ang, WORLD_W, WORLD_H) * 1.02;
+        ctx.beginPath();
+        ctx.moveTo(BEDWARS_CX, BEDWARS_CY);
+        ctx.lineTo(BEDWARS_CX + Math.cos(ang) * L, BEDWARS_CY + Math.sin(ang) * L);
+        ctx.stroke();
+      }
     }
 
     for (const bed of beds) {
       if (bed.hp <= 0) continue;
       const bedColor = getTeamColor(bed.teamId);
-      ctx.fillStyle = bedColor;
-      ctx.fillRect(bed.x - 18, bed.y - 10, 36, 20);
-      ctx.strokeStyle = "rgba(255,255,255,0.55)";
-      ctx.lineWidth = 2;
-      ctx.strokeRect(bed.x - 18, bed.y - 10, 36, 20);
-      ctx.fillStyle = "#fff";
-      ctx.font = "bold 10px system-ui";
-      ctx.textAlign = "center";
-      ctx.fillText("BED " + bed.hp, bed.x, bed.y + 4);
+      if (gameMode === "bedwars") {
+        ctx.beginPath();
+        ctx.arc(bed.x, bed.y, BEACON_VIS_RADIUS, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(255, 255, 200, 0.55)";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.fillStyle = bedColor;
+        ctx.globalAlpha = 0.35;
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        const hpStr = String(bed.hp);
+        ctx.save();
+        ctx.font = "700 14px system-ui, Segoe UI, sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = "rgba(0,0,0,0.88)";
+        ctx.strokeText(hpStr, bed.x, bed.y);
+        ctx.fillStyle = "rgba(255,255,248,0.96)";
+        ctx.fillText(hpStr, bed.x, bed.y);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = bedColor;
+        ctx.fillRect(bed.x - 18, bed.y - 10, 36, 20);
+        ctx.strokeStyle = "rgba(255,255,255,0.55)";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(bed.x - 18, bed.y - 10, 36, 20);
+      }
     }
 
     if (opts.p1WallPreview && player && player.alive && player.wallCharges > 0 && !isMedItem(currentItem(player))) {
@@ -6787,6 +8416,12 @@
       ctx.font = "10px system-ui";
       ctx.textAlign = "center";
       ctx.fillText(d.name, d.x, d.y + d.radius + 12);
+      const held = currentGun(d);
+      if (held) {
+        ctx.fillStyle = held.color || "#bbb";
+        ctx.font = "9px system-ui";
+        ctx.fillText(formatGunLabel(held), d.x, d.y + d.radius + 23);
+      }
       if (opts.spectateHighlightId != null && d.id === opts.spectateHighlightId) {
         ctx.strokeStyle = "rgba(255,255,255,0.95)";
         ctx.lineWidth = 3;
@@ -6861,6 +8496,8 @@
       paintViewport(camX, camY, 0, 0, VIEW_W, VIEW_H, { p1Aim: true, p1WallPreview: true, isRightPane: false });
     }
     drawMinimap();
+    drawKillFeed();
+    drawLocalDeathBanner();
   }
 
   function loop(ts, gen) {
@@ -6913,25 +8550,26 @@
     updateBullets(dt, now);
     updateGround(dt);
     updateCameras();
+    updateKillFeed(dt);
 
-    if (running) {
+    if (running && !isGunGameMode()) {
       if (twoPlayerMode) {
         const p1Dead = !player || !player.alive;
         const p2Dead = !player2 || !player2.alive;
         if (p1Dead && p2Dead) {
-          if (isTeamGameMode() && player && player.teamId != null && teamHasAliveMembers(player.teamId)) {
+          if (isTeamGameMode() && player && player.teamId != null && playerTeamStillFighting()) {
             if (player && !spectateMode) {
               enterSpectateDefeatOverlay({
                 title: "Downed",
                 place: player.finishPlace,
-                summary: "Your team is still fighting. Spectating allies…",
+                summary: withDeathLine(player, "Your team is still fighting. Spectating teammates…"),
               });
             }
           } else if (!isTeamGameMode()) {
             showEndOverlay({
               title: "Eliminated",
               place: player && player.finishPlace != null ? player.finishPlace : (player2 ? player2.finishPlace : null),
-              summary: playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + (player2 ? player2.kills : 0) + " kills.",
+              summary: withDeathLine(player, playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + (player2 ? player2.kills : 0) + " kills."),
               won: false,
             });
           }
@@ -6941,18 +8579,21 @@
           showEndOverlay({
             title: "Eliminated",
             place: player && player.finishPlace != null ? player.finishPlace : player2.finishPlace,
-            summary: playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + player2.kills + " kills.",
+            summary: withDeathLine(player, playerName + ": " + (player ? player.kills : 0) + " kills · " + player2Name + ": " + player2.kills + " kills."),
             won: false,
           });
         }
       } else if (player && !player.alive && !onlineMode && !spectateMode) {
-        const teamStillAlive = isTeamGameMode() && player.teamId != null && teamHasAliveMembers(player.teamId);
+        const teamStillAlive = isTeamGameMode() && playerTeamStillFighting();
         enterSpectateDefeatOverlay({
           title: teamStillAlive ? "Downed" : "Eliminated",
           place: player.finishPlace,
-          summary: teamStillAlive
-            ? "Your team is still fighting. Spectating allies…"
-            : "Kills: " + player.kills + ".",
+          summary: withDeathLine(
+            player,
+            teamStillAlive
+              ? "Your team is still fighting. Spectating teammates…"
+              : "Kills: " + player.kills + "."
+          ),
         });
       }
     }
@@ -7000,6 +8641,7 @@
     onlineMatchId = null;
     gameScreen.hidden = true;
     menuScreen.hidden = false;
+    flushGunStatsNow();
     setMainMenuTab("play");
     endOverlay.hidden = true;
     endPlacement.hidden = true;

@@ -371,6 +371,24 @@
       z-index: 1;
       pointer-events: none;
     }
+    #energyBarWrap, #energyBarWrapP2 {
+      position: relative;
+      width: 100%;
+      height: 10px;
+      background: #171717;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    #energyBarFill, #energyBarFillP2 {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #e6a817, #ffe66d);
+      transition: width 0.08s;
+    }
+    #energyBarWrap.boosted, #energyBarWrapP2.boosted {
+      box-shadow: 0 0 7px #ffe66d;
+    }
     #inventoryHud {
       position: absolute;
       left: 12px;
@@ -1137,7 +1155,7 @@
       </div>
       <p id="accountStats" class="account-stats"></p>
       <h1>Supergun</h1>
-      <p id="menuModeTag" class="menu-tag">16-dot arena · 7 hidden hunters · ~50s to cross the map · chests · guns · last dot wins</p>
+      <p id="menuModeTag" class="menu-tag">23-dot arena · 7 hidden hunters · ~80s to cross the map · heavy building · last dot wins</p>
       <div class="menu-preview-row">
         <span id="menuDotPreview" aria-hidden="true"></span>
       </div>
@@ -1242,7 +1260,7 @@
           </label>
         </div>
         <span style="display:block;color:#777;font-size:0.76rem;line-height:1.45;">
-          <strong>Split screen</strong> · <strong>P1 (left):</strong> WASD · mouse aim/shoot · right-click build/med · 1–5 · Q drop · <strong>E</strong> reload · scroll slots<br />
+          <strong>Split screen</strong> · <strong>P1 (left):</strong> WASD · Space sprint · F scope · R wall/slant · Z wood/stone · mouse aim/shoot · right-click build/med · 1–5 · Q drop · <strong>E</strong> reload · scroll slots<br />
           <strong>P2 (right):</strong> Arrow keys · <strong>mouse on right half</strong> aim/shoot/build/med · <strong>Enter</strong> shoot · <strong>Shift</strong> build/med · <strong>/</strong> drop · <strong>.</strong> reload · F1–F5 or Numpad 1–5 · scroll on right half
         </span>
       </div>
@@ -1265,14 +1283,14 @@
       <button type="button" id="btnDeleteAccount" class="btn-delete-account">Delete this account from this device…</button>
     </div>
     <p id="help">
-      Move with <strong>WASD</strong> or <strong>arrow keys</strong>. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
-      <strong>Right-click</strong> at the cursor to place a <strong>wall</strong> when a gun is selected, or to <strong>drink medicine</strong> when a potion is selected (blocks shots, 5 hits to break). You get <strong>5 walls</strong>, then wait <strong>5 seconds</strong> to recharge.
-      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> go into your inventory (Bottle +25, Carton +50, Big Glugger Pot +75). Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Select a potion and <strong>right-click</strong> to drink it. <strong>Right-click</strong> with a gun selected to build a wall. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
-      Gun types: <strong>Shotguns</strong> — Tactical, Pump, Double Barrel, Combat, Auto. <strong>ARs</strong> — Assault Rifle, SCAR, FAMAS, AUG, Tactical AR, Heavy AR, Scoped AR. <strong>SMGs</strong> — SMG, Suppressed SMG, Rapid Fire SMG. <strong>LMGs</strong> — LMG, Minigun, Tommy Gun. <strong>Pistols</strong> — Pistol, Revolver, Auto Pistol. <strong>Snipers</strong> — Bolt Action, Heavy, Semi Auto. <strong>DMRs</strong> — DMR, Tactical DMR. <strong>RPG</strong> — explosive area damage. Each dot shows the <strong>gun and rarity</strong> it is holding.
+      Move with <strong>WASD</strong> or <strong>arrow keys</strong>. Hold <strong>Space</strong> to sprint until your energy runs out. Press <strong>F</strong> to scope: movement becomes very slow and an aim line appears on the minimap. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
+      Press <strong>R</strong> to switch between a <strong>5-material wall</strong> and a <strong>7-material slant</strong>. Press <strong>Z</strong> to switch between wood and stone, then <strong>right-click</strong> to place it on the gap-free grid. Builds cannot overlap. Right-click drinks a selected medicine or energy bar.
+      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> can contain Bottle +25, Carton +50, Big Glugger Pot +75, or an <strong>Energy Bar</strong> that refills sprint energy and temporarily boosts sprint speed. Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Shoot <strong>trees</strong> for wood and <strong>stones</strong> for stone. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
+      Gun types: <strong>Shotguns</strong> — Tactical, Pump, Double Barrel, Combat, Auto. <strong>ARs</strong> — Assault Rifle, SCAR, FAMAS, AUG, Tactical AR, Heavy AR, Scoped AR. <strong>SMGs</strong> — SMG, Suppressed SMG, Rapid Fire SMG, Heavy SMG. <strong>LMGs</strong> — LMG, Minigun, Tommy Gun. <strong>Pistols</strong> — Pistol, Revolver, Auto Pistol. <strong>Snipers</strong> — Bolt Action, Heavy, Semi Auto. <strong>DMRs</strong> — DMR, Tactical DMR. <strong>RPG</strong> — explosive area damage. Each dot shows the <strong>gun and rarity</strong> it is holding.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
       Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for <strong>Mythic</strong> versions of their guns. Chests give Common through Epic. Be the last dot alive to win.
-      The arena is <strong>huge</strong> — about <strong>50 seconds</strong> to run left to right at full speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
+      The arena is <strong>massive</strong> — about <strong>80 seconds</strong> to run left to right at normal speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
     </p>
     </div>
@@ -1340,7 +1358,8 @@
           <div id="healthBarFill"></div>
           <span id="healthLabel">200 / 200</span>
         </div>
-        <div id="wallChargesHud">Walls: 5 · Right-click to build</div>
+        <div id="energyBarWrap" title="Sprint energy"><div id="energyBarFill"></div></div>
+        <div id="wallChargesHud">Wood: 25 · Stone: 0 · R: Wall 5 · Z: Wood · F: Scope</div>
         <div id="ammoHud">Ammo: —</div>
         <div id="reloadHud">Before reload: —</div>
         <div id="teamChartHud" class="hidden" aria-label="Leaderboard">
@@ -1354,7 +1373,8 @@
           <div id="healthBarFillP2"></div>
           <span id="healthLabelP2">200 / 200</span>
         </div>
-        <div id="wallChargesHudP2">Walls: 5 · Right-click or Shift to build</div>
+        <div id="energyBarWrapP2" title="Sprint energy"><div id="energyBarFillP2"></div></div>
+        <div id="wallChargesHudP2">Wood: 25 · Stone: 0 · Wall 5 / Slant 7</div>
         <div id="ammoHudP2">Ammo: —</div>
         <div id="reloadHudP2">Before reload: —</div>
       </div>
@@ -1384,7 +1404,14 @@
   const SNIPER_BULLET_SPEED = 820;
   const SNIPER_BULLET_LIFE = 2.8;
   const DOT_SPEED = 200;
-  const MAP_CROSS_SECONDS = 50;
+  const MAX_ENERGY = 100;
+  const SPRINT_SPEED_MUL = 1.35;
+  const SPRINT_DRAIN_PER_SEC = 20;
+  const ENERGY_REGEN_PER_SEC = 12;
+  const ENERGY_BOOST_MS = 6000;
+  const ENERGY_BOOST_SPEED_MUL = 1.15;
+  const SCOPE_SPEED_MUL = 0.28;
+  const MAP_CROSS_SECONDS = 80;
   const WORLD_W = DOT_SPEED * MAP_CROSS_SECONDS;
   const WORLD_H = Math.round(WORLD_W * (4500 / 7200));
   const MAP_SCALE = WORLD_W / 7200;
@@ -1393,17 +1420,20 @@
   const KILL_AMMO = 20;
   const DOT_R = 10;
   const BOSS_R = 18;
-  const CHEST_COUNT = Math.round(40 * MAP_SCALE);
-  const MED_CHEST_COUNT = Math.round(28 * MAP_SCALE);
-  const AMMO_BASKET_COUNT = Math.round(24 * MAP_SCALE);
+  const CHEST_COUNT = Math.round(64 * MAP_SCALE);
+  const MED_CHEST_COUNT = Math.round(45 * MAP_SCALE);
+  const AMMO_BASKET_COUNT = Math.round(38 * MAP_SCALE);
   const GUN_START_AMMO = 50;
   const SPAWN_MIN_DIST = Math.round(280 * MAP_SCALE);
   const AI_AMMO_LOW = 18;
   const AI_AMMO_CRITICAL = 6;
+  const AI_INTEREST_RADIUS = 850;
+  const AI_GUN_UPGRADE_RATIO = 1.3;
   const BOSS_SPEED = 155;
   const BOSS_COUNT = 5;
   const SIGNATURE_BOSS_COUNT = 7;
-  const TEAM_MODE_FIGHTER_COUNT = 11;
+  const TEAM_MODE_FIGHTER_COUNT = 18;
+  const AI_STARTING_WOOD = 200;
   const PLAYER_TEAM_ID = 0;
   const TEAM_COLORS = ["#e63946", "#2d6a4f", "#e9c46a", "#457b9d", "#9b59b6", "#f4a261"];
   const TEAM_NAMES = ["Red", "Green", "Yellow", "Blue", "Violet", "Orange"];
@@ -1425,14 +1455,14 @@
     meowie: "meowie-character.png",
   };
 
-  const TOTAL_DOTS = 16 + SIGNATURE_BOSS_COUNT;
-  const GUN_GAME_FIGHTER_COUNT = 12;
+  const TOTAL_DOTS = 23 + SIGNATURE_BOSS_COUNT;
+  const GUN_GAME_FIGHTER_COUNT = 19;
   const SIGNATURE_BOSSES = [
     { name: "Dogshot", gunId: "revolver" },
     { name: "Snowstorm", gunId: "smg" },
     { name: "Swift", gunId: "famas" },
     { name: "Crackshot", gunId: "tactical_shotgun" },
-    { name: "Zeus", gunId: "auto_shotgun" },
+    { name: "Zeus", gunId: "tommy_gun" },
     { name: "Foxly", gunId: "scar" },
     { name: "Meowie", gunId: "rpg" },
   ];
@@ -1447,7 +1477,7 @@
     mythic:    { label: "Mythic",    color: "#ffd700", dmg: [90, 125], fireMs: 140, spread: 0.03 },
   };
   const GUN_IMAGE_DIR = "supergun_gun/";
-  const GUN_LOOT_W = 1 / 27;
+  const GUN_LOOT_W = 1 / 28;
   const GUN_IMAGE_NAMES = {
     pistol: "pistol",
     revolver: "revolver",
@@ -1455,6 +1485,7 @@
     smg: "submachine gun",
     suppressed_smg: "suppresed smg",
     rapid_fire_smg: "rapid fire smg",
+    heavy_smg: "heavy smg",
     tactical_shotgun: "tactical shotgun",
     pump_shotgun: "pump shotgun",
     double_barrel_shotgun: "double barrel shotgun",
@@ -1484,6 +1515,7 @@
     smg: ["submachine gun", "SMG", "smg"],
     suppressed_smg: ["suppresed smg", "suppressed smg", "Suppressed SMG"],
     rapid_fire_smg: ["rapid fire smg", "Rapid Fire SMG", "rapidfire smg"],
+    heavy_smg: ["heavy smg", "Heavy SMG", "heavysmg"],
     tactical_shotgun: ["tactical shotgun", "Tactical Shotgun"],
     pump_shotgun: ["pump shotgun", "Pump Shotgun"],
     double_barrel_shotgun: ["double barrel shotgun", "Double Barrel Shotgun", "double-barrel shotgun"],
@@ -1508,13 +1540,13 @@
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
   const GUN_TYPES = [
-    { id: "tactical_shotgun", label: "Tactical Shotgun", w: GUN_LOOT_W, rareDmg: 81, bloomPerShot: 12, shotsPerSec: 1.5, holdToShoot: false, rangeBand: "close", spreadMul: 1.35 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: GUN_LOOT_W, rareDmg: 93, bloomPerShot: 6, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "close", spreadMul: 1.4 },
-    { id: "double_barrel_shotgun", label: "Double Barrel Shotgun", w: GUN_LOOT_W, rareDmg: 58, bloomPerShot: 16, shotsPerSec: 3, holdToShoot: false, rangeBand: "very_close", spreadMul: 1.5 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: GUN_LOOT_W, rareDmg: 65, bloomPerShot: 14, shotsPerSec: 1.7, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.95 },
-    { id: "auto_shotgun", label: "Auto Shotgun", w: GUN_LOOT_W, rareDmg: 73, bloomPerShot: 14, shotsPerSec: 1.6, holdToShoot: true, rangeBand: "close", spreadMul: 1.2 },
+    { id: "tactical_shotgun", label: "Tactical Shotgun", w: GUN_LOOT_W, rareDmg: 81, bloomPerShot: 12, shotsPerSec: 1.5, holdToShoot: false, rangeBand: "close", spreadMul: 1.35, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: GUN_LOOT_W, rareDmg: 93, bloomPerShot: 6, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "close", spreadMul: 1.4, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "double_barrel_shotgun", label: "Double Barrel Shotgun", w: GUN_LOOT_W, rareDmg: 58, bloomPerShot: 16, shotsPerSec: 3, holdToShoot: false, rangeBand: "very_close", spreadMul: 1.5, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: GUN_LOOT_W, rareDmg: 65, bloomPerShot: 14, shotsPerSec: 1.7, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.95, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "auto_shotgun", label: "Auto Shotgun", w: GUN_LOOT_W, rareDmg: 73, bloomPerShot: 14, shotsPerSec: 1.6, holdToShoot: true, rangeBand: "close", spreadMul: 1.2, pellets: 5, pelletSpreadMul: 0.45 },
     { id: "assault_rifle", label: "Assault Rifle", w: GUN_LOOT_W, rareDmg: 32, bloomPerShot: 10, shotsPerSec: 5.5, holdToShoot: true, rangeBand: "all", spreadMul: 1 },
-    { id: "scar", label: "SCAR", w: GUN_LOOT_W, rareDmg: 38, bloomPerShot: 9, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.95 },
+    { id: "scar", label: "SCAR", w: GUN_LOOT_W, rareDmg: 37, bloomPerShot: 9, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.95 },
     { id: "famas", label: "FAMAS", w: GUN_LOOT_W, rareDmg: 35, bloomPerShot: 6, shotsPerSec: 5, holdToShoot: true, rangeBand: "close_mid", spreadMul: 0.88, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
     { id: "aug", label: "AUG", w: GUN_LOOT_W, rareDmg: 39, bloomPerShot: 5, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.82, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
     { id: "tactical_ar", label: "Tactical AR", w: GUN_LOOT_W, rareDmg: 21, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
@@ -1523,6 +1555,7 @@
     { id: "smg", label: "SMG", w: GUN_LOOT_W, rareDmg: 17, bloomPerShot: 16, shotsPerSec: 14, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.15 },
     { id: "suppressed_smg", label: "Suppressed SMG", w: GUN_LOOT_W, rareDmg: 24, bloomPerShot: 10, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 0.92 },
     { id: "rapid_fire_smg", label: "Rapid Fire SMG", w: GUN_LOOT_W, rareDmg: 14, bloomPerShot: 18, shotsPerSec: 16, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.25 },
+    { id: "heavy_smg", label: "Heavy SMG", w: GUN_LOOT_W, rareDmg: 21, bloomPerShot: 12, shotsPerSec: 12, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
     { id: "lmg", label: "LMG", w: GUN_LOOT_W, rareDmg: 25, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.28 },
     { id: "minigun", label: "Minigun", w: GUN_LOOT_W, rareDmg: 19, bloomPerShot: 17, shotsPerSec: 11, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.5, infiniteMag: true },
     { id: "tommy_gun", label: "Tommy Gun", w: GUN_LOOT_W, rareDmg: 22, bloomPerShot: 13, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
@@ -1553,6 +1586,7 @@
     smg: { magSize: 35, reloadSec: 2 },
     suppressed_smg: { magSize: 36, reloadSec: 2 },
     rapid_fire_smg: { magSize: 36, reloadSec: 1.65 },
+    heavy_smg: { magSize: 32, reloadSec: 2.1 },
     lmg: { magSize: 60, reloadSec: 4 },
     minigun: { magSize: 9999, reloadSec: 0 },
     tommy_gun: { magSize: 40, reloadSec: 3 },
@@ -1574,7 +1608,7 @@
     combat_shotgun: "Rare 65 dmg. Short-mid range. Click to shoot.",
     auto_shotgun: "Rare 73 dmg. Close range. Hold to shoot.",
     assault_rifle: "Rare 32 dmg. All range. Hold to shoot.",
-    scar: "Rare 38 dmg. All range. Hold to shoot.",
+    scar: "Rare 37 dmg. All range. Hold to shoot.",
     famas: "Rare 35 dmg. Close/mid. 5-round burst, 0.5s pause.",
     aug: "Rare 39 dmg. All range. 5-round burst, 0.5s pause.",
     tactical_ar: "Rare 21 dmg. Mid/short. Fast hold-to-shoot.",
@@ -1583,6 +1617,7 @@
     smg: "Rare 17 dmg. Mid-short. High bloom spray.",
     suppressed_smg: "Rare 24 dmg. Mid-short. Tighter SMG.",
     rapid_fire_smg: "Rare 14 dmg. Mid-short. Fastest SMG, heaviest bloom.",
+    heavy_smg: "Rare 21 dmg. Mid-short. 12/sec hold spray.",
     lmg: "Rare 25 dmg. Mid-short. 60-round hold spray.",
     minigun: "Rare 19 dmg. Mid-short. Infinite mag, high bloom.",
     tommy_gun: "Rare 22 dmg. Mid-short. 40-round hold spray.",
@@ -1616,14 +1651,16 @@
   const BOT_SPAWN_EXTRA_RARE_CHANCE = 0.12;
   const BOT_SPAWN_EXTRA_EPIC_CHANCE = 0.05;
   const MED_POTION_WEIGHTS = [
-    ["bottle", 0.40],
-    ["carton", 0.40],
-    ["glugger", 0.20],
+    ["bottle", 0.34],
+    ["carton", 0.34],
+    ["glugger", 0.17],
+    ["energy_bar", 0.15],
   ];
   const MED_POTIONS = {
     bottle: { label: "Bottle", color: "#9e9e9e", heal: 25 },
     carton: { label: "Carton", color: "#4caf50", heal: 50 },
     glugger: { label: "Big Glugger Pot", color: "#2196f3", heal: 75 },
+    energy_bar: { label: "Energy Bar", color: "#f6c344", heal: 0, energy: MAX_ENERGY, boostMs: ENERGY_BOOST_MS },
   };
   const AMMO_PICKUP_WEIGHTS = [
     ["common", 0.50],
@@ -1647,13 +1684,21 @@
     ["epic", 0.432],
     ["legendary", 0.318],
   ];
-  const WALL_MAX_CHARGES = 5;
-  const WALL_RECHARGE_MS = 5000;
+  const STARTING_WOOD = 25;
+  const WALL_WOOD_COST = 5;
+  const SLANT_WOOD_COST = 7;
   const WALL_MAX_HP = 5;
+  const TREE_COUNT = Math.round(100 * MAP_SCALE);
+  const STONE_COUNT = Math.round(65 * MAP_SCALE);
+  const HARVESTABLE_TYPES = {
+    tree: { radius: 18, hp: 150, yield: 25, material: "wood" },
+    stone: { radius: 16, hp: 200, yield: 25, material: "stone" },
+  };
   const RPG_EXPLODE_RADIUS = 115;
   const MEOWIE_RPG_EXPLODE_RADIUS = Math.round(RPG_EXPLODE_RADIUS * 1.15);
   const RPG_WALL_DMG = Math.ceil(WALL_MAX_HP / 2);
   const GRID_STEP = 80;
+  const BUILD_GRID_STEP = 100;
   const WALL_LENGTH = 100;
   const WALL_THICK = 14;
   const WALL_PLACE_MAX_DIST = 400;
@@ -1671,6 +1716,8 @@
   const hud = document.getElementById("hud");
   const healthBarFill = document.getElementById("healthBarFill");
   const healthLabel = document.getElementById("healthLabel");
+  const energyBarWrap = document.getElementById("energyBarWrap");
+  const energyBarFill = document.getElementById("energyBarFill");
   const wallChargesHud = document.getElementById("wallChargesHud");
   const ammoHud = document.getElementById("ammoHud");
   const reloadHud = document.getElementById("reloadHud");
@@ -1687,6 +1734,8 @@
   const hudP2 = document.getElementById("hudP2");
   const healthBarFillP2 = document.getElementById("healthBarFillP2");
   const healthLabelP2 = document.getElementById("healthLabelP2");
+  const energyBarWrapP2 = document.getElementById("energyBarWrapP2");
+  const energyBarFillP2 = document.getElementById("energyBarFillP2");
   const wallChargesHudP2 = document.getElementById("wallChargesHudP2");
   const ammoHudP2 = document.getElementById("ammoHudP2");
   const reloadHudP2 = document.getElementById("reloadHudP2");
@@ -1797,6 +1846,12 @@
   let dots = [];
   let chests = [];
   let bullets = [];
+  let nextShotId = 1;
+  const groupedShotHits = new WeakMap();
+  let gameAudioCtx = null;
+  let gameAudioMaster = null;
+  let gunshotNoiseBuffer = null;
+  let activeGunshotSounds = 0;
   let explosions = [];
   let groundGuns = [];
   const gunImageCache = {};
@@ -1807,6 +1862,7 @@
   let groundMeds = [];
   let damageTexts = [];
   let walls = [];
+  let harvestables = [];
   let player = null;
   let player2 = null;
   let matchStandings = [];
@@ -1826,14 +1882,13 @@
   let onlineMatchRole = null;
   let onlineOpponentName = "";
   let onlineOpponentColor = "#fdcb6e";
-  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, reload: false, useMed: false, build: false, drop: false, modulate: false, invIndex: 0 };
+  let remoteInput = { mx: 0, my: 0, aimX: 0, aimY: 0, shoot: false, sprint: false, scoped: false, buildMode: "wall", buildMaterial: "wood", reload: false, useMed: false, build: false, drop: false, invIndex: 0 };
   let lastStateSentAt = 0;
   let lastInputSentAt = 0;
   let pendingOnlineMed = false;
   let pendingOnlineBuild = false;
   let pendingOnlineDrop = false;
   let pendingOnlineReload = false;
-  let pendingOnlineModulate = false;
   const ONLINE_WS_PORT = 3847;
   const ONLINE_SERVER_URL = (() => {
     const meta = document.querySelector('meta[name="supergun-ws-url"]');
@@ -1885,7 +1940,7 @@
 
   const GAME_MODE_DESCRIPTIONS = {
     battle_royale: "Classic free-for-all. Be the last dot alive.",
-    teams: "2–6 teams, 11 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins.",
+    teams: "2–6 teams, 18 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins.",
     bedwars: "2–6 teams with wedge territories from the map center. Each team has a beacon — respawn with no gun while it stands. Enemy beacons break after 20 shots. Defenders stay in their wedge; attackers roam. Last team standing wins.",
     revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot.",
     gun_game: "Everyone starts on the first gun in the ladder. A kill moves you to the next gun. First player to get a kill with the last gun wins. Everyone respawns until that happens.",
@@ -2152,13 +2207,13 @@
     }
     if (menuModeTag) {
       if (mode === "battle_royale") {
-        menuModeTag.textContent = "16-dot arena · 7 hidden hunters · ~50s to cross · last dot wins";
+        menuModeTag.textContent = "23-dot arena · 7 hidden hunters · ~80s to cross · heavy building";
       } else if (mode === "teams") {
-        menuModeTag.textContent = "2–6 teams · 11 fighters · team chart + minimap";
+        menuModeTag.textContent = "2–6 teams · 18 fighters · heavy building · team chart";
       } else if (mode === "bedwars") {
-        menuModeTag.textContent = "Wedge territories · beacons · 20 shots breaks a beacon";
+        menuModeTag.textContent = "18 fighters · wedge territories · beacons · heavy building";
       } else if (mode === "gun_game") {
-        menuModeTag.textContent = "12-dot FFA · assigned guns · respawn · last-gun kill wins";
+        menuModeTag.textContent = "19-dot FFA · assigned guns · respawn · last-gun kill wins";
       } else {
         menuModeTag.textContent = "Revenge free-for-all · avenge your killer to respawn";
       }
@@ -2261,6 +2316,7 @@
     keys["arrowdown"] = false;
     keys["arrowleft"] = false;
     keys["arrowright"] = false;
+    keys[" "] = false;
   }
 
   function clearSpectateMode() {
@@ -3131,6 +3187,7 @@
     if (reload) {
       const parts = [];
       if (typeof meta.rareDmg === "number") parts.push(meta.rareDmg + " dmg");
+      if (meta.pellets > 1) parts.push(meta.pellets + " pellets");
       if (meta.shotsPerSec > 0) parts.push(meta.shotsPerSec + "/sec");
       if (meta.infiniteMag) parts.push("∞ mag");
       else parts.push(reload.magSize + " mag");
@@ -3686,7 +3743,7 @@
       w: meta.w,
       bloomPerShot: typeof meta.bloomPerShot === "number" ? meta.bloomPerShot : base.bloomPerShot,
     };
-    ["dmgMul", "dmgMulHi", "fireMul", "spreadMul", "burstSize", "burstShotMs", "burstPauseMs", "pellets", "rareDmg", "shotsPerSec", "holdToShoot", "rangeBand", "infiniteMag", "explodeRadiusMul"].forEach((key) => {
+    ["dmgMul", "dmgMulHi", "fireMul", "spreadMul", "burstSize", "burstShotMs", "burstPauseMs", "pellets", "pelletDmgMul", "pelletSpreadMul", "rareDmg", "shotsPerSec", "holdToShoot", "rangeBand", "infiniteMag", "explodeRadiusMul"].forEach((key) => {
       if (meta[key] != null) merged[key] = meta[key];
     });
     return merged;
@@ -3909,11 +3966,7 @@
     if (!gun || !isOverchargeShotgun(gun.type)) return;
     if (e.chargeGunType && e.chargeGunType !== gun.type) cancelOvercharge(e);
     if (e.chargeStartAt) return;
-    if (!hasInfiniteAmmo(e)) {
-      if (isEntityReloading(e, now)) return;
-      if (getReloadShotsLeft(gun) <= 0) return;
-      if (getGunAmmo(gun) <= 0) return;
-    }
+    if (gunBlockedByReloadOrAmmo(e, gun, now)) return;
     e.chargeStartAt = now;
     e.chargeGunType = gun.type;
   }
@@ -3972,6 +4025,7 @@
         const t = clamp(1 - distance / 360, 0, 1);
         return dmg * (0.82 + 0.22 * t);
       }
+      case "heavy_smg":
       case "suppressed_smg": {
         const t = clamp(1 - distance / 420, 0, 1);
         return dmg * (0.72 + 0.28 * t);
@@ -4057,6 +4111,28 @@
 
   function hasInfiniteAmmo(e) {
     return !!(e && (e.isAI || e.isBoss || isGunGameMode()));
+  }
+
+  function entityUsesMagazineReload(e) {
+    if (!e) return false;
+    if (isGunGameMode() && !e.isAI) return false;
+    return true;
+  }
+
+  function gunBlockedByReloadOrAmmo(e, gun, now) {
+    if (!gun) return true;
+    if (isInfiniteMagGun(gun)) return false;
+    if (entityUsesMagazineReload(e)) {
+      if (isEntityReloading(e, now)) return true;
+      if (getReloadShotsLeft(gun) <= 0) return true;
+    }
+    if (!hasInfiniteAmmo(e) && getGunAmmo(gun) <= 0) return true;
+    return false;
+  }
+
+  function shouldConsumeShotAmmo(e, gun) {
+    if (!gun || isInfiniteMagGun(gun)) return false;
+    return entityUsesMagazineReload(e) || !hasInfiniteAmmo(e);
   }
 
   function getGunReloadStats(typeId) {
@@ -4145,7 +4221,7 @@
   }
 
   function tryStartReload(e, now) {
-    if (!e || !e.alive || hasInfiniteAmmo(e)) return false;
+    if (!e || !e.alive || !entityUsesMagazineReload(e)) return false;
     if (isEntityReloading(e, now)) return false;
     const gun = currentGun(e);
     if (!gun || !canReloadGun(gun)) return false;
@@ -4163,7 +4239,7 @@
     const item = e.inventory[i];
     if (!item || !isGunItem(item)) return false;
     syncGunAmmoFields(item);
-    item.ammo = Math.max(0, getGunAmmo(item) - amount);
+    if (!hasInfiniteAmmo(e)) item.ammo = Math.max(0, getGunAmmo(item) - amount);
     item.reloadShotsLeft = Math.max(0, getReloadShotsLeft(item) - amount);
     e.inventory[i] = normalizeGun(item);
     return true;
@@ -4446,8 +4522,7 @@
   function estimateGunPower(gun, shotDistance) {
     const g = normalizeGun(gun);
     const meta = getGunTypeMeta(g.type);
-    const pellets = getPelletCount(g);
-    const dmg = gunExpectedDamageAtDistance(g, shotDistance) * pellets;
+    const dmg = gunExpectedDamageAtDistance(g, shotDistance);
     if (meta.burstSize > 1) {
       const burstTiming = getEffectiveBurstTiming(meta);
       const cycleMs = meta.burstSize * burstTiming.burstShotMs + burstTiming.burstPauseMs;
@@ -4469,24 +4544,33 @@
     }
     if (!slots.length) return;
     const armedSlots = slots.filter((i) => getGunAmmo(d.inventory[i]) > 0);
-    const pickFrom = armedSlots.length ? armedSlots : slots;
+    const readySlots = (armedSlots.length ? armedSlots : slots).filter((i) => {
+      const g = d.inventory[i];
+      return isInfiniteMagGun(g) || getReloadShotsLeft(g) > 0;
+    });
+    const pickFrom = readySlots.length ? readySlots : (armedSlots.length ? armedSlots : slots);
     if (Math.random() > 0.75) {
-      d.invIndex = pickFrom[randInt(0, pickFrom.length - 1)];
+      const next = pickFrom[randInt(0, pickFrom.length - 1)];
+      if (next !== d.invIndex) cancelEntityReload(d);
+      d.invIndex = next;
       return;
     }
     const shotDist = aiTargetDistance(d);
     let bestSlot = pickFrom[0];
     let bestScore = estimateGunPower(d.inventory[bestSlot], shotDist);
     if (getGunAmmo(d.inventory[bestSlot]) <= 0) bestScore *= 0.02;
+    if (!isInfiniteMagGun(d.inventory[bestSlot]) && getReloadShotsLeft(d.inventory[bestSlot]) <= 0) bestScore *= 0.12;
     for (let j = 1; j < pickFrom.length; j++) {
       const slot = pickFrom[j];
       let score = estimateGunPower(d.inventory[slot], shotDist);
       if (getGunAmmo(d.inventory[slot]) <= 0) score *= 0.02;
+      if (!isInfiniteMagGun(d.inventory[slot]) && getReloadShotsLeft(d.inventory[slot]) <= 0) score *= 0.12;
       if (score > bestScore) {
         bestScore = score;
         bestSlot = slot;
       }
     }
+    if (bestSlot !== d.invIndex) cancelEntityReload(d);
     d.invIndex = bestSlot;
   }
 
@@ -4600,15 +4684,23 @@
       burstPauseUntil: 0,
       burstGunType: null,
       aiTarget: null,
+      aiInvestigatingUntil: 0,
       aiWanderX: rand(pad, WORLD_W - pad),
       aiWanderY: rand(pad, WORLD_H - pad),
       aiRetargetAt: 0,
       aiWallCooldownUntil: 0,
+      aiLastReloadBoxAt: 0,
       kills: 0,
       finishPlace: null,
       lastMedUse: 0,
-      wallCharges: WALL_MAX_CHARGES,
+      wallCharges: opts.isAI ? AI_STARTING_WOOD : STARTING_WOOD,
+      stoneMaterials: 0,
       wallRechargeAt: 0,
+      buildMode: "wall",
+      buildMaterial: "wood",
+      energy: MAX_ENERGY,
+      energyBoostUntil: 0,
+      scoped: false,
       reloadUntil: 0,
       playerSlot: opts.playerSlot || 0,
       aimX: 1,
@@ -4985,11 +5077,13 @@
     dots = [];
     chests = [];
     bullets = [];
+    nextShotId = 1;
     explosions = [];
     groundGuns = [];
     groundMeds = [];
     damageTexts = [];
     walls = [];
+    harvestables = [];
     beds = [];
     revengeKilledBy = new Map();
     matchStandings = [];
@@ -5045,6 +5139,8 @@
     } else {
       nextId = spawnBattleRoyaleMatch(0);
     }
+
+    spawnHarvestables();
 
     if (rightHud) rightHud.classList.toggle("visible", twoPlayerMode);
     if (inventoryHudP2) inventoryHudP2.classList.toggle("visible", twoPlayerMode);
@@ -5217,17 +5313,16 @@
 
   function updateWallChargesHud(entity, hudEl) {
     if (!hudEl || !entity) return;
-    const now = performance.now();
-    updateEntityWallRecharge(entity, now);
     hudEl.classList.remove("recharging", "empty");
-    if (entity.wallCharges <= 0) {
-      const left = Math.max(0, (entity.wallRechargeAt - now) / 1000);
-      hudEl.textContent = "Walls recharging: " + left.toFixed(1) + "s";
-      hudEl.classList.add("recharging");
-    } else {
-      const buildHint = entity.playerSlot === 2 ? "Right-click or Shift to build" : "Right-click to build";
-      hudEl.textContent = "Walls: " + entity.wallCharges + " / " + WALL_MAX_CHARGES + " · " + buildHint;
-    }
+    const wood = Math.max(0, entity.wallCharges | 0);
+    const stone = Math.max(0, entity.stoneMaterials | 0);
+    const mode = entity.buildMode === "slant" ? "Slant 7" : "Wall 5";
+    const material = entity.buildMaterial === "stone" ? "Stone" : "Wood";
+    const available = material === "Stone" ? stone : wood;
+    const cost = entity.buildMode === "slant" ? SLANT_WOOD_COST : WALL_WOOD_COST;
+    const scope = entity.scoped ? "Scoped" : "Scope";
+    hudEl.textContent = "Wood: " + wood + " · Stone: " + stone + " · R: " + mode + " · Z: " + material + " · F: " + scope;
+    if (available < cost) hudEl.classList.add("empty");
   }
 
   function updateAmmoHud(entity) {
@@ -5326,6 +5421,8 @@
     healthBarFill.style.width = pct + "%";
     const hp = Math.ceil(player.health);
     healthLabel.textContent = hp + " / " + MAX_HEALTH;
+    if (energyBarFill) energyBarFill.style.width = clamp(player.energy / MAX_ENERGY, 0, 1) * 100 + "%";
+    if (energyBarWrap) energyBarWrap.classList.toggle("boosted", performance.now() < (player.energyBoostUntil || 0));
     const alive = dots.filter(d => d.alive);
     const modeLabel =
       gameMode === "teams" ? "Teams"
@@ -5362,6 +5459,8 @@
       const pct2 = clamp(player2.health / MAX_HEALTH, 0, 1) * 100;
       if (healthBarFillP2) healthBarFillP2.style.width = pct2 + "%";
       if (healthLabelP2) healthLabelP2.textContent = Math.ceil(player2.health) + " / " + MAX_HEALTH;
+      if (energyBarFillP2) energyBarFillP2.style.width = clamp(player2.energy / MAX_ENERGY, 0, 1) * 100 + "%";
+      if (energyBarWrapP2) energyBarWrapP2.classList.toggle("boosted", performance.now() < (player2.energyBoostUntil || 0));
       hudP2.innerHTML =
         '<div class="hud-name">' + player2Name + " (P2)</div>" +
         '<div class="hud-line">' + (isGunGameMode() ? gunGameProgressLine(player2) + " · " : "") +
@@ -5394,17 +5493,128 @@
     return isGunItem(item) ? normalizeGun(item) : null;
   }
 
+  function ensureGameAudio() {
+    if (gameAudioCtx) return gameAudioCtx;
+    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+    if (!AudioCtor) return null;
+    gameAudioCtx = new AudioCtor();
+    gameAudioMaster = gameAudioCtx.createDynamicsCompressor();
+    gameAudioMaster.threshold.value = -14;
+    gameAudioMaster.knee.value = 18;
+    gameAudioMaster.ratio.value = 10;
+    gameAudioMaster.attack.value = 0.003;
+    gameAudioMaster.release.value = 0.16;
+    gameAudioMaster.connect(gameAudioCtx.destination);
+
+    const sampleCount = Math.ceil(gameAudioCtx.sampleRate * 0.18);
+    gunshotNoiseBuffer = gameAudioCtx.createBuffer(1, sampleCount, gameAudioCtx.sampleRate);
+    const samples = gunshotNoiseBuffer.getChannelData(0);
+    for (let i = 0; i < sampleCount; i++) samples[i] = Math.random() * 2 - 1;
+    return gameAudioCtx;
+  }
+
+  function unlockGameAudio() {
+    const audio = ensureGameAudio();
+    if (audio && audio.state === "suspended") audio.resume().catch(() => {});
+  }
+
+  function getGunSoundProfile(gun) {
+    const type = resolveGunBehaviorType((gun && gun.type) || "");
+    if (type === "suppressed_smg") return { volume: 0.025, pitch: 185, duration: 0.045, cutoff: 1700 };
+    if (type === "rpg") return { volume: 0.22, pitch: 55, duration: 0.16, cutoff: 850 };
+    if (type === "heavy_sniper") return { volume: 0.2, pitch: 62, duration: 0.15, cutoff: 1150 };
+    if (type === "bolt_action_sniper") return { volume: 0.17, pitch: 70, duration: 0.13, cutoff: 1400 };
+    if (type === "semi_auto_sniper") return { volume: 0.14, pitch: 82, duration: 0.1, cutoff: 1600 };
+    if (type.includes("shotgun")) {
+      const pumpBoost = type === "pump_shotgun" || type === "double_barrel_shotgun" ? 0.02 : 0;
+      return { volume: 0.13 + pumpBoost, pitch: 74, duration: 0.105, cutoff: 1450 };
+    }
+    if (type === "revolver") return { volume: 0.105, pitch: 92, duration: 0.085, cutoff: 1900 };
+    if (type === "heavy_ar") return { volume: 0.095, pitch: 88, duration: 0.08, cutoff: 1750 };
+    if (type === "lmg" || type === "minigun" || type === "tommy_gun" || type === "heavy_smg") {
+      return { volume: 0.08, pitch: 100, duration: 0.065, cutoff: 1900 };
+    }
+    if (type.includes("sniper") || type === "dmr" || type === "tactical_dmr") {
+      return { volume: 0.11, pitch: 85, duration: 0.09, cutoff: 1700 };
+    }
+    if (type.includes("assault_rifle") || type === "scar" || type === "famas" || type === "aug" || type === "tactical_ar") {
+      return { volume: 0.07, pitch: 112, duration: 0.06, cutoff: 2100 };
+    }
+    if (type.includes("smg") || type === "auto_pistol") {
+      return { volume: 0.045, pitch: 145, duration: 0.045, cutoff: 2450 };
+    }
+    return { volume: 0.055, pitch: 130, duration: 0.055, cutoff: 2300 };
+  }
+
+  function playGunshotSound(shooter, gun) {
+    const audio = ensureGameAudio();
+    if (!audio || audio.state !== "running" || !gameAudioMaster || !gunshotNoiseBuffer) return;
+    if (activeGunshotSounds >= 36) return;
+    const profile = getGunSoundProfile(gun);
+    const listeners = [player, twoPlayerMode ? player2 : null].filter(Boolean);
+    let nearest = listeners[0] || shooter;
+    let shotDist = 0;
+    if (shooter && listeners.length) {
+      shotDist = Infinity;
+      for (const listener of listeners) {
+        const dd = dist(shooter.x, shooter.y, listener.x, listener.y);
+        if (dd < shotDist) {
+          shotDist = dd;
+          nearest = listener;
+        }
+      }
+    }
+    const audibleRange = 650 + profile.volume * 5500;
+    if (shotDist >= audibleRange) return;
+    const falloff = Math.pow(1 - shotDist / audibleRange, 1.65);
+    const volume = Math.max(0.0001, profile.volume * falloff);
+    const start = audio.currentTime;
+    const output = typeof audio.createStereoPanner === "function" ? audio.createStereoPanner() : audio.createGain();
+    if (output.pan && shooter && nearest) {
+      output.pan.value = clamp((shooter.x - nearest.x) / 650, -0.85, 0.85);
+    }
+    output.connect(gameAudioMaster);
+
+    const noise = audio.createBufferSource();
+    const filter = audio.createBiquadFilter();
+    const noiseGain = audio.createGain();
+    noise.buffer = gunshotNoiseBuffer;
+    filter.type = "lowpass";
+    filter.frequency.value = profile.cutoff;
+    noiseGain.gain.setValueAtTime(volume, start);
+    noiseGain.gain.exponentialRampToValueAtTime(0.0001, start + profile.duration);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(output);
+
+    const thump = audio.createOscillator();
+    const thumpGain = audio.createGain();
+    thump.type = "triangle";
+    thump.frequency.setValueAtTime(profile.pitch, start);
+    thump.frequency.exponentialRampToValueAtTime(Math.max(35, profile.pitch * 0.48), start + profile.duration);
+    thumpGain.gain.setValueAtTime(volume * 0.7, start);
+    thumpGain.gain.exponentialRampToValueAtTime(0.0001, start + profile.duration);
+    thump.connect(thumpGain);
+    thumpGain.connect(output);
+
+    activeGunshotSounds++;
+    noise.onended = () => {
+      activeGunshotSounds = Math.max(0, activeGunshotSounds - 1);
+      output.disconnect();
+    };
+    noise.start(start);
+    noise.stop(start + profile.duration);
+    thump.start(start);
+    thump.stop(start + profile.duration);
+  }
+
   function fireOverchargeShot(e, aimX, aimY, now, chargeSec, accuracy) {
     const gun = currentGun(e);
     if (!gun || !isOverchargeShotgun(gun.type)) return;
-    if (!hasInfiniteAmmo(e)) {
-      if (isEntityReloading(e, now)) return;
-      if (getReloadShotsLeft(gun) <= 0) return;
-      if (getGunAmmo(gun) <= 0) return;
-    }
+    if (gunBlockedByReloadOrAmmo(e, gun, now)) return;
     if (now - e.lastShot < getEntityFireMs(e, gun)) return;
     e.lastShot = now;
-    if (!hasInfiniteAmmo(e)) consumeGunAmmo(e, 1);
+    if (shouldConsumeShotAmmo(e, gun)) consumeGunAmmo(e, 1);
     if (e.isPlayer) updateAmmoHud(e);
     let ang = Math.atan2(aimY - e.y, aimX - e.x);
     if (e.isAI) {
@@ -5429,6 +5639,7 @@
       color: gun.color,
       life: 2.4,
     });
+    playGunshotSound(e, gun);
     recordLocalGunShot(e, gun);
   }
 
@@ -5440,11 +5651,7 @@
       if (e.semiShotLocked) return;
       e.semiShotLocked = true;
     }
-    if (!hasInfiniteAmmo(e) && !isInfiniteMagGun(gun)) {
-      if (isEntityReloading(e, now)) return;
-      if (getReloadShotsLeft(gun) <= 0) return;
-      if (getGunAmmo(gun) <= 0) return;
-    }
+    if (gunBlockedByReloadOrAmmo(e, gun, now)) return;
     const meta = getGunTypeMeta(gun.type);
     const burstSize = meta.burstSize || 0;
     const burstTiming = burstSize > 1 ? getEffectiveBurstTiming(meta) : null;
@@ -5474,7 +5681,7 @@
       ? getModulatedDamageMul(getModulatedHeavyMode(e))
       : null;
     e.lastShot = now;
-    if (!hasInfiniteAmmo(e) && !isInfiniteMagGun(gun)) consumeGunAmmo(e, 1);
+    if (shouldConsumeShotAmmo(e, gun)) consumeGunAmmo(e, 1);
     addBloomOnShot(e, gun);
     if (e.isPlayer) updateAmmoHud(e);
     if (burstSize > 1) {
@@ -5491,20 +5698,19 @@
     const explosive = isExplosiveGun(gun);
     const spd = explosive ? 420 : (isSniperGun(gun.type) ? SNIPER_BULLET_SPEED : 520);
     const pellets = getPelletCount(gun);
-    const pelletDmgMul = meta.pelletDmgMul || (pellets > 1 ? 1 / pellets : 1);
+    const shotId = nextShotId++;
     const shotSpread = getEffectiveSpread(e, gun);
     for (let pi = 0; pi < pellets; pi++) {
       let pelletAng = ang;
       if (pellets > 1) {
-        pelletAng += rand(-shotSpread * 1.8, shotSpread * 1.8);
+        const pelletSpread = shotSpread * (meta.pelletSpreadMul || 1.8);
+        pelletAng += rand(-pelletSpread, pelletSpread);
       } else {
         pelletAng += rand(-shotSpread, shotSpread);
       }
       const pelletGun = pellets > 1
         ? {
             ...gun,
-            dmgMin: Math.max(1, Math.round(gun.dmgMin * pelletDmgMul)),
-            dmgMax: Math.max(1, Math.round(gun.dmgMax * pelletDmgMul)),
             ...(overdriveScale != null ? { overdriveScale } : {}),
             ...(modulatedScale != null ? { modulatedScale } : {}),
           }
@@ -5521,12 +5727,15 @@
         vx: Math.cos(pelletAng) * spd,
         vy: Math.sin(pelletAng) * spd,
         ownerId: e.id,
+        shotId,
+        groupedPellet: pellets > 1,
         gun: pelletGun,
         explosive,
         color: explosive ? (isMeowieRpg(gun) ? gun.color : "#ff6b35") : gun.color,
         life: explosive ? 3.2 : (isSniperGun(gun.type) ? SNIPER_BULLET_LIFE : 2.4),
       });
     }
+    playGunshotSound(e, gun);
     recordLocalGunShot(e, gun);
   }
 
@@ -5629,16 +5838,27 @@
   }
 
   function snapToGrid(v) {
-    return Math.round(v / GRID_STEP) * GRID_STEP;
+    return Math.round(v / BUILD_GRID_STEP) * BUILD_GRID_STEP;
   }
 
   function getSnappedWallPlacement(e, wx, wy) {
-    const sx = snapToGrid(wx);
-    const sy = snapToGrid(wy);
-    const dx = sx - e.x;
-    const dy = sy - e.y;
-    const angle = Math.abs(dx) >= Math.abs(dy) ? Math.PI * 0.5 : 0;
-    return { x: sx, y: sy, angle };
+    const slant = e.buildMode === "slant";
+    const rawDx = wx - e.x;
+    const rawDy = wy - e.y;
+    const angle = slant
+      ? (rawDx * rawDy >= 0 ? Math.PI * 0.75 : Math.PI * 0.25)
+      : (Math.abs(rawDx) >= Math.abs(rawDy) ? Math.PI * 0.5 : 0);
+    const halfSnap = (v) => (Math.round(v / BUILD_GRID_STEP - 0.5) + 0.5) * BUILD_GRID_STEP;
+    const sx = slant || angle === 0 ? halfSnap(wx) : snapToGrid(wx);
+    const sy = slant || angle !== 0 ? halfSnap(wy) : snapToGrid(wy);
+    return {
+      x: sx,
+      y: sy,
+      angle,
+      slant,
+      len: slant ? WALL_LENGTH * Math.SQRT2 : WALL_LENGTH,
+      cost: slant ? SLANT_WOOD_COST : WALL_WOOD_COST,
+    };
   }
 
   function wallExtentRadius(w) {
@@ -5646,7 +5866,43 @@
   }
 
   function wallOverlaps(w1, w2) {
-    return dist(w1.x, w1.y, w2.x, w2.y) < wallExtentRadius(w1) + wallExtentRadius(w2) + 10;
+    function endpoints(w) {
+      const dx = Math.cos(w.angle) * w.len * 0.5;
+      const dy = Math.sin(w.angle) * w.len * 0.5;
+      return [
+        { x: w.x - dx, y: w.y - dy },
+        { x: w.x + dx, y: w.y + dy },
+      ];
+    }
+    const ends1 = endpoints(w1);
+    const ends2 = endpoints(w2);
+    if (ends1.some((a) => ends2.some((b) => dist(a.x, a.y, b.x, b.y) < 1))) return false;
+    function corners(w) {
+      const c = Math.cos(w.angle);
+      const s = Math.sin(w.angle);
+      const hx = w.len * 0.5;
+      const hy = w.thick * 0.5;
+      return [
+        { x: w.x + c * hx - s * hy, y: w.y + s * hx + c * hy },
+        { x: w.x - c * hx - s * hy, y: w.y - s * hx + c * hy },
+        { x: w.x - c * hx + s * hy, y: w.y - s * hx - c * hy },
+        { x: w.x + c * hx + s * hy, y: w.y + s * hx - c * hy },
+      ];
+    }
+    const a = corners(w1);
+    const b = corners(w2);
+    const axes = [
+      { x: Math.cos(w1.angle), y: Math.sin(w1.angle) },
+      { x: -Math.sin(w1.angle), y: Math.cos(w1.angle) },
+      { x: Math.cos(w2.angle), y: Math.sin(w2.angle) },
+      { x: -Math.sin(w2.angle), y: Math.cos(w2.angle) },
+    ];
+    for (const axis of axes) {
+      const pa = a.map((p) => p.x * axis.x + p.y * axis.y);
+      const pb = b.map((p) => p.x * axis.x + p.y * axis.y);
+      if (Math.max(...pa) <= Math.min(...pb) + 0.01 || Math.max(...pb) <= Math.min(...pa) + 0.01) return false;
+    }
+    return true;
   }
 
   function bulletHitsWall(b, w) {
@@ -5688,6 +5944,18 @@
       return true;
     }
     return clip(-dx, a.x + hl) && clip(dx, hl - a.x) && clip(-dy, a.y + ht) && clip(dy, ht - a.y);
+  }
+
+  function bulletPathHitsCircle(x0, y0, x1, y1, cx, cy, radius) {
+    const dx = x1 - x0;
+    const dy = y1 - y0;
+    const len2 = dx * dx + dy * dy;
+    const t = len2 > 0
+      ? clamp(((cx - x0) * dx + (cy - y0) * dy) / len2, 0, 1)
+      : 0;
+    const px = x0 + dx * t;
+    const py = y0 + dy * t;
+    return dist(px, py, cx, cy) <= radius + 3;
   }
 
   const MAP_IDS = ["none", "arena", "canyon", "storage", "maze", "pyramids", "coral", "chilltown"];
@@ -5953,7 +6221,85 @@
     for (const w of walls) {
       if (circleHitsWall(x, y, rad, w)) return true;
     }
+    for (const node of harvestables) {
+      if (dist(x, y, node.x, node.y) < rad + node.radius) return true;
+    }
     return false;
+  }
+
+  function spawnHarvestables() {
+    const specs = [
+      ["tree", TREE_COUNT],
+      ["stone", STONE_COUNT],
+    ];
+    for (const [type, count] of specs) {
+      const meta = HARVESTABLE_TYPES[type];
+      for (let i = 0; i < count; i++) {
+        let x = 0;
+        let y = 0;
+        let placed = false;
+        for (let attempt = 0; attempt < 100; attempt++) {
+          x = rand(50, WORLD_W - 50);
+          y = rand(50, WORLD_H - 50);
+          if (pointBlockedByWalls(x, y, meta.radius + 8)) continue;
+          if (dots.some((d) => dist(x, y, d.x, d.y) < meta.radius + d.radius + 80)) continue;
+          placed = true;
+          break;
+        }
+        if (!placed) continue;
+        harvestables.push({
+          type,
+          x,
+          y,
+          radius: meta.radius,
+          hp: meta.hp,
+          maxHp: meta.hp,
+          yield: meta.yield,
+          material: meta.material,
+          angle: rand(-Math.PI, Math.PI),
+        });
+      }
+    }
+  }
+
+  function awardHarvestMaterials(owner, node) {
+    if (!owner || !owner.alive) return;
+    const material = node.material || (node.type === "tree" ? "wood" : "stone");
+    if (material === "wood") {
+      owner.wallCharges = Math.max(0, owner.wallCharges | 0) + node.yield;
+    } else {
+      owner.stoneMaterials = Math.max(0, owner.stoneMaterials | 0) + node.yield;
+    }
+    damageTexts.push({
+      x: node.x,
+      y: node.y - node.radius - 10,
+      text: "+" + node.yield + " " + material.toUpperCase(),
+      color: node.type === "tree" ? "#8bd17c" : "#d0d0d0",
+      life: 0.9,
+      maxLife: 0.9,
+      big: !!owner.isPlayer,
+    });
+    if (owner.isPlayer) updateHud();
+  }
+
+  function damageHarvestable(index, amount, owner) {
+    const node = harvestables[index];
+    if (!node) return;
+    node.hp -= amount;
+    if (node.hp <= 0) {
+      awardHarvestMaterials(owner, node);
+      harvestables.splice(index, 1);
+      return;
+    }
+    damageTexts.push({
+      x: node.x + rand(-5, 5),
+      y: node.y - node.radius - 5,
+      text: String(Math.max(0, Math.ceil(node.hp))),
+      color: node.type === "tree" ? "#9ccc65" : "#bbb",
+      life: 0.45,
+      maxLife: 0.45,
+      big: false,
+    });
   }
 
   function triggerExplosion(b, shotOwner) {
@@ -5982,6 +6328,14 @@
         big: false,
       });
       if (wall.hp <= 0) walls.splice(w, 1);
+    }
+
+    for (let h = harvestables.length - 1; h >= 0; h--) {
+      const node = harvestables[h];
+      if (dist(b.x, b.y, node.x, node.y) > radius + node.radius) continue;
+      const nodeDist = dist(b.x, b.y, node.x, node.y);
+      const harvestDmg = Math.max(1, Math.round(centerDmg * (1 - nodeDist / (radius + node.radius)) * 0.85));
+      damageHarvestable(h, harvestDmg, shotOwner);
     }
 
     for (const d of dots) {
@@ -6056,6 +6410,22 @@
       let moved = false;
       for (const w of walls) {
         if (pushEntityOutOfWall(e, w)) moved = true;
+      }
+      for (const node of harvestables) {
+        let dx = e.x - node.x;
+        let dy = e.y - node.y;
+        let d = Math.hypot(dx, dy);
+        const minDist = e.radius + node.radius;
+        if (d >= minDist) continue;
+        if (d < 1e-6) {
+          dx = 1;
+          dy = 0;
+          d = 1;
+        }
+        const push = minDist - d + 0.01;
+        e.x += (dx / d) * push;
+        e.y += (dy / d) * push;
+        moved = true;
       }
       e.x = clamp(e.x, e.radius, WORLD_W - e.radius);
       e.y = clamp(e.y, e.radius, WORLD_H - e.radius);
@@ -6157,44 +6527,51 @@
   }
 
   function updateEntityWallRecharge(e, now) {
-    if (!e) return;
-    if (e.wallCharges <= 0 && now >= e.wallRechargeAt) {
-      e.wallCharges = WALL_MAX_CHARGES;
-      e.wallRechargeAt = 0;
-    }
+    // Building now spends harvested wood instead of regenerating charges.
+  }
+
+  function getSelectedBuildMaterialAmount(e) {
+    return e && e.buildMaterial === "stone"
+      ? Math.max(0, e.stoneMaterials | 0)
+      : Math.max(0, e && e.wallCharges | 0);
   }
 
   function tryPlaceWallForEntity(e, wx, wy, now) {
-    if (!e || !e.alive || e.wallCharges <= 0) return false;
-    updateEntityWallRecharge(e, now);
-    if (e.wallCharges <= 0) return false;
-    const ext = wallExtentRadius({ len: WALL_LENGTH, thick: WALL_THICK });
+    if (!e || !e.alive) return false;
     const snapped = getSnappedWallPlacement(e, wx, wy);
+    const material = e.buildMaterial === "stone" ? "stone" : "wood";
+    const available = material === "stone" ? (e.stoneMaterials | 0) : (e.wallCharges | 0);
+    if (available < snapped.cost) return false;
+    const ext = wallExtentRadius({ len: snapped.len, thick: WALL_THICK });
     wx = clamp(snapped.x, ext + 4, WORLD_W - ext - 4);
     wy = clamp(snapped.y, ext + 4, WORLD_H - ext - 4);
     if (dist(e.x, e.y, wx, wy) > WALL_PLACE_MAX_DIST) return false;
     if (dist(e.x, e.y, wx, wy) < e.radius + ext + 4) return false;
     const wallAngle = snapped.angle;
-    const candidate = { x: wx, y: wy, len: WALL_LENGTH, thick: WALL_THICK, angle: wallAngle };
+    const candidate = { x: wx, y: wy, len: snapped.len, thick: WALL_THICK, angle: wallAngle };
     for (const w of walls) {
       if (wallOverlaps(candidate, w)) return false;
     }
     for (const d of dots) {
-      if (!d.alive) continue;
-      if (dist(wx, wy, d.x, d.y) < d.radius + ext - 2) return false;
+      if (d.alive && circleHitsWall(d.x, d.y, d.radius, candidate)) return false;
+    }
+    for (const node of harvestables) {
+      if (circleHitsWall(node.x, node.y, node.radius, candidate)) return false;
     }
     walls.push({
       x: wx,
       y: wy,
-      len: WALL_LENGTH,
+      len: snapped.len,
       thick: WALL_THICK,
       angle: wallAngle,
       hp: WALL_MAX_HP,
       maxHp: WALL_MAX_HP,
+      buildType: snapped.slant ? "slant" : "wall",
+      buildMaterial: material,
       ownerId: e.id,
     });
-    e.wallCharges--;
-    if (e.wallCharges <= 0) e.wallRechargeAt = now + WALL_RECHARGE_MS;
+    if (material === "stone") e.stoneMaterials -= snapped.cost;
+    else e.wallCharges -= snapped.cost;
     return true;
   }
 
@@ -6203,9 +6580,61 @@
     return tryPlaceWallForEntity(player, mouseWorldX, mouseWorldY, now);
   }
 
+  function aiBoxUpForReload(d, now) {
+    if (!d || d.wallCharges < WALL_WOOD_COST) return 0;
+    if (now - (d.aiLastReloadBoxAt || 0) < 2500) return 0;
+    d.aiLastReloadBoxAt = now;
+
+    const x0 = Math.floor(d.x / BUILD_GRID_STEP) * BUILD_GRID_STEP;
+    const y0 = Math.floor(d.y / BUILD_GRID_STEP) * BUILD_GRID_STEP;
+    const x1 = x0 + BUILD_GRID_STEP;
+    const y1 = y0 + BUILD_GRID_STEP;
+    const candidates = [
+      { x: (x0 + x1) * 0.5, y: y0, angle: 0 },
+      { x: (x0 + x1) * 0.5, y: y1, angle: 0 },
+      { x: x0, y: (y0 + y1) * 0.5, angle: Math.PI * 0.5 },
+      { x: x1, y: (y0 + y1) * 0.5, angle: Math.PI * 0.5 },
+    ];
+    let built = 0;
+    for (const c of candidates) {
+      if (d.wallCharges < WALL_WOOD_COST) break;
+      const wall = {
+        x: c.x,
+        y: c.y,
+        len: WALL_LENGTH,
+        thick: WALL_THICK,
+        angle: c.angle,
+        hp: WALL_MAX_HP,
+        maxHp: WALL_MAX_HP,
+        buildType: "wall",
+        ownerId: d.id,
+      };
+      if (c.x < 0 || c.x > WORLD_W || c.y < 0 || c.y > WORLD_H) continue;
+      if (walls.some((w) => wallOverlaps(wall, w))) continue;
+      if (dots.some((other) => other.alive && other.id !== d.id && circleHitsWall(other.x, other.y, other.radius, wall))) continue;
+      if (circleHitsWall(d.x, d.y, d.radius, wall)) continue;
+      if (harvestables.some((node) => circleHitsWall(node.x, node.y, node.radius, wall))) continue;
+      walls.push(wall);
+      d.wallCharges -= WALL_WOOD_COST;
+      built++;
+    }
+    if (built > 0) {
+      damageTexts.push({
+        x: d.x,
+        y: d.y - d.radius - 22,
+        text: "BOX + RELOAD",
+        color: "#9ad4ff",
+        life: 0.75,
+        maxLife: 0.75,
+        big: false,
+      });
+    }
+    return built;
+  }
+
   function aiTryBuildWall(d, now, tune) {
-    updateEntityWallRecharge(d, now);
-    if (d.wallCharges <= 0 || now < d.aiWallCooldownUntil) return;
+    // Keep enough wood in reserve for a four-wall emergency reload box.
+    if (d.wallCharges < WALL_WOOD_COST * 5 || now < d.aiWallCooldownUntil) return;
 
     let tgt = d.aiTarget;
     if (!tgt || !tgt.alive) {
@@ -6221,7 +6650,7 @@
 
     const hpRatio = d.health / d.maxHealth;
     const hurt = hpRatio < 0.55;
-    const buildRoll = 0.05 + tune.accuracy * 0.1 + (d.isBoss ? 0.06 : 0);
+    const buildRoll = 0.28 + tune.accuracy * 0.22 + (d.isBoss ? 0.12 : 0);
     if (!hurt && Math.random() > buildRoll) return;
 
     const t = 0.28 + rand(0, 0.2);
@@ -6229,7 +6658,7 @@
     const wy = d.y + (tgt.y - d.y) * t;
 
     if (tryPlaceWallForEntity(d, wx, wy, now)) {
-      d.aiWallCooldownUntil = now + rand(1400, 3800);
+      d.aiWallCooldownUntil = now + rand(350, 1050);
     }
   }
 
@@ -6240,7 +6669,15 @@
   function makeMedChestPotion() {
     const id = pickWeighted(MED_POTION_WEIGHTS);
     const p = MED_POTIONS[id];
-    return { itemKind: "med", id, label: p.label, color: p.color, heal: p.heal };
+    return {
+      itemKind: "med",
+      id,
+      label: p.label,
+      color: p.color,
+      heal: p.heal || 0,
+      energy: p.energy || 0,
+      boostMs: p.boostMs || 0,
+    };
   }
 
   function makeAmmoBasket() {
@@ -6274,7 +6711,7 @@
   function applyPotionToEntity(e, potion) {
     if (!e || !e.alive || !potion) return 0;
     const before = e.health;
-    e.health = clamp(e.health + potion.heal, 0, e.maxHealth);
+    e.health = clamp(e.health + (potion.heal || 0), 0, e.maxHealth);
     const gained = Math.round(e.health - before);
     if (gained > 0) {
       damageTexts.push({
@@ -6294,10 +6731,26 @@
     const item = currentItem(e);
     if (!e || !e.alive || !isMedItem(item)) return false;
     if (now - (e.lastMedUse || 0) < MED_USE_MS) return false;
-    if (e.health >= e.maxHealth) return false;
+    const isEnergyBar = (item.energy || 0) > 0 || (item.boostMs || 0) > 0;
+    if (!isEnergyBar && e.health >= e.maxHealth) return false;
+    if (isEnergyBar && e.energy >= MAX_ENERGY && now < (e.energyBoostUntil || 0)) return false;
     e.lastMedUse = now;
     const gained = applyPotionToEntity(e, item);
-    if (gained <= 0) return false;
+    if (isEnergyBar) {
+      e.energy = clamp(e.energy + (item.energy || MAX_ENERGY), 0, MAX_ENERGY);
+      e.energyBoostUntil = now + (item.boostMs || ENERGY_BOOST_MS);
+      damageTexts.push({
+        x: e.x,
+        y: e.y - e.radius - 20,
+        text: "ENERGY BOOST",
+        color: "#ffe66d",
+        life: 1,
+        maxLife: 1,
+        big: !!e.isPlayer,
+      });
+    } else if (gained <= 0) {
+      return false;
+    }
     e.inventory[e.invIndex] = null;
     let next = -1;
     for (let i = 0; i < INV_SLOTS; i++) {
@@ -6315,6 +6768,7 @@
     if (d.health >= d.maxHealth * 0.92) return;
     for (let i = 0; i < INV_SLOTS; i++) {
       if (!isMedItem(d.inventory[i])) continue;
+      if ((d.inventory[i].energy || 0) > 0) continue;
       const prev = d.invIndex;
       d.invIndex = i;
       if (tryUseMed(d, now)) return;
@@ -6814,11 +7268,32 @@
     }
   }
 
-  function applyEntityMovement(e, mx, my, dt) {
+  function updateEntityEnergy(e, moving, dt, wantsSprint) {
+    if (typeof e.energy !== "number") e.energy = MAX_ENERGY;
+    if (!wantsSprint) e.sprintExhausted = false;
+    if (e.energy <= 0) e.sprintExhausted = true;
+    if (e.sprintExhausted && e.energy >= 20) e.sprintExhausted = false;
+    const sprinting = !!(moving && wantsSprint && !e.scoped && !e.sprintExhausted && e.energy > 0);
+    if (sprinting) {
+      e.energy = Math.max(0, e.energy - SPRINT_DRAIN_PER_SEC * dt);
+    } else {
+      e.energy = Math.min(MAX_ENERGY, e.energy + ENERGY_REGEN_PER_SEC * dt);
+    }
+    if (!sprinting) return e.scoped ? SCOPE_SPEED_MUL : 1;
+    const boosted = performance.now() < (e.energyBoostUntil || 0);
+    return SPRINT_SPEED_MUL * (boosted ? ENERGY_BOOST_SPEED_MUL : 1);
+  }
+
+  function applyEntityMovement(e, mx, my, dt, opts) {
+    opts = opts || {};
+    const moving = mx !== 0 || my !== 0;
+    const speedMul = e.isPlayer
+      ? updateEntityEnergy(e, moving, dt, !!opts.sprint)
+      : 1;
     if (mx !== 0 || my !== 0) {
       const len = Math.hypot(mx, my) || 1;
-      e.x += (mx / len) * e.speed * dt;
-      e.y += (my / len) * e.speed * dt;
+      e.x += (mx / len) * e.speed * speedMul * dt;
+      e.y += (my / len) * e.speed * speedMul * dt;
       e.aimX = mx / len;
       e.aimY = my / len;
     }
@@ -6843,7 +7318,7 @@
       if (keys["arrowleft"]) mx -= 1;
       if (keys["arrowright"]) mx += 1;
     }
-    applyEntityMovement(player, mx, my, dt);
+    applyEntityMovement(player, mx, my, dt, { sprint: keys[" "] });
 
     const gun = currentGun(player);
     if (!shootMouseDown) player.semiShotLocked = false;
@@ -6884,7 +7359,10 @@
     if (!onlineMode || !onlineHost || !player2 || !player2.alive || !remoteInput) return;
     const ri = remoteInput;
     updateEntityReload(player2, now);
-    applyEntityMovement(player2, ri.mx || 0, ri.my || 0, dt);
+    player2.scoped = !!ri.scoped;
+    player2.buildMode = ri.buildMode === "slant" ? "slant" : "wall";
+    player2.buildMaterial = ri.buildMaterial === "stone" ? "stone" : "wood";
+    applyEntityMovement(player2, ri.mx || 0, ri.my || 0, dt, { sprint: !!ri.sprint });
     const gun = currentGun(player2);
     if (!ri.shoot) player2.semiShotLocked = false;
     if (gun && isOverchargeShotgun(gun.type)) {
@@ -6896,7 +7374,6 @@
       if (ri.shoot && gun) tryShoot(player2, ri.aimX, ri.aimY, now, 1);
     }
     if (ri.reload) tryStartReload(player2, now);
-    if (ri.modulate) toggleModulatedMode(player2);
     if (ri.useMed) tryUseMed(player2, now);
     if (ri.build) tryPlaceWallForEntity(player2, ri.aimX, ri.aimY, now);
     if (ri.drop) dropCurrentWeapon(player2);
@@ -6910,7 +7387,16 @@
   function serializeInvSlot(item) {
     if (!item) return null;
     if (isMedItem(item)) {
-      return { kind: "med", color: item.color, label: item.label, heal: item.heal, itemKind: "med" };
+      return {
+        kind: "med",
+        id: item.id,
+        color: item.color,
+        label: item.label,
+        heal: item.heal,
+        energy: item.energy || 0,
+        boostMs: item.boostMs || 0,
+        itemKind: "med",
+      };
     }
     if (isGunItem(item)) {
       const g = normalizeGun(item);
@@ -6935,7 +7421,15 @@
   function hydrateInvSlot(data) {
     if (!data) return null;
     if (data.kind === "med") {
-      return { itemKind: "med", color: data.color, label: data.label, heal: data.heal };
+      return {
+        itemKind: "med",
+        id: data.id,
+        color: data.color,
+        label: data.label,
+        heal: data.heal,
+        energy: data.energy || 0,
+        boostMs: data.boostMs || 0,
+      };
     }
     if (data.kind === "gun") {
       return normalizeGun({ ...data, rarity: data.rarity });
@@ -6957,7 +7451,13 @@
         kills: player2.kills,
         invIndex: player2.invIndex,
         wallCharges: player2.wallCharges,
+        stoneMaterials: player2.stoneMaterials || 0,
         wallRechargeAt: player2.wallRechargeAt,
+        energy: player2.energy,
+        energyBoostUntil: player2.energyBoostUntil || 0,
+        scoped: !!player2.scoped,
+        buildMode: player2.buildMode || "wall",
+        buildMaterial: player2.buildMaterial || "wood",
         reloadUntil: player2.reloadUntil || 0,
         modulatedHeavy: !!player2.modulatedHeavy,
         inventory: player2.inventory.map(serializeInvSlot),
@@ -6987,8 +7487,9 @@
       walls: walls.map((w) => ({
         x: w.x, y: w.y, len: w.len, thick: w.thick, angle: w.angle, hp: w.hp, maxHp: w.maxHp,
         mapWall: !!w.mapWall, indestructible: !!w.indestructible, light: !!w.light,
-        fill: w.fill, stroke: w.stroke, mini: w.mini,
+        fill: w.fill, stroke: w.stroke, mini: w.mini, buildMaterial: w.buildMaterial || "wood",
       })),
+      harvestables: harvestables.map((node) => ({ ...node })),
       chests: chests.map((c) => ({ x: c.x, y: c.y, open: !!c.open, kind: c.kind })),
       groundGuns: groundGuns.map((g) => ({ x: g.x, y: g.y, gun: serializeInvSlot(g.gun) })),
       groundMeds: groundMeds.map((m) => ({ x: m.x, y: m.y, potion: serializeInvSlot(m.potion) })),
@@ -7017,7 +7518,13 @@
       player.alive = gv.alive;
       player.kills = gv.kills;
       player.wallCharges = gv.wallCharges;
+      player.stoneMaterials = gv.stoneMaterials || 0;
       player.wallRechargeAt = gv.wallRechargeAt;
+      player.energy = typeof gv.energy === "number" ? gv.energy : MAX_ENERGY;
+      player.energyBoostUntil = gv.energyBoostUntil || 0;
+      player.scoped = !!gv.scoped;
+      player.buildMode = gv.buildMode === "slant" ? "slant" : "wall";
+      player.buildMaterial = gv.buildMaterial === "stone" ? "stone" : "wood";
       player.reloadUntil = gv.reloadUntil || 0;
       if (typeof gv.modulatedHeavy === "boolean") player.modulatedHeavy = gv.modulatedHeavy;
       if (gv.inventory) player.inventory = gv.inventory.map(hydrateInvSlot);
@@ -7074,6 +7581,7 @@
     }
     bullets = (state.bullets || []).map((b) => ({ ...b, ox: b.x, oy: b.y, life: 1 }));
     walls = (state.walls || []).map((w) => ({ ...w, maxHp: w.maxHp || WALL_MAX_HP }));
+    harvestables = (state.harvestables || []).map((node) => ({ ...node }));
     chests = (state.chests || []).map((c) => ({ ...c, gun: null, potion: null }));
     groundGuns = (state.groundGuns || []).map((g) => ({
       x: g.x,
@@ -7112,8 +7620,11 @@
       aimX: mouseWorldX,
       aimY: mouseWorldY,
       shoot: !!shootMouseDown,
+      sprint: !!keys[" "],
+      scoped: !!(player && player.scoped),
+      buildMode: player && player.buildMode === "slant" ? "slant" : "wall",
+      buildMaterial: player && player.buildMaterial === "stone" ? "stone" : "wood",
       reload: pendingOnlineReload,
-      modulate: pendingOnlineModulate,
       useMed: pendingOnlineMed,
       build: pendingOnlineBuild,
       drop: pendingOnlineDrop,
@@ -7127,7 +7638,6 @@
     pendingOnlineBuild = false;
     pendingOnlineDrop = false;
     pendingOnlineReload = false;
-    pendingOnlineModulate = false;
     return input;
   }
 
@@ -7148,7 +7658,7 @@
     if (keys["arrowdown"]) my += 1;
     if (keys["arrowleft"]) mx -= 1;
     if (keys["arrowright"]) mx += 1;
-    applyEntityMovement(player, mx, my, dt);
+    applyEntityMovement(player, mx, my, dt, { sprint: keys[" "] });
     const vw = viewHalfW();
     camX = clamp(player.x - vw * 0.5, 0, Math.max(0, WORLD_W - vw));
     camY = clamp(player.y - VIEW_H * 0.5, 0, Math.max(0, WORLD_H - VIEW_H));
@@ -7578,11 +8088,13 @@
     dots = [];
     chests = [];
     bullets = [];
+    nextShotId = 1;
     explosions = [];
     groundGuns = [];
     groundMeds = [];
     damageTexts = [];
     walls = [];
+    harvestables = [];
     matchStandings = [];
     killFeed = [];
     player = spawnDot({ id: 9999, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
@@ -7645,19 +8157,59 @@
     lastInputSentAt = now;
   }
 
-  function aiHasInventorySpace(d) {
+  function aiGroundGunPickupSlot(d, groundGun) {
+    if (!d || !groundGun || !groundGun.gun) return -1;
+    const candidate = normalizeGun(groundGun.gun);
+    if (!candidate) return -1;
+    if (d.isBoss && !isRareOrStronger(candidate.rarity)) return -1;
     for (let i = 0; i < INV_SLOTS; i++) {
-      if (!d.inventory[i]) return true;
+      if (!d.inventory[i]) return i;
     }
-    return false;
+    if (!d.isBoss && isBossOnlyRarity(candidate.rarity)) return -1;
+
+    const shotDist = aiTargetDistance(d);
+    const candidatePower = estimateGunPower(candidate, shotDist);
+    let worstSlot = -1;
+    let worstPower = Infinity;
+    for (let i = 0; i < INV_SLOTS; i++) {
+      const held = d.inventory[i];
+      if (!held || !isGunItem(held)) continue;
+      const power = estimateGunPower(held, shotDist);
+      if (power < worstPower) {
+        worstPower = power;
+        worstSlot = i;
+      }
+    }
+    if (worstSlot < 0 || candidatePower < worstPower * AI_GUN_UPGRADE_RATIO) return -1;
+    return worstSlot;
   }
 
   function aiShouldChaseGroundGun(d, g, now) {
     if (!g || !g.gun || !canPickupGroundGun(d, g, now)) return false;
-    if (!aiHasInventorySpace(d)) return false;
-    const gun = normalizeGun(g.gun);
+    return aiGroundGunPickupSlot(d, g) >= 0;
+  }
+
+  function aiTakeGroundGun(d, g, now) {
+    const slot = aiGroundGunPickupSlot(d, g);
+    if (slot < 0) return false;
+    let gun = normalizeGun(g.gun);
     if (!gun) return false;
-    if (d.isBoss && !isRareOrStronger(gun.rarity)) return false;
+    if (!d.isBoss) gun = fitGunForRegularBot(gun);
+    const replaced = d.inventory[slot];
+    cancelEntityReload(d);
+    d.inventory[slot] = gun;
+    d.invIndex = slot;
+    if (replaced && isGunItem(replaced)) {
+      groundGuns.push({
+        x: d.x + rand(-12, 12),
+        y: d.y + rand(-12, 12),
+        gun: normalizeGun(replaced),
+        life: null,
+        noPickupId: d.id,
+        noPickupUntil: now + 3000,
+      });
+    }
+    aiSelectWeapon(d);
     return true;
   }
 
@@ -7673,6 +8225,28 @@
       }
     }
     return best;
+  }
+
+  function aiNearestInterestingChest(d, maxDist) {
+    if (!d || d.isBoss) return null;
+    let best = null;
+    let bestDist = maxDist != null ? maxDist : Infinity;
+    for (const ch of chests) {
+      if (ch.open || ch.kind === "ammo") continue;
+      const dd = dist(d.x, d.y, ch.x, ch.y);
+      if (dd < bestDist) {
+        bestDist = dd;
+        best = ch;
+      }
+    }
+    return best;
+  }
+
+  function aiInvestigatePoint(d, x, y, now) {
+    d.aiWanderX = x;
+    d.aiWanderY = y;
+    d.aiTarget = null;
+    d.aiInvestigatingUntil = now + 3000;
   }
 
   function aiNearestEnemy(d, maxDist) {
@@ -7707,6 +8281,10 @@
     if (!d.alive) return;
     const tune = aiTune;
     sanitizeBossInventory(d);
+    if (isEntityReloading(d, now)) {
+      resolveEntityWallCollisions(d);
+      return;
+    }
 
     if (spectateMode) {
       const nearestFoe = aiNearestEnemy(d);
@@ -7744,8 +8322,6 @@
       const inCombat = foeDist < 520;
       const medChestNear = chests.filter(c => !c.open && c.kind === "med").sort((a, b) =>
         dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
-      const gunChestNear = chests.filter(c => !c.open && c.kind === "gun").sort((a, b) =>
-        dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y))[0];
       const ammoInfo = aiAmmoRefillInfo(d);
       const ammoSeekRange = ammoInfo.critical ? 720 : 620;
       const ammoBasketNear = ammoInfo.needs ? aiNearestAmmoBasket(d, ammoSeekRange) : null;
@@ -7753,12 +8329,11 @@
         ? dist(d.x, d.y, ammoBasketNear.x, ammoBasketNear.y)
         : Infinity;
       const ammoSafeToSeek = !inCombat || (ammoInfo.critical && foeDist > 280);
-      const gunNear = aiNearestChaseableGroundGun(d, now, 320);
+      const gunNear = aiNearestChaseableGroundGun(d, now, AI_INTEREST_RADIUS);
+      const interestingChest = aiNearestInterestingChest(d, AI_INTEREST_RADIUS);
 
-      if (!inCombat && gunNear && dist(d.x, d.y, gunNear.x, gunNear.y) < 260) {
-        d.aiWanderX = gunNear.x;
-        d.aiWanderY = gunNear.y;
-        d.aiTarget = null;
+      if (!inCombat && gunNear) {
+        aiInvestigatePoint(d, gunNear.x, gunNear.y, now);
       } else if (
         !inCombat &&
         !d.isBoss &&
@@ -7766,9 +8341,7 @@
         medChestNear &&
         dist(d.x, d.y, medChestNear.x, medChestNear.y) < 620
       ) {
-        d.aiWanderX = medChestNear.x;
-        d.aiWanderY = medChestNear.y;
-        d.aiTarget = null;
+        aiInvestigatePoint(d, medChestNear.x, medChestNear.y, now);
       } else if (
         ammoInfo.needs &&
         ammoBasketNear &&
@@ -7779,10 +8352,8 @@
         d.aiWanderY = ammoBasketNear.y;
         d.aiTarget = null;
         aiPrepareForAmmoPickup(d);
-      } else if (!inCombat && !d.isBoss && gunChestNear && dist(d.x, d.y, gunChestNear.x, gunChestNear.y) < 520 && !currentGun(d)) {
-        d.aiWanderX = gunChestNear.x;
-        d.aiWanderY = gunChestNear.y;
-        d.aiTarget = null;
+      } else if (!inCombat && interestingChest) {
+        aiInvestigatePoint(d, interestingChest.x, interestingChest.y, now);
       } else if (enemies.length) {
         const tgt = aiPickHuntTarget(d, tune) || nearestFoe;
         d.aiTarget = tgt;
@@ -7798,8 +8369,11 @@
       aiSelectWeapon(d);
     }
 
+    if (now < (d.aiInvestigatingUntil || 0) && dist(d.x, d.y, d.aiWanderX, d.aiWanderY) < 26) {
+      d.aiInvestigatingUntil = 0;
+    }
     const chaseFoe = aiNearestEnemy(d, spectateMode ? Infinity : 1800);
-    if (chaseFoe) {
+    if (chaseFoe && now >= (d.aiInvestigatingUntil || 0)) {
       const chaseDist = dist(d.x, d.y, chaseFoe.x, chaseFoe.y);
       if (!aiShouldDeferChaseForAmmo(d, chaseFoe, chaseDist)) {
         d.aiTarget = chaseFoe;
@@ -7839,6 +8413,24 @@
     }
   }
 
+  function aiHandleReload(d, now) {
+    if (!entityUsesMagazineReload(d) || isEntityReloading(d, now)) return;
+    const gun = currentGun(d);
+    if (gun && (isInfiniteMagGun(gun) || getReloadShotsLeft(gun) > 0)) return;
+    for (let i = 0; i < INV_SLOTS; i++) {
+      if (i === d.invIndex) continue;
+      const item = d.inventory[i];
+      if (!item || !isGunItem(item)) continue;
+      if (isInfiniteMagGun(item) || getReloadShotsLeft(item) > 0) {
+        cancelEntityReload(d);
+        d.invIndex = i;
+        return;
+      }
+    }
+    aiBoxUpForReload(d, now);
+    tryStartReload(d, now);
+  }
+
   function updateAIInteractions(d, now) {
     if (!d.alive) return;
     const tune = aiTune;
@@ -7854,10 +8446,7 @@
         const g = groundGuns[i];
         if (!aiShouldChaseGroundGun(d, g, now)) continue;
         if (dist(d.x, d.y, g.x, g.y) < d.radius + 14) {
-          if (addGunToEntity(d, g.gun, { dropIfFull: false })) {
-            aiSelectWeapon(d);
-            groundGuns.splice(i, 1);
-          }
+          if (aiTakeGroundGun(d, g, now)) groundGuns.splice(i, 1);
         }
       }
       for (let i = groundMeds.length - 1; i >= 0; i--) {
@@ -7869,7 +8458,11 @@
       }
     }
 
-    const gun = currentGun(d);
+    let gun = currentGun(d);
+    if (gun) {
+      aiHandleReload(d, now);
+      gun = currentGun(d);
+    }
     if (gun) {
       if (!isOverchargeShotgun(gun.type)) {
         d.aiOverchargeStartAt = 0;
@@ -7881,7 +8474,7 @@
           .sort((a, b) => dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
         aim = foes[0];
       }
-      if (aim) {
+      if (aim && !isEntityReloading(d, now)) {
         d.aiTarget = aim;
         const shootChance = spectateMode ? 0.98 : 0.48;
         if (dist(d.x, d.y, aim.x, aim.y) < (isSniperGun(gun.type) ? Math.max(tune.shootRange, getSniperFarRange() + 40) : tune.shootRange) && Math.random() < shootChance) {
@@ -7915,6 +8508,19 @@
     }
   }
 
+  function groupedShotAlreadyHit(target, bullet) {
+    if (!target || !bullet || !bullet.groupedPellet) return false;
+    let recentShots = groupedShotHits.get(target);
+    if (!recentShots) {
+      recentShots = [];
+      groupedShotHits.set(target, recentShots);
+    }
+    if (recentShots.includes(bullet.shotId)) return true;
+    recentShots.push(bullet.shotId);
+    if (recentShots.length > 16) recentShots.shift();
+    return false;
+  }
+
   function updateBullets(dt, now) {
     for (let i = bullets.length - 1; i >= 0; i--) {
       const b = bullets[i];
@@ -7932,6 +8538,11 @@
       for (let w = walls.length - 1; w >= 0; w--) {
         const wall = walls[w];
         if (!bulletPathHitsWall(prevX, prevY, b.x, b.y, wall)) continue;
+        if (groupedShotAlreadyHit(wall, b)) {
+          bullets.splice(i, 1);
+          hitWall = true;
+          break;
+        }
         if (b.explosive) {
           triggerExplosion(b, shotOwner);
         } else if (wall.indestructible) {
@@ -7964,12 +8575,37 @@
       }
       if (hitWall) continue;
 
+      for (let h = harvestables.length - 1; h >= 0; h--) {
+        const node = harvestables[h];
+        if (!bulletPathHitsCircle(prevX, prevY, b.x, b.y, node.x, node.y, node.radius)) continue;
+        if (groupedShotAlreadyHit(node, b)) {
+          bullets.splice(i, 1);
+          hitWall = true;
+          break;
+        }
+        if (b.explosive) {
+          triggerExplosion(b, shotOwner);
+        } else {
+          const hitDist = dist(b.ox, b.oy, b.x, b.y);
+          damageHarvestable(h, gunDamage(b.gun, hitDist), shotOwner);
+        }
+        bullets.splice(i, 1);
+        hitWall = true;
+        break;
+      }
+      if (hitWall) continue;
+
       if (gameMode === "bedwars" && beds.length) {
         for (let bi = 0; bi < beds.length; bi++) {
           const bed = beds[bi];
           if (bed.hp <= 0) continue;
           if (shotOwner && shotOwner.teamId != null && shotOwner.teamId === bed.teamId) continue;
           if (dist(b.x, b.y, bed.x, bed.y) > BEACON_VIS_RADIUS) continue;
+          if (groupedShotAlreadyHit(bed, b)) {
+            bullets.splice(i, 1);
+            hitWall = true;
+            break;
+          }
           bed.hp -= 1;
           damageTexts.push({
             x: bed.x + rand(-8, 8),
@@ -7992,6 +8628,10 @@
         if (!d.alive || d.id === b.ownerId) continue;
         if (shotOwner && areTeammates(shotOwner, d)) continue;
         if (dist(b.x, b.y, d.x, d.y) < d.radius + 3) {
+          if (groupedShotAlreadyHit(d, b)) {
+            bullets.splice(i, 1);
+            break;
+          }
           if (b.explosive) {
             triggerExplosion(b, shotOwner);
             bullets.splice(i, 1);
@@ -8127,6 +8767,32 @@
         mctx.stroke();
       }
     }
+
+    for (const d of dots) {
+      if (!d.alive || !d.isPlayer || !d.scoped) continue;
+      let ax = d.aimX || 1;
+      let ay = d.aimY || 0;
+      if (d === player) {
+        ax = mouseWorldX - d.x;
+        ay = mouseWorldY - d.y;
+      } else if (d === player2 && p2MouseOnPane) {
+        ax = mouseWorldX2 - d.x;
+        ay = mouseWorldY2 - d.y;
+      }
+      const len = Math.hypot(ax, ay) || 1;
+      const reach = Math.max(WORLD_W, WORLD_H);
+      mctx.strokeStyle = d === player2 ? "rgba(253,203,110,0.9)" : "rgba(138,212,255,0.9)";
+      mctx.lineWidth = 1.5;
+      mctx.beginPath();
+      mctx.moveTo(pad + d.x * sx, pad + d.y * sy);
+      mctx.lineTo(pad + (d.x + ax / len * reach) * sx, pad + (d.y + ay / len * reach) * sy);
+      mctx.stroke();
+    }
+
+    for (const node of harvestables) {
+      mctx.fillStyle = node.type === "tree" ? "#397a42" : "#888";
+      mctx.fillRect(pad + node.x * sx - 1, pad + node.y * sy - 1, 2, 2);
+    }
     mctx.strokeStyle = "rgba(255,255,255,0.85)";
     mctx.lineWidth = 1;
     const vw = viewHalfW();
@@ -8171,6 +8837,47 @@
     ctx.strokeStyle = "#3a3a55";
     ctx.lineWidth = 4;
     ctx.strokeRect(2, 2, WORLD_W - 4, WORLD_H - 4);
+
+    for (const node of harvestables) {
+      ctx.save();
+      ctx.translate(node.x, node.y);
+      ctx.rotate(node.angle || 0);
+      if (node.type === "tree") {
+        ctx.fillStyle = "#6d4c2f";
+        ctx.fillRect(-4, -3, 8, 19);
+        ctx.fillStyle = "#235c32";
+        ctx.beginPath();
+        ctx.arc(-8, -7, 12, 0, Math.PI * 2);
+        ctx.arc(7, -10, 13, 0, Math.PI * 2);
+        ctx.arc(1, 2, 14, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#3f824c";
+        ctx.lineWidth = 2;
+        ctx.stroke();
+      } else {
+        ctx.fillStyle = "#777d82";
+        ctx.strokeStyle = "#aeb4b8";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(-15, 8);
+        ctx.lineTo(-11, -9);
+        ctx.lineTo(2, -15);
+        ctx.lineTo(15, -5);
+        ctx.lineTo(12, 11);
+        ctx.lineTo(-3, 15);
+        ctx.closePath();
+        ctx.fill();
+        ctx.stroke();
+      }
+      if (node.hp < node.maxHp) {
+        const w = node.radius * 2;
+        ctx.fillStyle = "#222";
+        ctx.fillRect(-w / 2, -node.radius - 8, w, 4);
+        ctx.fillStyle = node.type === "tree" ? "#70ad62" : "#aaa";
+        ctx.fillRect(-w / 2, -node.radius - 8, w * (node.hp / node.maxHp), 4);
+      }
+      ctx.restore();
+    }
 
     for (const ch of chests) {
       if (ch.open) continue;
@@ -8255,7 +8962,13 @@
           w.indestructible ? null : (w.maxHp ? w.hp / w.maxHp : null)
         );
       } else {
-        drawWallShape(w, "#3d4555", "#6a7a94", w.hp / w.maxHp);
+        const stoneBuild = w.buildMaterial === "stone";
+        drawWallShape(
+          w,
+          stoneBuild ? "#666a70" : "#6b4932",
+          stoneBuild ? "#aeb4bd" : "#a8754e",
+          w.hp / w.maxHp
+        );
       }
     }
 
@@ -8305,30 +9018,32 @@
       }
     }
 
-    if (opts.p1WallPreview && player && player.alive && player.wallCharges > 0 && !isMedItem(currentItem(player))) {
-      const ext = wallExtentRadius({ len: WALL_LENGTH, thick: WALL_THICK });
+    if (opts.p1WallPreview && player && player.alive && getSelectedBuildMaterialAmount(player) >= WALL_WOOD_COST && !isMedItem(currentItem(player))) {
       const snapped = getSnappedWallPlacement(player, mouseWorldX, mouseWorldY);
+      const ext = wallExtentRadius({ len: snapped.len, thick: WALL_THICK });
       const px = clamp(snapped.x, ext, WORLD_W - ext);
       const py = clamp(snapped.y, ext, WORLD_H - ext);
-      const inRange = dist(player.x, player.y, px, py) <= WALL_PLACE_MAX_DIST;
+      const inRange = dist(player.x, player.y, px, py) <= WALL_PLACE_MAX_DIST && getSelectedBuildMaterialAmount(player) >= snapped.cost;
+      const stoneBuild = player.buildMaterial === "stone";
       drawWallShape(
-        { x: px, y: py, len: WALL_LENGTH, thick: WALL_THICK, angle: snapped.angle },
-        inRange ? "rgba(61,69,85,0.55)" : "rgba(80,40,40,0.45)",
-        inRange ? "rgba(120,180,255,0.5)" : "rgba(255,100,100,0.4)",
+        { x: px, y: py, len: snapped.len, thick: WALL_THICK, angle: snapped.angle },
+        inRange ? (stoneBuild ? "rgba(102,106,112,0.55)" : "rgba(107,73,50,0.55)") : "rgba(80,40,40,0.45)",
+        inRange ? (stoneBuild ? "rgba(174,180,189,0.6)" : "rgba(168,117,78,0.6)") : "rgba(255,100,100,0.4)",
         null
       );
     }
 
-    if (opts.p2WallPreview && player2 && player2.alive && player2.wallCharges > 0 && !isMedItem(currentItem(player2))) {
-      const ext = wallExtentRadius({ len: WALL_LENGTH, thick: WALL_THICK });
+    if (opts.p2WallPreview && player2 && player2.alive && getSelectedBuildMaterialAmount(player2) >= WALL_WOOD_COST && !isMedItem(currentItem(player2))) {
       const snapped = getSnappedWallPlacement(player2, mouseWorldX2, mouseWorldY2);
+      const ext = wallExtentRadius({ len: snapped.len, thick: WALL_THICK });
       const px = clamp(snapped.x, ext, WORLD_W - ext);
       const py = clamp(snapped.y, ext, WORLD_H - ext);
-      const inRange = dist(player2.x, player2.y, px, py) <= WALL_PLACE_MAX_DIST;
+      const inRange = dist(player2.x, player2.y, px, py) <= WALL_PLACE_MAX_DIST && getSelectedBuildMaterialAmount(player2) >= snapped.cost;
+      const stoneBuild = player2.buildMaterial === "stone";
       drawWallShape(
-        { x: px, y: py, len: WALL_LENGTH, thick: WALL_THICK, angle: snapped.angle },
-        inRange ? "rgba(61,69,85,0.55)" : "rgba(80,40,40,0.45)",
-        inRange ? "rgba(253,203,110,0.55)" : "rgba(255,100,100,0.4)",
+        { x: px, y: py, len: snapped.len, thick: WALL_THICK, angle: snapped.angle },
+        inRange ? (stoneBuild ? "rgba(102,106,112,0.55)" : "rgba(107,73,50,0.55)") : "rgba(80,40,40,0.45)",
+        inRange ? (stoneBuild ? "rgba(174,180,189,0.6)" : "rgba(168,117,78,0.6)") : "rgba(255,100,100,0.4)",
         null
       );
     }
@@ -8418,9 +9133,10 @@
       ctx.fillText(d.name, d.x, d.y + d.radius + 12);
       const held = currentGun(d);
       if (held) {
-        ctx.fillStyle = held.color || "#bbb";
+        const reloading = isEntityReloading(d, performance.now());
+        ctx.fillStyle = reloading ? "#9a9a9a" : (held.color || "#bbb");
         ctx.font = "9px system-ui";
-        ctx.fillText(formatGunLabel(held), d.x, d.y + d.radius + 23);
+        ctx.fillText(reloading ? "reload" : formatGunLabel(held), d.x, d.y + d.radius + 23);
       }
       if (opts.spectateHighlightId != null && d.id === opts.spectateHighlightId) {
         ctx.strokeStyle = "rgba(255,255,255,0.95)";
@@ -8535,6 +9251,7 @@
     if (twoPlayerMode) updatePlayer2(dt, now);
     else if (onlineMode && onlineHost) updateOnlineRemotePlayer(dt, now);
     for (const d of dots) {
+      if (d.isAI && d.alive) updateEntityReload(d, now);
       if (d.isAI) updateAIMovement(d, dt, now);
     }
     for (const d of dots) {
@@ -8773,6 +9490,9 @@
   canvas.addEventListener("mousemove", updateMouseFromEvent);
   canvas.addEventListener("mouseleave", () => { p2MouseOnPane = false; });
   canvas.addEventListener("contextmenu", (e) => e.preventDefault());
+  window.addEventListener("pointerdown", unlockGameAudio, { once: true, capture: true });
+  window.addEventListener("keydown", unlockGameAudio, { once: true, capture: true });
+
   canvas.addEventListener("mousedown", (e) => {
     const rect = canvas.getBoundingClientRect();
     const sx = (e.clientX - rect.left) * (VIEW_W / rect.width);
@@ -8852,6 +9572,7 @@
       }
     }
     keys[k] = true;
+    if (e.code === "Space") e.preventDefault();
     if (twoPlayerMode && running && (k === "enter" || e.code === "NumpadEnter")) {
       p2ShootHeld = true;
       e.preventDefault();
@@ -8911,13 +9632,31 @@
       return;
     }
 
+    if (e.code === "KeyR" && !e.repeat) {
+      e.preventDefault();
+      if (player && player.alive) {
+        player.buildMode = player.buildMode === "slant" ? "wall" : "slant";
+        updateWallChargesHud(player, wallChargesHud);
+        if (onlineMode && !onlineHost) flushGuestInput();
+      }
+      return;
+    }
+
+    if (e.code === "KeyZ" && !e.repeat) {
+      e.preventDefault();
+      if (player && player.alive) {
+        player.buildMaterial = player.buildMaterial === "stone" ? "wood" : "stone";
+        updateWallChargesHud(player, wallChargesHud);
+        if (onlineMode && !onlineHost) flushGuestInput();
+      }
+      return;
+    }
+
     if (e.code === "KeyF" && !e.repeat) {
       e.preventDefault();
-      if (onlineMode && !onlineHost) {
-        pendingOnlineModulate = true;
-        flushGuestInput();
-      } else if (player && player.alive) {
-        toggleModulatedMode(player);
+      if (player && player.alive) {
+        player.scoped = !player.scoped;
+        if (onlineMode && !onlineHost) flushGuestInput();
       }
       return;
     }

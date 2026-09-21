@@ -143,6 +143,15 @@ mag: 36
 reload: 1.65 
 hold to shoot: yes
 
+Heavy SMG
+damage: 21
+bloom: +12
+fire speed: 12
+range: mid - short
+mag: 32
+reload: 2.1
+hold to shoot: yes
+
 ======== LMGS ========
 
 LMG

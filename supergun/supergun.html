@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="local-2026-06-29b" />
+  <meta name="supergun-build" content="2026-09-23-xp-shop" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -254,6 +254,87 @@
       white-space: nowrap;
     }
     #hud .hud-line strong { color: #ddd; }
+    #stormHud {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: #d9c4ff;
+      text-shadow: 0 1px 4px #000;
+      line-height: 1.3;
+    }
+    #xpFeed {
+      position: fixed;
+      left: 50%;
+      top: 18%;
+      transform: translateX(-50%);
+      z-index: 40;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+      min-width: 180px;
+    }
+    .xp-toast {
+      font-family: system-ui, sans-serif;
+      font-weight: 800;
+      font-size: 1.12rem;
+      letter-spacing: 0.03em;
+      color: #d8ffb0;
+      text-shadow: 0 2px 0 #000, 0 0 10px rgba(0,0,0,0.85);
+      animation: xpPop 2.35s ease-out forwards;
+      white-space: nowrap;
+    }
+    .xp-toast .xp-amt { color: #ffe66d; }
+    .xp-toast.xp-double { color: #ffd56a; font-size: 1.2rem; }
+    .xp-toast.xp-place { color: #9ad4ff; }
+    .xp-toast.xp-level { color: #fff; font-size: 1.28rem; }
+    @keyframes xpPop {
+      0% { opacity: 0; transform: translateY(10px) scale(0.9); }
+      12% { opacity: 1; transform: translateY(0) scale(1); }
+      72% { opacity: 1; }
+      100% { opacity: 0; transform: translateY(-18px); }
+    }
+    #stormHud.closing { color: #efe6ff; }
+    #stormHud.in-storm {
+      color: #e9a8ff;
+      font-weight: 700;
+    }
+    #healthBarWrap.in-storm {
+      border-color: #a46adf;
+      box-shadow: 0 0 8px rgba(160, 80, 255, 0.55);
+    }
+    #shieldBarWrap, #rightHud #shieldBarWrapP2 {
+      position: relative;
+      width: 100%;
+      height: 16px;
+      background: #151a22;
+      border: 1px solid #3a5a7a;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    #shieldBarFill, #rightHud #shieldBarFillP2 {
+      position: absolute;
+      left: 0;
+      top: 0;
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #1f6feb, #5ec8ff);
+      transition: width 0.08s;
+    }
+    #shieldLabel, #rightHud #shieldLabelP2 {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: 0.03em;
+      text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+      z-index: 1;
+      pointer-events: none;
+    }
     #wallChargesHud {
       font-size: 0.72rem;
       color: #9ab;
@@ -945,13 +1026,14 @@
     .btn-delete-account:hover { background: #2a1818; }
     .main-menu-tabs {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 2px;
     }
     .main-menu-tabs button {
-      flex: 1;
+      flex: 1 1 88px;
       padding: 10px 12px;
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       font-weight: 600;
       background: #1a1a1a;
       border: 1px solid #333;
@@ -1109,6 +1191,92 @@
       background: rgba(255, 215, 0, 0.12);
       border: 1px solid rgba(255, 215, 0, 0.35);
     }
+    #accountProgressHud {
+      margin: 8px 0 0;
+      font-size: 0.78rem;
+      color: #c8d4e0;
+      line-height: 1.45;
+    }
+    #accountProgressHud strong { color: #ffe66d; }
+    .xp-bar-wrap {
+      position: relative;
+      width: 100%;
+      height: 12px;
+      margin-top: 6px;
+      background: #171717;
+      border: 1px solid #3d3d3d;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+    .xp-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #5ec8ff, #b8f0c8);
+      transition: width 0.12s;
+    }
+    .quest-list, .shop-grid {
+      display: grid;
+      gap: 12px;
+    }
+    .quest-card, .shop-card {
+      background: #161616;
+      border: 1px solid #2a2a2a;
+      border-radius: 10px;
+      padding: 12px;
+      text-align: left;
+    }
+    .quest-card h3, .shop-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.92rem;
+      color: #eee;
+    }
+    .quest-card p, .shop-card p {
+      margin: 0 0 8px;
+      font-size: 0.78rem;
+      color: #999;
+      line-height: 1.4;
+    }
+    .quest-progress {
+      font-size: 0.76rem;
+      color: #8ad4ff;
+      margin-bottom: 8px;
+    }
+    .quest-card button, .shop-card button {
+      width: 100%;
+    }
+    .quest-card button:disabled, .shop-card button:disabled {
+      opacity: 0.55;
+      cursor: default;
+    }
+    .quest-card.ready { border-color: #4a7a4a; }
+    .quest-card.claimed { opacity: 0.72; }
+    .shop-grid {
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    }
+    .shop-swatch {
+      width: 100%;
+      height: 72px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      margin-bottom: 8px;
+    }
+    .shop-card.owned { border-color: #3a5a7a; }
+    .shop-card.equipped { border-color: #7ecbff; box-shadow: 0 0 0 1px rgba(126,203,255,0.35); }
+    .shop-price { color: #ffe66d !important; }
+    .shop-section-title {
+      margin: 18px 0 8px;
+      font-size: 0.82rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #9ab;
+    }
+    #endXp {
+      margin: 8px 0 0;
+      font-size: 0.82rem;
+      color: #b8f0c8;
+      line-height: 1.45;
+      text-align: left;
+    }
   </style>
 </head>
 <body>
@@ -1118,6 +1286,8 @@
     <div class="main-menu-tabs" id="mainMenuTabs">
       <button type="button" id="tabPlay" class="active">Play</button>
       <button type="button" id="tabIndex">Guns</button>
+      <button type="button" id="tabQuests">Quests</button>
+      <button type="button" id="tabShop">Shop</button>
       <button type="button" id="tabAnalysis">Analysis</button>
       <button type="button" id="tabWiki">Wiki</button>
     </div>
@@ -1154,8 +1324,9 @@
         <button type="button" id="btnLogout" class="btn-logout">Log out</button>
       </div>
       <p id="accountStats" class="account-stats"></p>
+      <div id="accountProgressHud"></div>
       <h1>Supergun</h1>
-      <p id="menuModeTag" class="menu-tag">23-dot arena · 7 hidden hunters · ~80s to cross the map · heavy building · last dot wins</p>
+      <p id="menuModeTag" class="menu-tag">23-dot arena · storm circle · 7 hidden hunters · ~80s to cross the map · last dot wins</p>
       <div class="menu-preview-row">
         <span id="menuDotPreview" aria-hidden="true"></span>
       </div>
@@ -1197,7 +1368,7 @@
             <option value="speed_down">Speed build down — fastest first, slowest last</option>
           </select>
         </div>
-        <span id="gameModeDesc" class="menu-mode-desc">Classic free-for-all. Be the last dot alive.</span>
+        <span id="gameModeDesc" class="menu-mode-desc">Classic free-for-all. Stay inside the storm circle. Be the last dot alive.</span>
       </div>
       <div class="menu-game-mode">
         <label for="mapSelectA">Map structures</label>
@@ -1285,13 +1456,16 @@
     <p id="help">
       Move with <strong>WASD</strong> or <strong>arrow keys</strong>. Hold <strong>Space</strong> to sprint until your energy runs out. Press <strong>F</strong> to scope: movement becomes very slow and an aim line appears on the minimap. <strong>Left-click and hold</strong> to shoot toward the cursor. Press <strong>E</strong> to reload.
       Press <strong>R</strong> to switch between a <strong>5-material wall</strong> and a <strong>7-material slant</strong>. Press <strong>Z</strong> to switch between wood and stone, then <strong>right-click</strong> to place it on the gap-free grid. Builds cannot overlap. Right-click drinks a selected medicine or energy bar.
-      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> can contain Bottle +25, Carton +50, Big Glugger Pot +75, or an <strong>Energy Bar</strong> that refills sprint energy and temporarily boosts sprint speed. Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Shoot <strong>trees</strong> for wood and <strong>stones</strong> for stone. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
+      Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> can contain <strong>Bandages</strong> +15 health (3s), a <strong>Med Kit</strong> that heals 5 health every 0.5s, <strong>Mini Shield</strong> +25 shield (1.5s), <strong>Shield Potion</strong> +50 shield (3s), or an <strong>Energy Bar</strong> that refills sprint energy and temporarily boosts sprint speed. Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Shoot <strong>trees</strong> for wood and <strong>stones</strong> for stone. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
       Gun types: <strong>Shotguns</strong> — Tactical, Pump, Double Barrel, Combat, Auto. <strong>ARs</strong> — Assault Rifle, SCAR, FAMAS, AUG, Tactical AR, Heavy AR, Scoped AR. <strong>SMGs</strong> — SMG, Suppressed SMG, Rapid Fire SMG, Heavy SMG. <strong>LMGs</strong> — LMG, Minigun, Tommy Gun. <strong>Pistols</strong> — Pistol, Revolver, Auto Pistol. <strong>Snipers</strong> — Bolt Action, Heavy, Semi Auto. <strong>DMRs</strong> — DMR, Tactical DMR. <strong>RPG</strong> — explosive area damage. Each dot shows the <strong>gun and rarity</strong> it is holding.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
-      Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full).
+      Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full). You have <strong>100 health</strong> and <strong>100 shield</strong>. Guns hit shield first; the storm damages health only. Running out of health eliminates you — running out of shield does not.
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for <strong>Mythic</strong> versions of their guns. Chests give Common through Epic. Be the last dot alive to win.
+      A shrinking <strong>storm circle</strong> marks the safe zone. Outside it, the <strong>storm</strong> deals rising damage. The next circle is a dashed ring on the map and minimap.
       The arena is <strong>massive</strong> — about <strong>80 seconds</strong> to run left to right at normal speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
-      <strong>Accounts</strong> keep your name, color, difficulty, and win stats on this device across restarts.
+      <strong>Accounts</strong> keep your name, color, difficulty, win stats, XP, quests, and Kredits on this device across restarts.
+      Elims grant <strong>24 XP</strong>, assists <strong>12 XP</strong>, and a double kill (two elims within 4s) a <strong>+16 XP</strong> bonus. Placement starts at <strong>64 XP</strong> for 10th and climbs by 4 each rank. Level 2 costs 150 XP; each next level costs 1.25× the last jump.
+      Spend <strong>Kredits</strong> in the Shop on skins, trails, and backgrounds. Claim daily quests on the Quests tab.
     </p>
     </div>
 
@@ -1301,6 +1475,22 @@
         <p class="menu-tag" style="text-align:center;">Keep-list guns with placeholder stats. Pictures will be added later. Reload stats are shots before reload and reload time.</p>
         <p id="wikiLinkRow" class="index-wiki-row"></p>
         <div id="weaponIndexList"></div>
+      </div>
+    </div>
+
+    <div id="questsPanel" hidden>
+      <div class="menu-card index-card">
+        <h1>Quests</h1>
+        <p class="menu-tag" style="text-align:center;">Daily challenges. Finish them in matches, then claim XP and Kredits here. New set each day.</p>
+        <div id="questList" class="quest-list"></div>
+      </div>
+    </div>
+
+    <div id="shopPanel" hidden>
+      <div class="menu-card index-card">
+        <h1>Shop</h1>
+        <p class="menu-tag" style="text-align:center;" id="shopKreditsLine">Buy skins, trails, and backgrounds with Kredits.</p>
+        <div id="shopList"></div>
       </div>
     </div>
 
@@ -1354,14 +1544,19 @@
       <canvas id="minimap" width="168" height="104" aria-label="Arena minimap"></canvas>
       <div id="leftHud">
         <div id="hud"></div>
+        <div id="shieldBarWrap">
+          <div id="shieldBarFill"></div>
+          <span id="shieldLabel">100 / 100</span>
+        </div>
         <div id="healthBarWrap">
           <div id="healthBarFill"></div>
-          <span id="healthLabel">200 / 200</span>
+          <span id="healthLabel">100 / 100</span>
         </div>
         <div id="energyBarWrap" title="Sprint energy"><div id="energyBarFill"></div></div>
         <div id="wallChargesHud">Wood: 25 · Stone: 0 · R: Wall 5 · Z: Wood · F: Scope</div>
         <div id="ammoHud">Ammo: —</div>
         <div id="reloadHud">Before reload: —</div>
+        <div id="stormHud" hidden>Storm circle</div>
         <div id="teamChartHud" class="hidden" aria-label="Leaderboard">
           <div class="team-chart-title" id="teamChartTitle">Teams</div>
           <div id="teamChartList"></div>
@@ -1369,9 +1564,13 @@
       </div>
       <div id="rightHud">
         <div id="hudP2"></div>
+        <div id="shieldBarWrapP2">
+          <div id="shieldBarFillP2"></div>
+          <span id="shieldLabelP2">100 / 100</span>
+        </div>
         <div id="healthBarWrapP2">
           <div id="healthBarFillP2"></div>
-          <span id="healthLabelP2">200 / 200</span>
+          <span id="healthLabelP2">100 / 100</span>
         </div>
         <div id="energyBarWrapP2" title="Sprint energy"><div id="energyBarFillP2"></div></div>
         <div id="wallChargesHudP2">Wood: 25 · Stone: 0 · Wall 5 / Slant 7</div>
@@ -1385,6 +1584,7 @@
           <h2 id="endTitle">Victory!</h2>
           <div id="endPlacement" hidden>1st place</div>
           <p id="endSummary"></p>
+          <div id="endXp" hidden></div>
           <div id="endLeaderboard" hidden></div>
           <div class="go-actions">
             <button type="button" id="btnPlayAgain" class="btn-play-again">Play again</button>
@@ -1399,8 +1599,6 @@
 (function () {
   const VIEW_W = 1200;
   const VIEW_H = 750;
-  const SNIPER_CLOSE_RANGE = 110;
-  const SNIPER_CLOSE_DMG_MUL = 0.55;
   const SNIPER_BULLET_SPEED = 820;
   const SNIPER_BULLET_LIFE = 2.8;
   const DOT_SPEED = 200;
@@ -1415,9 +1613,29 @@
   const WORLD_W = DOT_SPEED * MAP_CROSS_SECONDS;
   const WORLD_H = Math.round(WORLD_W * (4500 / 7200));
   const MAP_SCALE = WORLD_W / 7200;
-  const MAX_HEALTH = 200;
+  const STORM_START_R = Math.min(WORLD_W, WORLD_H) * 0.48;
+  const STORM_PHASES = [
+    { wait: 48, shrink: 40, radiusFrac: 0.70, dps: 2 },
+    { wait: 28, shrink: 32, radiusFrac: 0.46, dps: 4 },
+    { wait: 22, shrink: 26, radiusFrac: 0.30, dps: 7 },
+    { wait: 18, shrink: 22, radiusFrac: 0.18, dps: 10 },
+    { wait: 14, shrink: 18, radiusFrac: 0.10, dps: 14 },
+    { wait: 12, shrink: 16, radiusFrac: 0.055, dps: 18 },
+    { wait: 10, shrink: 14, radiusFrac: 0.028, dps: 24 },
+    { wait: 8, shrink: 18, radiusFrac: 0, dps: 32 },
+  ];
+  const MAX_HEALTH = 100;
+  const MAX_SHIELD = 100;
   const KILL_HEAL = 50;
   const KILL_AMMO = 20;
+  const XP_ELIM = 24;
+  const XP_ASSIST = 12;
+  const XP_DOUBLE = 16;
+  const XP_LEVEL2 = 150;
+  const XP_LEVEL_GROWTH = 1.25;
+  const DOUBLE_KILL_MS = 4000;
+  const ASSIST_WINDOW_MS = 8000;
+  const LEVEL_UP_KREDITS = 15;
   const DOT_R = 10;
   const BOSS_R = 18;
   const CHEST_COUNT = Math.round(64 * MAP_SCALE);
@@ -1541,30 +1759,30 @@
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
   const GUN_TYPES = [
     { id: "tactical_shotgun", label: "Tactical Shotgun", w: GUN_LOOT_W, rareDmg: 81, bloomPerShot: 12, shotsPerSec: 1.5, holdToShoot: false, rangeBand: "close", spreadMul: 1.35, pellets: 5, pelletSpreadMul: 0.45 },
-    { id: "pump_shotgun", label: "Pump Shotgun", w: GUN_LOOT_W, rareDmg: 93, bloomPerShot: 6, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "close", spreadMul: 1.4, pellets: 5, pelletSpreadMul: 0.45 },
-    { id: "double_barrel_shotgun", label: "Double Barrel Shotgun", w: GUN_LOOT_W, rareDmg: 58, bloomPerShot: 16, shotsPerSec: 3, holdToShoot: false, rangeBand: "very_close", spreadMul: 1.5, pellets: 5, pelletSpreadMul: 0.45 },
-    { id: "combat_shotgun", label: "Combat Shotgun", w: GUN_LOOT_W, rareDmg: 65, bloomPerShot: 14, shotsPerSec: 1.7, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.95, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "pump_shotgun", label: "Pump Shotgun", w: GUN_LOOT_W, rareDmg: 105, bloomPerShot: 6, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "close", spreadMul: 1.4, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "double_barrel_shotgun", label: "Double Barrel Shotgun", w: GUN_LOOT_W, rareDmg: 105, bloomPerShot: 16, shotsPerSec: 3, holdToShoot: false, rangeBand: "very_close", spreadMul: 1.5, pellets: 5, pelletSpreadMul: 0.45 },
+    { id: "combat_shotgun", label: "Combat Shotgun", w: GUN_LOOT_W, rareDmg: 70, bloomPerShot: 14, shotsPerSec: 1.8, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.95, pellets: 5, pelletSpreadMul: 0.45 },
     { id: "auto_shotgun", label: "Auto Shotgun", w: GUN_LOOT_W, rareDmg: 73, bloomPerShot: 14, shotsPerSec: 1.6, holdToShoot: true, rangeBand: "close", spreadMul: 1.2, pellets: 5, pelletSpreadMul: 0.45 },
     { id: "assault_rifle", label: "Assault Rifle", w: GUN_LOOT_W, rareDmg: 32, bloomPerShot: 10, shotsPerSec: 5.5, holdToShoot: true, rangeBand: "all", spreadMul: 1 },
     { id: "scar", label: "SCAR", w: GUN_LOOT_W, rareDmg: 37, bloomPerShot: 9, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.95 },
     { id: "famas", label: "FAMAS", w: GUN_LOOT_W, rareDmg: 35, bloomPerShot: 6, shotsPerSec: 5, holdToShoot: true, rangeBand: "close_mid", spreadMul: 0.88, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
     { id: "aug", label: "AUG", w: GUN_LOOT_W, rareDmg: 39, bloomPerShot: 5, shotsPerSec: 5, holdToShoot: true, rangeBand: "all", spreadMul: 0.82, burstSize: 5, burstShotMs: 200, burstPauseMs: 500 },
-    { id: "tactical_ar", label: "Tactical AR", w: GUN_LOOT_W, rareDmg: 21, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
+    { id: "tactical_ar", label: "Tactical AR", w: GUN_LOOT_W, rareDmg: 24, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
     { id: "heavy_ar", label: "Heavy AR", w: GUN_LOOT_W, rareDmg: 40, bloomPerShot: 7, shotsPerSec: 3.75, holdToShoot: true, rangeBand: "short_mid", spreadMul: 0.9 },
     { id: "scoped_assault_rifle", label: "Scoped AR", w: GUN_LOOT_W, rareDmg: 39, bloomPerShot: 8, shotsPerSec: 4, holdToShoot: true, rangeBand: "mid_long", spreadMul: 0.72 },
-    { id: "smg", label: "SMG", w: GUN_LOOT_W, rareDmg: 17, bloomPerShot: 16, shotsPerSec: 14, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.15 },
+    { id: "smg", label: "SMG", w: GUN_LOOT_W, rareDmg: 16, bloomPerShot: 16, shotsPerSec: 13, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.15 },
     { id: "suppressed_smg", label: "Suppressed SMG", w: GUN_LOOT_W, rareDmg: 24, bloomPerShot: 10, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 0.92 },
-    { id: "rapid_fire_smg", label: "Rapid Fire SMG", w: GUN_LOOT_W, rareDmg: 14, bloomPerShot: 18, shotsPerSec: 16, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.25 },
-    { id: "heavy_smg", label: "Heavy SMG", w: GUN_LOOT_W, rareDmg: 21, bloomPerShot: 12, shotsPerSec: 12, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
+    { id: "rapid_fire_smg", label: "Rapid Fire SMG", w: GUN_LOOT_W, rareDmg: 13, bloomPerShot: 18, shotsPerSec: 16, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.25 },
+    { id: "heavy_smg", label: "Heavy SMG", w: GUN_LOOT_W, rareDmg: 19, bloomPerShot: 12, shotsPerSec: 11, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.05 },
     { id: "lmg", label: "LMG", w: GUN_LOOT_W, rareDmg: 25, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.28 },
     { id: "minigun", label: "Minigun", w: GUN_LOOT_W, rareDmg: 19, bloomPerShot: 17, shotsPerSec: 11, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.5, infiniteMag: true },
-    { id: "tommy_gun", label: "Tommy Gun", w: GUN_LOOT_W, rareDmg: 22, bloomPerShot: 13, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
+    { id: "tommy_gun", label: "Tommy Gun", w: GUN_LOOT_W, rareDmg: 23, bloomPerShot: 13, shotsPerSec: 8, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
     { id: "pistol", label: "Pistol", w: GUN_LOOT_W, rareDmg: 26, bloomPerShot: 11, shotsPerSec: 6.5, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.3 },
     { id: "revolver", label: "Revolver", w: GUN_LOOT_W, rareDmg: 50, bloomPerShot: 5, shotsPerSec: 2, holdToShoot: false, rangeBand: "mid", spreadMul: 0.65 },
-    { id: "auto_pistol", label: "Auto Pistol", w: GUN_LOOT_W, rareDmg: 18, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
+    { id: "auto_pistol", label: "Auto Pistol", w: GUN_LOOT_W, rareDmg: 27, bloomPerShot: 12, shotsPerSec: 7, holdToShoot: true, rangeBand: "short_mid", spreadMul: 1.2 },
     { id: "bolt_action_sniper", label: "Bolt Action Sniper Rifle", w: GUN_LOOT_W, rareDmg: 110, bloomPerShot: 2, shotsPerSec: 0.7, holdToShoot: false, rangeBand: "long", spreadMul: 0.5 },
-    { id: "heavy_sniper", label: "Heavy Sniper Rifle", w: GUN_LOOT_W, rareDmg: 120, bloomPerShot: 1, shotsPerSec: 0.64, holdToShoot: false, rangeBand: "long", spreadMul: 0.4 },
-    { id: "semi_auto_sniper", label: "Semi Auto Sniper Rifle", w: GUN_LOOT_W, rareDmg: 97, bloomPerShot: 4, shotsPerSec: 1.2, holdToShoot: false, rangeBand: "long", spreadMul: 0.55 },
+    { id: "heavy_sniper", label: "Heavy Sniper Rifle", w: GUN_LOOT_W, rareDmg: 140, bloomPerShot: 1, shotsPerSec: 0.64, holdToShoot: false, rangeBand: "long", spreadMul: 0.4 },
+    { id: "semi_auto_sniper", label: "Semi Auto Sniper Rifle", w: GUN_LOOT_W, rareDmg: 95, bloomPerShot: 4, shotsPerSec: 1.2, holdToShoot: false, rangeBand: "long", spreadMul: 0.55 },
     { id: "dmr", label: "DMR", w: GUN_LOOT_W, rareDmg: 50, bloomPerShot: 5, shotsPerSec: 2.5, holdToShoot: false, rangeBand: "all", spreadMul: 0.7 },
     { id: "tactical_dmr", label: "Tactical DMR", w: GUN_LOOT_W, rareDmg: 45, bloomPerShot: 6, shotsPerSec: 2.85, holdToShoot: false, rangeBand: "all", spreadMul: 0.78 },
     { id: "rpg", label: "RPG", w: GUN_LOOT_W, rareDmg: 100, bloomPerShot: 2, shotsPerSec: 0.75, holdToShoot: false, rangeBand: "short_mid", spreadMul: 0.05, explodeRadiusMul: 12 },
@@ -1603,30 +1821,30 @@
 
   const GUN_INDEX_BLURBS = {
     tactical_shotgun: "Rare 81 dmg. Close range. Click to shoot.",
-    pump_shotgun: "Rare 93 dmg. Close range. Slow click-to-shoot slug.",
-    double_barrel_shotgun: "Rare 58 dmg. Very close. Two-shot burst click.",
-    combat_shotgun: "Rare 65 dmg. Short-mid range. Click to shoot.",
+    pump_shotgun: "Rare 105 dmg. Close range. Slow click-to-shoot slug.",
+    double_barrel_shotgun: "Rare 105 dmg. Very close. Two-shot burst click.",
+    combat_shotgun: "Rare 70 dmg. Short-mid range. Click to shoot.",
     auto_shotgun: "Rare 73 dmg. Close range. Hold to shoot.",
     assault_rifle: "Rare 32 dmg. All range. Hold to shoot.",
     scar: "Rare 37 dmg. All range. Hold to shoot.",
     famas: "Rare 35 dmg. Close/mid. 5-round burst, 0.5s pause.",
     aug: "Rare 39 dmg. All range. 5-round burst, 0.5s pause.",
-    tactical_ar: "Rare 21 dmg. Mid/short. Fast hold-to-shoot.",
+    tactical_ar: "Rare 24 dmg. Mid/short. Fast hold-to-shoot.",
     heavy_ar: "Rare 40 dmg. Mid/short. Slow hold-to-shoot.",
     scoped_assault_rifle: "Rare 39 dmg. Mid-long. Hold to shoot.",
-    smg: "Rare 17 dmg. Mid-short. High bloom spray.",
+    smg: "Rare 16 dmg. Mid-short. High bloom spray.",
     suppressed_smg: "Rare 24 dmg. Mid-short. Tighter SMG.",
-    rapid_fire_smg: "Rare 14 dmg. Mid-short. Fastest SMG, heaviest bloom.",
-    heavy_smg: "Rare 21 dmg. Mid-short. 12/sec hold spray.",
+    rapid_fire_smg: "Rare 13 dmg. Mid-short. Fastest SMG, heaviest bloom.",
+    heavy_smg: "Rare 19 dmg. Mid-short. 11/sec hold spray.",
     lmg: "Rare 25 dmg. Mid-short. 60-round hold spray.",
     minigun: "Rare 19 dmg. Mid-short. Infinite mag, high bloom.",
-    tommy_gun: "Rare 22 dmg. Mid-short. 40-round hold spray.",
+    tommy_gun: "Rare 23 dmg. Mid-short. 40-round hold spray.",
     pistol: "Rare 26 dmg. Short-mid. Hold to shoot.",
     revolver: "Rare 50 dmg. Mid. Click to shoot.",
-    auto_pistol: "Rare 18 dmg. Mid-short. Hold to shoot.",
-    bolt_action_sniper: "Rare 110 dmg at long range. Weak up close. Hits hardest past one screen.",
-    heavy_sniper: "Rare 120 dmg at long range. Weak up close. Hits hardest past one screen.",
-    semi_auto_sniper: "Rare 97 dmg at long range. Weak up close. Hits hardest past one screen.",
+    auto_pistol: "Rare 27 dmg. Mid-short. Hold to shoot.",
+    bolt_action_sniper: "Rare 110 dmg. Long range. Click to shoot.",
+    heavy_sniper: "Rare 140 dmg. Long range. Click to shoot.",
+    semi_auto_sniper: "Rare 95 dmg. Long range. Click to shoot.",
     dmr: "Rare 50 dmg. All range. Click to shoot.",
     tactical_dmr: "Rare 45 dmg. All range. Faster DMR click.",
     rpg: "Rare 100 dmg splash. Hurts you too. Short-mid rocket.",
@@ -1651,16 +1869,18 @@
   const BOT_SPAWN_EXTRA_RARE_CHANCE = 0.12;
   const BOT_SPAWN_EXTRA_EPIC_CHANCE = 0.05;
   const MED_POTION_WEIGHTS = [
-    ["bottle", 0.34],
-    ["carton", 0.34],
-    ["glugger", 0.17],
-    ["energy_bar", 0.15],
+    ["bandage", 0.30],
+    ["medkit", 0.22],
+    ["mini_shield", 0.22],
+    ["shield_potion", 0.14],
+    ["energy_bar", 0.12],
   ];
   const MED_POTIONS = {
-    bottle: { label: "Bottle", color: "#9e9e9e", heal: 25 },
-    carton: { label: "Carton", color: "#4caf50", heal: 50 },
-    glugger: { label: "Big Glugger Pot", color: "#2196f3", heal: 75 },
-    energy_bar: { label: "Energy Bar", color: "#f6c344", heal: 0, energy: MAX_ENERGY, boostMs: ENERGY_BOOST_MS },
+    bandage: { label: "Bandages", color: "#9e9e9e", rarity: "common", heal: 15, shield: 0, useMs: 3000 },
+    medkit: { label: "Med Kit", color: "#4caf50", rarity: "uncommon", heal: 0, shield: 0, tickHeal: 5, tickMs: 500 },
+    mini_shield: { label: "Mini Shield", color: "#7dd3fc", rarity: "uncommon", heal: 0, shield: 25, useMs: 1500 },
+    shield_potion: { label: "Shield Potion", color: "#2196f3", rarity: "rare", heal: 0, shield: 50, useMs: 3000 },
+    energy_bar: { label: "Energy Bar", color: "#f6c344", heal: 0, energy: MAX_ENERGY, boostMs: ENERGY_BOOST_MS, useMs: 450 },
   };
   const AMMO_PICKUP_WEIGHTS = [
     ["common", 0.50],
@@ -1714,8 +1934,13 @@
   const menuScreen = document.getElementById("menuScreen");
   const gameScreen = document.getElementById("gameScreen");
   const hud = document.getElementById("hud");
+  const healthBarWrap = document.getElementById("healthBarWrap");
   const healthBarFill = document.getElementById("healthBarFill");
   const healthLabel = document.getElementById("healthLabel");
+  const shieldBarWrap = document.getElementById("shieldBarWrap");
+  const shieldBarFill = document.getElementById("shieldBarFill");
+  const shieldLabel = document.getElementById("shieldLabel");
+  const stormHud = document.getElementById("stormHud");
   const energyBarWrap = document.getElementById("energyBarWrap");
   const energyBarFill = document.getElementById("energyBarFill");
   const wallChargesHud = document.getElementById("wallChargesHud");
@@ -1734,6 +1959,8 @@
   const hudP2 = document.getElementById("hudP2");
   const healthBarFillP2 = document.getElementById("healthBarFillP2");
   const healthLabelP2 = document.getElementById("healthLabelP2");
+  const shieldBarFillP2 = document.getElementById("shieldBarFillP2");
+  const shieldLabelP2 = document.getElementById("shieldLabelP2");
   const energyBarWrapP2 = document.getElementById("energyBarWrapP2");
   const energyBarFillP2 = document.getElementById("energyBarFillP2");
   const wallChargesHudP2 = document.getElementById("wallChargesHudP2");
@@ -1764,12 +1991,20 @@
   const tabRegister = document.getElementById("tabRegister");
   const tabPlayMain = document.getElementById("tabPlay");
   const tabIndexMain = document.getElementById("tabIndex");
+  const tabQuestsMain = document.getElementById("tabQuests");
+  const tabShopMain = document.getElementById("tabShop");
   const tabAnalysisMain = document.getElementById("tabAnalysis");
   const tabWikiMain = document.getElementById("tabWiki");
   const playPanel = document.getElementById("playPanel");
   const indexPanel = document.getElementById("indexPanel");
+  const questsPanel = document.getElementById("questsPanel");
+  const shopPanel = document.getElementById("shopPanel");
   const analysisPanel = document.getElementById("analysisPanel");
   const analysisList = document.getElementById("analysisList");
+  const questList = document.getElementById("questList");
+  const shopList = document.getElementById("shopList");
+  const accountProgressHud = document.getElementById("accountProgressHud");
+  const endXp = document.getElementById("endXp");
   const weaponIndexList = document.getElementById("weaponIndexList");
   const wikiLinkRow = document.getElementById("wikiLinkRow");
 
@@ -1782,6 +2017,49 @@
   }
 
   let currentUserSlug = null;
+  let matchXp = emptyMatchXp();
+  const SKIN_ITEMS = [
+    { id: "solid", label: "Solid", price: 0, desc: "Your color picker. Always owned." },
+    { id: "striped", label: "Striped", price: 75, desc: "Diagonal bands over your color." },
+    { id: "rainbow", label: "Rainbow", price: 200, desc: "Full spectrum swirl." },
+    { id: "lava", label: "Lava", price: 125, desc: "Hot magma cracks." },
+    { id: "subzero", label: "Subzero", price: 125, desc: "Frozen ice facets." },
+    { id: "starry", label: "Starry", price: 150, desc: "Night sky speckled with stars." },
+    { id: "nebula", label: "Nebula", price: 180, desc: "Pink-violet cosmic cloud." },
+  ];
+  const TRAIL_ITEMS = [
+    { id: "none", label: "No trail", price: 0, desc: "Clean movement." },
+    { id: "sparks", label: "Sparks", price: 50, desc: "Tiny yellow sparks." },
+    { id: "flame", label: "Flame", price: 90, desc: "Orange fire wake." },
+    { id: "frost", label: "Frost", price: 90, desc: "Icy blue mist." },
+    { id: "rainbow_trail", label: "Rainbow trail", price: 140, desc: "Color-cycle path." },
+    { id: "stardust", label: "Stardust", price: 110, desc: "Glittering star motes." },
+    { id: "nebula_wake", label: "Nebula wake", price: 170, desc: "Purple cosmic dust." },
+  ];
+  const BG_ITEMS = [
+    { id: "default", label: "Default", price: 0, desc: "Classic dark arena." },
+    { id: "grid", label: "Blueprint", price: 40, desc: "Bright technical grid." },
+    { id: "sunset", label: "Sunset", price: 80, desc: "Warm dusk horizon." },
+    { id: "aurora", label: "Aurora", price: 100, desc: "Green-blue northern lights." },
+    { id: "magma", label: "Magma", price: 110, desc: "Dark red lava field." },
+    { id: "glacier", label: "Glacier", price: 90, desc: "Cold ice sheet." },
+    { id: "starfield", label: "Starfield", price: 120, desc: "Deep space stars." },
+    { id: "nebula_space", label: "Nebula space", price: 160, desc: "Violet galaxy backdrop." },
+  ];
+  const QUEST_DEFS = [
+    { id: "elims_1", label: "Get 1 elim", goal: 1, key: "elims", xp: 40, kredits: 20 },
+    { id: "elims_3", label: "Get 3 elims", goal: 3, key: "elims", xp: 80, kredits: 40 },
+    { id: "assists_2", label: "Get 2 assists", goal: 2, key: "assists", xp: 50, kredits: 25 },
+    { id: "top10", label: "Place Top 10", goal: 1, key: "top10", xp: 60, kredits: 30 },
+    { id: "top5", label: "Place Top 5", goal: 1, key: "top5", xp: 90, kredits: 50 },
+    { id: "win", label: "Win a match", goal: 1, key: "wins", xp: 120, kredits: 80 },
+    { id: "chests_3", label: "Open 3 chests", goal: 3, key: "chests", xp: 40, kredits: 20 },
+    { id: "meds_2", label: "Use 2 meds", goal: 2, key: "meds", xp: 45, kredits: 20 },
+    { id: "damage_250", label: "Deal 250 damage", goal: 250, key: "damage", xp: 55, kredits: 25 },
+    { id: "double", label: "Get a double kill", goal: 1, key: "doubles", xp: 70, kredits: 35 },
+    { id: "matches_2", label: "Play 2 matches", goal: 2, key: "matches", xp: 40, kredits: 20 },
+  ];
+
   const BOT_DIFFICULTY_ORDER = [
     "new", "beginner", "novice", "intermediate", "advanced",
     "pro", "expert", "master", "grandmaster",
@@ -1829,6 +2107,7 @@
   let twoPlayerMode = false;
   let twoPlayerTeamMode = true;
   let gameMode = "battle_royale";
+  let storm = null;
   let gunGameVariant = "damage_up";
   let gunGameLadder = [];
   let activeMapIds = [];
@@ -1939,10 +2218,10 @@
   const leftHud = document.getElementById("leftHud");
 
   const GAME_MODE_DESCRIPTIONS = {
-    battle_royale: "Classic free-for-all. Be the last dot alive.",
-    teams: "2–6 teams, 18 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins.",
+    battle_royale: "Classic free-for-all. Stay inside the shrinking storm circle. Be the last dot alive.",
+    teams: "2–6 teams, 18 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins. The storm still closes in.",
     bedwars: "2–6 teams with wedge territories from the map center. Each team has a beacon — respawn with no gun while it stands. Enemy beacons break after 20 shots. Defenders stay in their wedge; attackers roam. Last team standing wins.",
-    revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot.",
+    revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot. The storm still closes in.",
     gun_game: "Everyone starts on the first gun in the ladder. A kill moves you to the next gun. First player to get a kill with the last gun wins. Everyone respawns until that happens.",
   };
 
@@ -2207,15 +2486,15 @@
     }
     if (menuModeTag) {
       if (mode === "battle_royale") {
-        menuModeTag.textContent = "23-dot arena · 7 hidden hunters · ~80s to cross · heavy building";
+        menuModeTag.textContent = "23-dot arena · storm circle · 7 hidden hunters · ~80s to cross";
       } else if (mode === "teams") {
-        menuModeTag.textContent = "2–6 teams · 18 fighters · heavy building · team chart";
+        menuModeTag.textContent = "2–6 teams · 18 fighters · storm circle · team chart";
       } else if (mode === "bedwars") {
         menuModeTag.textContent = "18 fighters · wedge territories · beacons · heavy building";
       } else if (mode === "gun_game") {
         menuModeTag.textContent = "19-dot FFA · assigned guns · respawn · last-gun kill wins";
       } else {
-        menuModeTag.textContent = "Revenge free-for-all · avenge your killer to respawn";
+        menuModeTag.textContent = "Revenge free-for-all · storm circle · avenge your killer to respawn";
       }
     }
     const btnStart = document.getElementById("btnStart");
@@ -2477,6 +2756,7 @@
       stats: { games: 0, wins: 0, kills: 0, placeSum: 0, placeCount: 0, bestPlace: 0, top5: 0 },
       gunStats: {},
       rarityStats: {},
+      progression: defaultProgression(),
     };
   }
 
@@ -2532,11 +2812,14 @@
           stats: normalizeCareerStats(p.stats),
           gunStats: normalizeGunStatsMap(p.gunStats),
           rarityStats: normalizeRarityStatsMap(p.rarityStats),
+          progression: normalizeProgression(p.progression, slug),
         };
       }
     } catch (_) {}
     const acc = loadAccounts()[slug];
-    return defaultProfile(acc ? acc.displayName : slug);
+    const fresh = defaultProfile(acc ? acc.displayName : slug);
+    fresh.progression = defaultProgression(slug);
+    return fresh;
   }
 
   function saveProfile(slug, profile) {
@@ -2544,6 +2827,517 @@
     try {
       localStorage.setItem(userProfileKey(slug), JSON.stringify(profile));
     } catch (_) {}
+  }
+
+  function emptyMatchXp() {
+    return {
+      elims: 0,
+      assists: 0,
+      doubles: 0,
+      elimXp: 0,
+      assistXp: 0,
+      doubleXp: 0,
+      placeXp: 0,
+      lastElimAt: 0,
+      settled: false,
+      damageQueued: 0,
+    };
+  }
+
+  function questDayKey() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  function hashPick(seed, mod) {
+    let h = 2166136261;
+    const s = String(seed);
+    for (let i = 0; i < s.length; i++) h = Math.imul(h ^ s.charCodeAt(i), 16777619);
+    return Math.abs(h) % Math.max(1, mod);
+  }
+
+  function pickDailyQuests(slug, day) {
+    const pool = QUEST_DEFS.slice();
+    const picked = [];
+    let seed = (slug || "guest") + "|" + day;
+    while (picked.length < 3 && pool.length) {
+      const idx = hashPick(seed + "|" + picked.length, pool.length);
+      const item = pool.splice(idx, 1)[0];
+      if (picked.some((q) => q.key === item.key) && pool.length) continue;
+      picked.push({ id: item.id, claimed: false });
+    }
+    return picked;
+  }
+
+  function defaultProgression(slug) {
+    const day = questDayKey();
+    return {
+      totalXp: 0,
+      kredits: 0,
+      equippedSkin: "solid",
+      equippedTrail: "none",
+      equippedBg: "default",
+      ownedSkins: ["solid"],
+      ownedTrails: ["none"],
+      ownedBgs: ["default"],
+      questDay: day,
+      quests: pickDailyQuests(slug, day),
+      counts: {},
+    };
+  }
+
+  function normalizeProgression(raw, slug) {
+    const d = defaultProgression(slug);
+    const p = raw && typeof raw === "object" ? raw : {};
+    const day = questDayKey();
+    const ownedSkins = Array.isArray(p.ownedSkins) ? p.ownedSkins.slice() : d.ownedSkins.slice();
+    const ownedTrails = Array.isArray(p.ownedTrails) ? p.ownedTrails.slice() : d.ownedTrails.slice();
+    const ownedBgs = Array.isArray(p.ownedBgs) ? p.ownedBgs.slice() : d.ownedBgs.slice();
+    if (!ownedSkins.includes("solid")) ownedSkins.unshift("solid");
+    if (!ownedTrails.includes("none")) ownedTrails.unshift("none");
+    if (!ownedBgs.includes("default")) ownedBgs.unshift("default");
+    const questDay = String(p.questDay || "");
+    const quests = questDay === day && Array.isArray(p.quests) && p.quests.length
+      ? p.quests.map((q) => ({ id: q.id, claimed: !!q.claimed })).filter((q) => QUEST_DEFS.some((d0) => d0.id === q.id))
+      : pickDailyQuests(slug, day);
+    return {
+      totalXp: Math.max(0, p.totalXp | 0),
+      kredits: Math.max(0, p.kredits | 0),
+      equippedSkin: SKIN_ITEMS.some((s) => s.id === p.equippedSkin) ? p.equippedSkin : "solid",
+      equippedTrail: TRAIL_ITEMS.some((s) => s.id === p.equippedTrail) ? p.equippedTrail : "none",
+      equippedBg: BG_ITEMS.some((s) => s.id === p.equippedBg) ? p.equippedBg : "default",
+      ownedSkins,
+      ownedTrails,
+      ownedBgs,
+      questDay: day,
+      quests: quests.length ? quests : pickDailyQuests(slug, day),
+      counts: questDay === day && p.counts && typeof p.counts === "object" ? p.counts : {},
+    };
+  }
+
+  function xpToNextLevel(level) {
+    if (level < 1) return XP_LEVEL2;
+    return Math.round(XP_LEVEL2 * Math.pow(XP_LEVEL_GROWTH, level - 1));
+  }
+
+  function levelFromTotalXp(totalXp) {
+    let xp = Math.max(0, totalXp | 0);
+    let level = 1;
+    while (level < 250) {
+      const need = xpToNextLevel(level);
+      if (xp < need) return { level, into: xp, need };
+      xp -= need;
+      level++;
+    }
+    return { level, into: xp, need: xpToNextLevel(level) };
+  }
+
+  function placementXp(place) {
+    const n = place | 0;
+    if (n < 1) return 0;
+    return Math.max(0, 104 - 4 * n);
+  }
+
+  function equippedSkinId() {
+    if (!currentUserSlug) return "solid";
+    return loadProfile(currentUserSlug).progression.equippedSkin || "solid";
+  }
+
+  function equippedTrailId() {
+    if (!currentUserSlug) return "none";
+    return loadProfile(currentUserSlug).progression.equippedTrail || "none";
+  }
+
+  function equippedBgId() {
+    if (!currentUserSlug) return "default";
+    return loadProfile(currentUserSlug).progression.equippedBg || "default";
+  }
+
+  function mutateProgression(fn) {
+    if (!currentUserSlug) return null;
+    const profile = loadProfile(currentUserSlug);
+    profile.progression = normalizeProgression(profile.progression, currentUserSlug);
+    fn(profile.progression, profile);
+    saveProfile(currentUserSlug, profile);
+    return profile;
+  }
+
+  function grantXp(amount, why) {
+    amount = Math.max(0, Math.round(amount));
+    if (!amount || !currentUserSlug) return 0;
+    let gainedLevels = 0;
+    mutateProgression((prog) => {
+      const before = levelFromTotalXp(prog.totalXp).level;
+      prog.totalXp += amount;
+      const after = levelFromTotalXp(prog.totalXp).level;
+      gainedLevels = Math.max(0, after - before);
+      if (gainedLevels) prog.kredits += gainedLevels * LEVEL_UP_KREDITS;
+    });
+    pushXpMark(amount, why, gainedLevels);
+    refreshProgressionUI();
+    return gainedLevels;
+  }
+
+  function pushXpMark(amount, why, levels) {
+    const feed = document.getElementById("xpFeed");
+    if (!feed) return;
+    const labels = {
+      elim: "Elim",
+      assist: "Assist",
+      double: "Double kill",
+      place: "Placement",
+      quest: "Quest",
+    };
+    const el = document.createElement("div");
+    el.className = "xp-toast" + (why === "double" ? " xp-double" : why === "place" ? " xp-place" : "");
+    el.innerHTML = '<span class="xp-why">' + (labels[why] || "XP") + '</span> <span class="xp-amt">+' + amount + " XP</span>";
+    feed.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 2400);
+    if (levels > 0) {
+      const lv = document.createElement("div");
+      lv.className = "xp-toast xp-level";
+      lv.textContent = levels === 1 ? "Level up!" : "+" + levels + " levels";
+      feed.appendChild(lv);
+      setTimeout(() => { if (lv.parentNode) lv.parentNode.removeChild(lv); }, 2800);
+    }
+    while (feed.children.length > 6) feed.removeChild(feed.firstChild);
+  }
+
+  function grantKredits(amount) {
+    amount = Math.max(0, Math.round(amount));
+    if (!amount || !currentUserSlug) return;
+    mutateProgression((prog) => { prog.kredits += amount; });
+    refreshProgressionUI();
+  }
+
+  function bumpQuest(key, amount) {
+    if (!currentUserSlug) return;
+    mutateProgression((prog) => {
+      prog.counts[key] = (prog.counts[key] | 0) + Math.max(0, amount | 0);
+    });
+    if (questsPanel && !questsPanel.hidden) renderQuests();
+  }
+
+  function spawnXpText(e, text, color) {
+    if (!e) return;
+    damageTexts.push({
+      x: e.x + rand(-10, 10),
+      y: e.y - e.radius - 40,
+      text: text,
+      color: color || "#b8f0c8",
+      life: 1.35,
+      maxLife: 1.35,
+      big: false,
+      xp: true,
+    });
+  }
+
+  function noteLocalElim(killer, victim) {
+    if (!killer || !isLocalTrackedPlayer(killer) || !victim || killer.id === victim.id) return;
+    matchXp.elims += 1;
+    matchXp.elimXp += XP_ELIM;
+    grantXp(XP_ELIM, "elim");
+    bumpQuest("elims", 1);
+    spawnXpText(killer, "ELIM +" + XP_ELIM + " XP", "#b8f0c8");
+    const now = performance.now();
+    if (matchXp.lastElimAt && now - matchXp.lastElimAt <= DOUBLE_KILL_MS) {
+      matchXp.doubles += 1;
+      matchXp.doubleXp += XP_DOUBLE;
+      grantXp(XP_DOUBLE, "double");
+      bumpQuest("doubles", 1);
+      spawnXpText(killer, "DOUBLE +" + XP_DOUBLE + " XP", "#ffd56a");
+    }
+    matchXp.lastElimAt = now;
+  }
+
+  function noteLocalAssist(assister) {
+    if (!assister || !isLocalTrackedPlayer(assister)) return;
+    matchXp.assists += 1;
+    matchXp.assistXp += XP_ASSIST;
+    grantXp(XP_ASSIST, "assist");
+    bumpQuest("assists", 1);
+    spawnXpText(assister, "ASSIST +" + XP_ASSIST + " XP", "#9ad4ff");
+  }
+
+  function flushQuestDamage() {
+    const n = Math.round(matchXp.damageQueued || 0);
+    if (n <= 0) return;
+    matchXp.damageQueued = 0;
+    bumpQuest("damage", n);
+  }
+
+  function settleMatchXp(won, place) {
+    if (matchXp.settled) return matchXp;
+    matchXp.settled = true;
+    flushQuestDamage();
+    const px = placementXp(place);
+    matchXp.placeXp = px;
+    if (px) grantXp(px, "place");
+    bumpQuest("matches", 1);
+    if ((place | 0) > 0 && (place | 0) <= 10) bumpQuest("top10", 1);
+    if ((place | 0) > 0 && (place | 0) <= 5) bumpQuest("top5", 1);
+    if (won || (place | 0) === 1) bumpQuest("wins", 1);
+    return matchXp;
+  }
+
+  function formatMatchXpHtml(xp) {
+    if (!xp) return "";
+    const total = (xp.elimXp | 0) + (xp.assistXp | 0) + (xp.doubleXp | 0) + (xp.placeXp | 0);
+    const bits = [];
+    if (xp.elims) bits.push(xp.elims + " elim" + (xp.elims === 1 ? "" : "s") + " +" + xp.elimXp);
+    if (xp.assists) bits.push(xp.assists + " assist" + (xp.assists === 1 ? "" : "s") + " +" + xp.assistXp);
+    if (xp.doubles) bits.push(xp.doubles + " double" + (xp.doubles === 1 ? "" : "s") + " +" + xp.doubleXp);
+    if (xp.placeXp) bits.push("placement +" + xp.placeXp);
+    if (!bits.length && !total) return "";
+    return "XP this match: <strong>+" + total + "</strong>" + (bits.length ? "<br>" + bits.join(" · ") : "");
+  }
+
+  function showEndXp() {
+    if (!endXp) return;
+    const html = formatMatchXpHtml(matchXp);
+    if (!html) {
+      endXp.hidden = true;
+      endXp.innerHTML = "";
+      return;
+    }
+    endXp.hidden = false;
+    endXp.innerHTML = html;
+  }
+
+  function skinCss(skin, color) {
+    const c = color || "#4af0ff";
+    if (skin === "striped") return "repeating-linear-gradient(135deg, " + c + " 0 8px, #141414 8px 16px)";
+    if (skin === "rainbow") return "conic-gradient(#ff5b5b, #ffd15a, #5cff8a, #5ec8ff, #c07cff, #ff5b5b)";
+    if (skin === "lava") return "radial-gradient(circle at 30% 30%, #ffd15a, #ff6b1a 42%, #5a1208 78%)";
+    if (skin === "subzero") return "radial-gradient(circle at 35% 30%, #f4ffff, #7ecbff 40%, #1a4a7a 80%)";
+    if (skin === "starry") return "radial-gradient(circle at 40% 30%, #6a7aa8 0 8%, #101428 42%, #07080f 100%)";
+    if (skin === "nebula") return "radial-gradient(circle at 40% 35%, #ffb3e6, #9b5de5 40%, #1b1030 78%)";
+    return c;
+  }
+
+  function applyMenuCosmetics() {
+    const skin = equippedSkinId();
+    const color = colorInput ? colorInput.value : "#4af0ff";
+    if (menuDotPreview) {
+      menuDotPreview.style.background = skinCss(skin, color);
+      menuDotPreview.style.boxShadow = skin === "solid" ? "0 0 24px " + color + "55" : "0 0 22px rgba(255,255,255,0.18)";
+    }
+    applyPageBackground();
+  }
+
+  function applyPageBackground() {
+    const id = equippedBgId();
+    const map = {
+      default: "#000",
+      grid: "#071018",
+      sunset: "#140c10",
+      aurora: "#061410",
+      magma: "#120806",
+      glacier: "#081018",
+      starfield: "#05060c",
+      nebula_space: "#100818",
+    };
+    document.body.style.background = map[id] || "#000";
+  }
+
+  function refreshProgressionUI() {
+    if (!currentUserSlug) {
+      if (accountProgressHud) accountProgressHud.innerHTML = "";
+      applyPageBackground();
+      return;
+    }
+    const prog = loadProfile(currentUserSlug).progression;
+    const lv = levelFromTotalXp(prog.totalXp);
+    if (accountProgressHud) {
+      accountProgressHud.innerHTML =
+        "Level <strong>" + lv.level + "</strong> · " + lv.into + " / " + lv.need + " XP · " +
+        "<strong>" + prog.kredits + "</strong> Kredits" +
+        '<div class="xp-bar-wrap"><div class="xp-bar-fill" style="width:' +
+        (lv.need ? clamp(lv.into / lv.need, 0, 1) * 100 : 0) + '%"></div></div>';
+    }
+    applyMenuCosmetics();
+    const shopLine = document.getElementById("shopKreditsLine");
+    if (shopLine) shopLine.textContent = "You have " + prog.kredits + " Kredits. Buy skins, trails, and backgrounds.";
+  }
+
+  function renderQuests() {
+    if (!questList) return;
+    if (!currentUserSlug) {
+      questList.innerHTML = "<p class='menu-tag'>Log in to track and claim daily quests.</p>";
+      return;
+    }
+    const prog = loadProfile(currentUserSlug).progression;
+    questList.replaceChildren();
+    for (const row of prog.quests) {
+      const def = QUEST_DEFS.find((q) => q.id === row.id);
+      if (!def) continue;
+      const have = prog.counts[def.key] | 0;
+      const done = have >= def.goal;
+      const card = document.createElement("div");
+      card.className = "quest-card" + (row.claimed ? " claimed" : done ? " ready" : "");
+      const btn = document.createElement("button");
+      btn.type = "button";
+      if (row.claimed) {
+        btn.textContent = "Claimed";
+        btn.disabled = true;
+      } else if (done) {
+        btn.textContent = "Claim +" + def.xp + " XP · +" + def.kredits + " Kredits";
+        btn.addEventListener("click", () => claimQuest(row.id));
+      } else {
+        btn.textContent = "In progress";
+        btn.disabled = true;
+      }
+      card.innerHTML =
+        "<h3>" + def.label + "</h3>" +
+        "<div class='quest-progress'>" + Math.min(have, def.goal) + " / " + def.goal + "</div>" +
+        "<p>Reward: +" + def.xp + " XP · +" + def.kredits + " Kredits</p>";
+      card.appendChild(btn);
+      questList.appendChild(card);
+    }
+  }
+
+  function claimQuest(id) {
+    if (!currentUserSlug) return;
+    let awarded = null;
+    mutateProgression((prog) => {
+      const row = prog.quests.find((q) => q.id === id);
+      const def = QUEST_DEFS.find((q) => q.id === id);
+      if (!row || !def || row.claimed) return;
+      if ((prog.counts[def.key] | 0) < def.goal) return;
+      row.claimed = true;
+      prog.kredits += def.kredits;
+      awarded = def;
+    });
+    if (awarded) grantXp(awarded.xp, "quest");
+    refreshProgressionUI();
+    renderQuests();
+    if (awarded) renderShop();
+  }
+
+  function shopItemOwned(prog, kind, id) {
+    if (kind === "skin") return (prog.ownedSkins || []).includes(id);
+    if (kind === "trail") return (prog.ownedTrails || []).includes(id);
+    return (prog.ownedBgs || []).includes(id);
+  }
+
+  function shopItemEquipped(prog, kind, id) {
+    if (kind === "skin") return prog.equippedSkin === id;
+    if (kind === "trail") return prog.equippedTrail === id;
+    return prog.equippedBg === id;
+  }
+
+  function renderShopSection(title, kind, items, prog) {
+    const wrap = document.createElement("div");
+    const h = document.createElement("div");
+    h.className = "shop-section-title";
+    h.textContent = title;
+    wrap.appendChild(h);
+    const grid = document.createElement("div");
+    grid.className = "shop-grid";
+    for (const item of items) {
+      const owned = shopItemOwned(prog, kind, item.id);
+      const equipped = shopItemEquipped(prog, kind, item.id);
+      const card = document.createElement("div");
+      card.className = "shop-card" + (equipped ? " equipped" : owned ? " owned" : "");
+      const swatch = document.createElement("div");
+      swatch.className = "shop-swatch";
+      if (kind === "skin") swatch.style.background = skinCss(item.id, colorInput ? colorInput.value : "#4af0ff");
+      else if (kind === "trail") swatch.style.background = skinCss(item.id === "frost" ? "subzero" : item.id === "flame" ? "lava" : item.id === "nebula_wake" ? "nebula" : item.id === "rainbow_trail" ? "rainbow" : item.id === "stardust" ? "starry" : "solid", "#ffe66d");
+      else swatch.style.background = pageBgPreview(item.id);
+      const btn = document.createElement("button");
+      btn.type = "button";
+      if (equipped) {
+        btn.textContent = "Equipped";
+        btn.disabled = true;
+      } else if (owned) {
+        btn.textContent = "Equip";
+        btn.addEventListener("click", () => equipCosmetic(kind, item.id));
+      } else if (!item.price) {
+        btn.textContent = "Equip";
+        btn.addEventListener("click", () => buyOrEquip(kind, item));
+      } else {
+        btn.textContent = "Buy · " + item.price + " Kredits";
+        btn.addEventListener("click", () => buyOrEquip(kind, item));
+      }
+      card.appendChild(swatch);
+      const name = document.createElement("h3");
+      name.textContent = item.label;
+      card.appendChild(name);
+      const desc = document.createElement("p");
+      desc.textContent = item.desc;
+      card.appendChild(desc);
+      const price = document.createElement("p");
+      price.className = "shop-price";
+      price.textContent = item.price ? item.price + " Kredits" : "Free";
+      card.appendChild(price);
+      card.appendChild(btn);
+      grid.appendChild(card);
+    }
+    wrap.appendChild(grid);
+    return wrap;
+  }
+
+  function pageBgPreview(id) {
+    const map = {
+      default: "#111",
+      grid: "repeating-linear-gradient(0deg, #163040 0 1px, #071018 1px 12px), repeating-linear-gradient(90deg, #163040 0 1px, #071018 1px 12px)",
+      sunset: "linear-gradient(#1b1030, #c45c2c, #1a0c08)",
+      aurora: "linear-gradient(#04140f, #1fa37a, #0a2a40)",
+      magma: "radial-gradient(circle at 50% 80%, #ff6b1a, #2a0808)",
+      glacier: "linear-gradient(#d8f0ff, #4a7a9a)",
+      starfield: "#070814",
+      nebula_space: "radial-gradient(circle at 40% 40%, #c07cff, #1b1030)",
+    };
+    return map[id] || "#111";
+  }
+
+  function renderShop() {
+    if (!shopList) return;
+    shopList.replaceChildren();
+    if (!currentUserSlug) {
+      shopList.innerHTML = "<p class='menu-tag'>Log in to buy and equip cosmetics.</p>";
+      return;
+    }
+    const prog = loadProfile(currentUserSlug).progression;
+    refreshProgressionUI();
+    shopList.appendChild(renderShopSection("Skins", "skin", SKIN_ITEMS, prog));
+    shopList.appendChild(renderShopSection("Trails", "trail", TRAIL_ITEMS, prog));
+    shopList.appendChild(renderShopSection("Backgrounds", "bg", BG_ITEMS, prog));
+  }
+
+  function buyOrEquip(kind, item) {
+    if (!currentUserSlug || !item) return;
+    let err = "";
+    mutateProgression((prog) => {
+      const owned = shopItemOwned(prog, kind, item.id);
+      if (!owned) {
+        if ((prog.kredits | 0) < (item.price | 0)) {
+          err = "Need " + item.price + " Kredits.";
+          return;
+        }
+        prog.kredits -= item.price | 0;
+        if (kind === "skin") prog.ownedSkins.push(item.id);
+        else if (kind === "trail") prog.ownedTrails.push(item.id);
+        else prog.ownedBgs.push(item.id);
+      }
+      if (kind === "skin") prog.equippedSkin = item.id;
+      else if (kind === "trail") prog.equippedTrail = item.id;
+      else prog.equippedBg = item.id;
+    });
+    if (err) alert(err);
+    refreshProgressionUI();
+    renderShop();
+    if (player && player.playerSlot === 1) applyPlayerCosmetics(player);
+  }
+
+  function equipCosmetic(kind, id) {
+    buyOrEquip(kind, { id, price: 0 });
+  }
+
+  function applyPlayerCosmetics(e) {
+    if (!e || !e.isPlayer || e.playerSlot !== 1) return;
+    e.cosmeticSkin = equippedSkinId();
+    e.cosmeticTrail = equippedTrailId();
   }
 
   function loadSessionUser() {
@@ -2564,8 +3358,8 @@
   function applyProfileToMenu(profile) {
     nameInput.value = profile.displayName.slice(0, 12);
     colorInput.value = profile.dotColor;
-    menuDotPreview.style.background = profile.dotColor;
     if (botDifficultySelect) botDifficultySelect.value = profile.difficulty;
+    applyMenuCosmetics();
   }
 
   function profileFromMenu() {
@@ -2577,6 +3371,7 @@
       stats: currentUserSlug ? loadProfile(currentUserSlug).stats : normalizeCareerStats(null),
       gunStats: currentUserSlug ? gunStatsRuntime : {},
       rarityStats: currentUserSlug ? rarityStatsRuntime : {},
+      progression: currentUserSlug ? loadProfile(currentUserSlug).progression : defaultProgression(),
     };
   }
 
@@ -2631,11 +3426,17 @@
   }
 
   function refreshAccountStatsUI() {
-    if (!accountStats || !currentUserSlug) return;
-    const s = loadProfile(currentUserSlug).stats;
-    accountStats.innerHTML =
-      "Saved on this device — <strong>" + s.games + "</strong> games · " +
-      "<strong>" + s.wins + "</strong> wins · <strong>" + s.kills + "</strong> total kills";
+    if (!currentUserSlug) {
+      refreshProgressionUI();
+      return;
+    }
+    if (accountStats) {
+      const s = loadProfile(currentUserSlug).stats;
+      accountStats.innerHTML =
+        "Saved on this device — <strong>" + s.games + "</strong> games · " +
+        "<strong>" + s.wins + "</strong> wins · <strong>" + s.kills + "</strong> total kills";
+    }
+    refreshProgressionUI();
   }
 
   function updateMenuAuthUI() {
@@ -2882,6 +3683,8 @@
     profile.rarityStats = rarityStatsRuntime;
     saveProfile(currentUserSlug, profile);
     refreshAccountStatsUI();
+    settleMatchXp(won, recPlace);
+    showEndXp();
   }
 
   function loadSavedDifficulty() {
@@ -2930,7 +3733,7 @@
   nameInput.addEventListener("change", saveProfileFromMenu);
   colorInput.addEventListener("change", saveProfileFromMenu);
   colorInput.addEventListener("input", () => {
-    menuDotPreview.style.background = colorInput.value;
+    applyMenuCosmetics();
     saveProfileFromMenu();
   });
 
@@ -3012,6 +3815,196 @@
   function dist(ax, ay, bx, by) {
     const dx = bx - ax, dy = by - ay;
     return Math.hypot(dx, dy);
+  }
+
+  function isStormMode() {
+    return gameMode === "battle_royale" || gameMode === "teams" || gameMode === "revenge";
+  }
+
+  function emptyStormState() {
+    return {
+      enabled: false,
+      phase: 0,
+      mode: "wait",
+      timer: 0,
+      cx: WORLD_W * 0.5,
+      cy: WORLD_H * 0.5,
+      r: STORM_START_R,
+      fromCx: WORLD_W * 0.5,
+      fromCy: WORLD_H * 0.5,
+      fromR: STORM_START_R,
+      toCx: WORLD_W * 0.5,
+      toCy: WORLD_H * 0.5,
+      toR: STORM_START_R,
+      shrinkDur: 1,
+      dps: 0,
+      damageAcc: 0,
+      dmgTextAcc: 0,
+      flash: 0,
+      nextFlashIn: 3,
+    };
+  }
+
+  function stormPhaseSpec(index) {
+    return STORM_PHASES[clamp(index, 0, STORM_PHASES.length - 1)];
+  }
+
+  function pickNestedStormCircle(cx, cy, cr, nextR) {
+    const maxOff = Math.max(0, cr - nextR);
+    const ang = rand(0, Math.PI * 2);
+    const off = maxOff > 0 ? Math.sqrt(Math.random()) * maxOff : 0;
+    return {
+      x: clamp(cx + Math.cos(ang) * off, 48, WORLD_W - 48),
+      y: clamp(cy + Math.sin(ang) * off, 48, WORLD_H - 48),
+      r: Math.max(0, nextR),
+    };
+  }
+
+  function beginStormWait(phaseIndex) {
+    const spec = stormPhaseSpec(phaseIndex);
+    storm.phase = phaseIndex;
+    storm.mode = "wait";
+    storm.timer = spec.wait;
+    storm.fromCx = storm.cx;
+    storm.fromCy = storm.cy;
+    storm.fromR = storm.r;
+    const next = pickNestedStormCircle(storm.cx, storm.cy, storm.r, STORM_START_R * spec.radiusFrac);
+    storm.toCx = next.x;
+    storm.toCy = next.y;
+    storm.toR = next.r;
+    if (phaseIndex > 0) storm.dps = spec.dps;
+  }
+
+  function beginStormShrink() {
+    const spec = stormPhaseSpec(storm.phase);
+    storm.mode = "shrink";
+    storm.timer = spec.shrink;
+    storm.shrinkDur = Math.max(0.01, spec.shrink);
+    storm.fromCx = storm.cx;
+    storm.fromCy = storm.cy;
+    storm.fromR = storm.r;
+    storm.dps = spec.dps;
+    killFeed.push({ line: "The storm is closing", life: 3.8 });
+    if (killFeed.length > 8) killFeed.splice(0, killFeed.length - 8);
+  }
+
+  function initStorm() {
+    storm = emptyStormState();
+    storm.enabled = isStormMode();
+    if (!storm.enabled) return;
+    beginStormWait(0);
+    storm.dps = 0;
+  }
+
+  function pointInStorm(x, y) {
+    if (!storm || !storm.enabled) return false;
+    return dist(x, y, storm.cx, storm.cy) > storm.r + 0.5;
+  }
+
+  function stormAimToward(x, y, cx, cy, radius, margin) {
+    const d = dist(x, y, cx, cy);
+    const safeR = Math.max(0, radius - (margin || 90));
+    if (d <= safeR) return null;
+    if (safeR <= 1) return { x: cx, y: cy };
+    const ang = Math.atan2(y - cy, x - cx);
+    return {
+      x: cx + Math.cos(ang) * safeR,
+      y: cy + Math.sin(ang) * safeR,
+    };
+  }
+
+  function stormSafeAim(x, y, margin) {
+    if (!storm || !storm.enabled) return null;
+    return stormAimToward(x, y, storm.cx, storm.cy, storm.r, margin);
+  }
+
+  function stormNextAim(x, y, margin) {
+    if (!storm || !storm.enabled) return null;
+    return stormAimToward(x, y, storm.toCx, storm.toCy, storm.toR, margin);
+  }
+
+  function stormAiOverride(d) {
+    if (!storm || !storm.enabled || !d || !d.alive) return null;
+    const outsideNow = stormSafeAim(d.x, d.y, 70 + d.radius);
+    if (outsideNow) return outsideNow;
+    const next = stormNextAim(d.x, d.y, 90 + d.radius);
+    if (!next) return null;
+    if (storm.mode === "shrink") return next;
+    if (storm.mode === "wait" && storm.timer < 14) return next;
+    return null;
+  }
+
+  function formatStormClock(sec) {
+    const s = Math.max(0, Math.ceil(sec));
+    const m = Math.floor(s / 60);
+    const r = s % 60;
+    return m + ":" + String(r).padStart(2, "0");
+  }
+
+  function updateStorm(dt) {
+    if (!storm || !storm.enabled) return;
+    storm.flash = Math.max(0, storm.flash - dt * 3.2);
+    storm.nextFlashIn -= dt;
+    if (storm.nextFlashIn <= 0) {
+      storm.flash = rand(0.18, 0.42);
+      storm.nextFlashIn = rand(2.2, 6.5);
+    }
+
+    storm.timer -= dt;
+    if (storm.mode === "wait") {
+      if (storm.timer <= 0) beginStormShrink();
+    } else {
+      const spec = stormPhaseSpec(storm.phase);
+      const dur = storm.shrinkDur || spec.shrink;
+      const t = 1 - clamp(storm.timer / dur, 0, 1);
+      const ease = t * t * (3 - 2 * t);
+      storm.cx = storm.fromCx + (storm.toCx - storm.fromCx) * ease;
+      storm.cy = storm.fromCy + (storm.toCy - storm.fromCy) * ease;
+      storm.r = storm.fromR + (storm.toR - storm.fromR) * ease;
+      if (storm.timer <= 0) {
+        storm.cx = storm.toCx;
+        storm.cy = storm.toCy;
+        storm.r = storm.toR;
+        if (storm.phase + 1 < STORM_PHASES.length) {
+          beginStormWait(storm.phase + 1);
+        } else {
+          storm.mode = "wait";
+          storm.timer = 9999;
+          storm.r = 0;
+          storm.toR = 0;
+          storm.dps = Math.max(storm.dps, 32);
+        }
+      }
+    }
+
+    const dps = storm.r <= 0 ? Math.max(storm.dps, 32) : storm.dps;
+    if (dps <= 0) return;
+    storm.damageAcc += dt;
+    storm.dmgTextAcc += dt;
+    const tick = 0.2;
+    while (storm.damageAcc >= tick) {
+      storm.damageAcc -= tick;
+      const dmg = dps * tick;
+      const showText = storm.dmgTextAcc >= 0.85;
+      for (const d of dots) {
+        if (!d.alive) continue;
+        if (!pointInStorm(d.x, d.y)) continue;
+        d.health -= dmg;
+        if (showText && d.isPlayer) {
+          damageTexts.push({
+            x: d.x + rand(-10, 10),
+            y: d.y - d.radius - 16,
+            text: String(Math.max(1, Math.round(dps))),
+            color: "#d9a5ff",
+            life: 0.7,
+            maxLife: 0.7,
+            big: true,
+          });
+        }
+        if (d.health <= 0) killEntity(null, d, { storm: true });
+      }
+      if (showText) storm.dmgTextAcc = 0;
+    }
   }
   function pickWeighted(table) {
     let r = Math.random();
@@ -3500,21 +4493,29 @@
   function setMainMenuTab(tab) {
     const indexOn = tab === "index";
     const analysisOn = tab === "analysis";
+    const questsOn = tab === "quests";
+    const shopOn = tab === "shop";
     const playOn = tab === "play";
     if (tabPlayMain) tabPlayMain.classList.toggle("active", playOn);
     if (tabIndexMain) tabIndexMain.classList.toggle("active", indexOn);
+    if (tabQuestsMain) tabQuestsMain.classList.toggle("active", questsOn);
+    if (tabShopMain) tabShopMain.classList.toggle("active", shopOn);
     if (tabAnalysisMain) tabAnalysisMain.classList.toggle("active", analysisOn);
     if (tabWikiMain) tabWikiMain.classList.remove("active");
     if (playPanel) playPanel.hidden = !playOn;
     if (indexPanel) indexPanel.hidden = !indexOn;
+    if (questsPanel) questsPanel.hidden = !questsOn;
+    if (shopPanel) shopPanel.hidden = !shopOn;
     if (analysisPanel) analysisPanel.hidden = !analysisOn;
-    if (menuScreen) menuScreen.classList.toggle("menu-index-open", indexOn || analysisOn);
+    if (menuScreen) menuScreen.classList.toggle("menu-index-open", indexOn || analysisOn || questsOn || shopOn);
     if (indexOn) {
       updateWikiLinkRow();
       renderWeaponIndex();
     }
     if (analysisOn) renderAnalysis();
-    const hash = analysisOn ? "#analysis" : (indexOn ? "#index" : "#play");
+    if (questsOn) renderQuests();
+    if (shopOn) renderShop();
+    const hash = analysisOn ? "#analysis" : indexOn ? "#index" : questsOn ? "#quests" : shopOn ? "#shop" : "#play";
     if (location.hash !== hash) {
       history.replaceState(null, "", hash);
     }
@@ -3523,6 +4524,8 @@
   function tabFromHash() {
     if (location.hash === "#index") return "index";
     if (location.hash === "#analysis") return "analysis";
+    if (location.hash === "#quests") return "quests";
+    if (location.hash === "#shop") return "shop";
     return "play";
   }
 
@@ -3530,6 +4533,8 @@
     updateWikiLinkRow();
     if (tabPlayMain) tabPlayMain.addEventListener("click", () => setMainMenuTab("play"));
     if (tabIndexMain) tabIndexMain.addEventListener("click", () => setMainMenuTab("index"));
+    if (tabQuestsMain) tabQuestsMain.addEventListener("click", () => setMainMenuTab("quests"));
+    if (tabShopMain) tabShopMain.addEventListener("click", () => setMainMenuTab("shop"));
     if (tabAnalysisMain) tabAnalysisMain.addEventListener("click", () => setMainMenuTab("analysis"));
     if (tabWikiMain) tabWikiMain.addEventListener("click", goToWiki);
     window.addEventListener("hashchange", () => {
@@ -3964,6 +4969,7 @@
   function beginOverchargeIfNeeded(e, now) {
     const gun = currentGun(e);
     if (!gun || !isOverchargeShotgun(gun.type)) return;
+    if (isEntityUsingMed(e)) return;
     if (e.chargeGunType && e.chargeGunType !== gun.type) cancelOvercharge(e);
     if (e.chargeStartAt) return;
     if (gunBlockedByReloadOrAmmo(e, gun, now)) return;
@@ -4009,6 +5015,7 @@
 
   function applyGunTypeDistanceModifier(type, dmg, distance) {
     type = resolveGunBehaviorType(type);
+    if (isSniperGun(type)) return dmg;
     const meta = getGunTypeMeta(type);
     if (meta.rangeBand) return applyRangeBand(meta.rangeBand, dmg, distance);
     switch (type) {
@@ -4121,6 +5128,7 @@
 
   function gunBlockedByReloadOrAmmo(e, gun, now) {
     if (!gun) return true;
+    if (isEntityUsingMed(e)) return true;
     if (isInfiniteMagGun(gun)) return false;
     if (entityUsesMagazineReload(e)) {
       if (isEntityReloading(e, now)) return true;
@@ -4222,6 +5230,7 @@
 
   function tryStartReload(e, now) {
     if (!e || !e.alive || !entityUsesMagazineReload(e)) return false;
+    if (isEntityUsingMed(e)) return false;
     if (isEntityReloading(e, now)) return false;
     const gun = currentGun(e);
     if (!gun || !canReloadGun(gun)) return false;
@@ -4370,25 +5379,8 @@
     return VIEW_W * 1.2;
   }
 
-  function sniperPeakDamage(gun) {
-    const g = normalizeGun(gun);
-    const band = gunDamageBandFor(g.type, g.rarity);
-    return (band.dmgMin + band.dmgMax) * 0.5;
-  }
-
-  function sniperDamageByDistance(gun, distance) {
-    const peak = sniperPeakDamage(gun);
-    const close = peak * SNIPER_CLOSE_DMG_MUL;
-    const farRange = getSniperFarRange();
-    const t = clamp((distance - SNIPER_CLOSE_RANGE) / Math.max(1, farRange - SNIPER_CLOSE_RANGE), 0, 1);
-    return close + (peak - close) * t;
-  }
-
   function gunDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
-    if (isSniperGun(g.type)) {
-      return sniperDamageByDistance(g, distance);
-    }
     const meta = getGunTypeMeta(g.type);
     if (isOverchargeShotgun(g.type)) {
       const base = typeof g.chargeDamage === "number"
@@ -4416,11 +5408,57 @@
     return Math.max(1, Math.round(gunDamageAtDistance(gun, distance)));
   }
 
+  function ensureVitals(e) {
+    if (!e) return;
+    if (typeof e.maxHealth !== "number") e.maxHealth = e.isBoss ? 400 : MAX_HEALTH;
+    if (typeof e.health !== "number") e.health = e.maxHealth;
+    if (typeof e.maxShield !== "number") e.maxShield = MAX_SHIELD;
+    if (typeof e.shield !== "number") e.shield = e.maxShield;
+  }
+
+  function isEntityUsingMed(e) {
+    return !!(e && e.medUse);
+  }
+
+  function cancelMedChannel(e) {
+    if (e) e.medUse = null;
+  }
+
+  function applyCombatDamage(d, dmg, attacker) {
+    ensureVitals(d);
+    cancelMedChannel(d);
+    let remaining = Math.max(0, dmg);
+    let shieldHit = 0;
+    if (d.shield > 0 && remaining > 0) {
+      shieldHit = Math.min(d.shield, remaining);
+      d.shield -= shieldHit;
+      remaining -= shieldHit;
+    }
+    if (remaining > 0) d.health -= remaining;
+    if (attacker && attacker.id !== d.id && dmg > 0) {
+      if (!d.assistHits) d.assistHits = {};
+      d.assistHits[attacker.id] = performance.now();
+      if (isLocalTrackedPlayer(attacker)) matchXp.damageQueued = (matchXp.damageQueued || 0) + dmg;
+    }
+    return { total: dmg, shieldHit, healthHit: remaining };
+  }
+
+  function healEntityHealth(e, amount) {
+    ensureVitals(e);
+    const before = e.health;
+    e.health = clamp(e.health + amount, 0, e.maxHealth);
+    return e.health - before;
+  }
+
+  function healEntityShield(e, amount) {
+    ensureVitals(e);
+    const before = e.shield;
+    e.shield = clamp(e.shield + amount, 0, e.maxShield);
+    return e.shield - before;
+  }
+
   function gunExpectedDamageAtDistance(gun, distance) {
     const g = normalizeGun(gun);
-    if (isSniperGun(g.type)) {
-      return sniperDamageByDistance(g, distance);
-    }
     const meta = getGunTypeMeta(g.type);
     if (isOverchargeShotgun(g.type)) {
       return applyGunTypeDistanceModifier(g.type, overchargeDamageAtSec(10, g.rarity), distance);
@@ -4538,6 +5576,7 @@
 
   function aiSelectWeapon(d) {
     if (isGunGameMode()) return;
+    if (isEntityUsingMed(d)) return;
     const slots = [];
     for (let i = 0; i < INV_SLOTS; i++) {
       if (d.inventory[i] && isGunItem(d.inventory[i])) slots.push(i);
@@ -4653,6 +5692,7 @@
     victim.invIndex = 0;
     cancelEntityReload(victim);
     cancelOvercharge(victim);
+    cancelMedChannel(victim);
   }
 
   function spawnDot(opts) {
@@ -4675,6 +5715,8 @@
       alive: true,
       health: opts.isBoss ? 400 : MAX_HEALTH,
       maxHealth: opts.isBoss ? 400 : MAX_HEALTH,
+      shield: MAX_SHIELD,
+      maxShield: MAX_SHIELD,
       speed: opts.isBoss ? BOSS_SPEED : DOT_SPEED,
       radius: opts.isBoss ? BOSS_R : DOT_R,
       inventory: [null, null, null, null, null],
@@ -4689,10 +5731,10 @@
       aiWanderY: rand(pad, WORLD_H - pad),
       aiRetargetAt: 0,
       aiWallCooldownUntil: 0,
-      aiLastReloadBoxAt: 0,
       kills: 0,
       finishPlace: null,
       lastMedUse: 0,
+      medUse: null,
       wallCharges: opts.isAI ? AI_STARTING_WOOD : STARTING_WOOD,
       stoneMaterials: 0,
       wallRechargeAt: 0,
@@ -4709,6 +5751,10 @@
       bloomGunType: null,
       semiShotLocked: false,
       chargeStartAt: 0,
+      cosmeticSkin: "solid",
+      cosmeticTrail: "none",
+      trailPts: [],
+      assistHits: {},
       chargeGunType: null,
       aiOverchargeStartAt: 0,
       aiOverchargeFireAt: 0,
@@ -5087,6 +6133,7 @@
     beds = [];
     revengeKilledBy = new Map();
     matchStandings = [];
+    matchXp = emptyMatchXp();
     killFeed = [];
     clearSpectateMode();
     defeatStatsRecorded = false;
@@ -5139,6 +6186,7 @@
     } else {
       nextId = spawnBattleRoyaleMatch(0);
     }
+    if (player) applyPlayerCosmetics(player);
 
     spawnHarvestables();
 
@@ -5205,6 +6253,7 @@
     buildInventoryHud();
     buildInventoryHudP2();
     refreshInventoryHud();
+    initStorm();
     updateHud();
     preloadSignatureBossImages();
     gameStartTime = performance.now();
@@ -5264,7 +6313,12 @@
         inner.style.display = "block";
         typeEl.textContent = item.label;
         typeEl.style.display = "block";
-        el.title = item.label + " (+" + item.heal + " HP) · use item key";
+        const bits = [];
+        if (item.tickHeal) bits.push("+" + item.tickHeal + " HP / 0.5s");
+        else if (item.heal) bits.push("+" + item.heal + " HP");
+        if (item.shield) bits.push("+" + item.shield + " shield");
+        if (item.energy) bits.push("energy");
+        el.title = item.label + (bits.length ? " (" + bits.join(", ") + ")" : "") + " · use item key";
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
@@ -5344,6 +6398,17 @@
     }
     if (!reloadEl) return;
     reloadEl.classList.remove("needs-reload", "reloading");
+    if (isEntityUsingMed(entity)) {
+      const use = entity.medUse;
+      reloadEl.classList.add("reloading");
+      if (use.tickHeal > 0) {
+        reloadEl.textContent = "Using " + (use.label || "Med Kit");
+      } else {
+        const left = Math.max(0, (use.until - now) / 1000);
+        reloadEl.textContent = "Using " + (use.label || "item") + " " + left.toFixed(1) + "s";
+      }
+      return;
+    }
     if (!gun) {
       reloadEl.textContent = "Before reload: —";
       return;
@@ -5417,10 +6482,15 @@
         if (d.teamId != null) d.color = TEAM_COLORS[d.teamId % TEAM_COLORS.length];
       }
     }
-    const pct = clamp(player.health / MAX_HEALTH, 0, 1) * 100;
+    const maxHp = player.maxHealth || MAX_HEALTH;
+    const maxSh = player.maxShield || MAX_SHIELD;
+    ensureVitals(player);
+    const pct = clamp(player.health / maxHp, 0, 1) * 100;
     healthBarFill.style.width = pct + "%";
-    const hp = Math.ceil(player.health);
-    healthLabel.textContent = hp + " / " + MAX_HEALTH;
+    const hp = Math.max(0, Math.ceil(player.health));
+    healthLabel.textContent = hp + " / " + maxHp;
+    if (shieldBarFill) shieldBarFill.style.width = clamp(player.shield / maxSh, 0, 1) * 100 + "%";
+    if (shieldLabel) shieldLabel.textContent = Math.max(0, Math.ceil(player.shield)) + " / " + maxSh;
     if (energyBarFill) energyBarFill.style.width = clamp(player.energy / MAX_ENERGY, 0, 1) * 100 + "%";
     if (energyBarWrap) energyBarWrap.classList.toggle("boosted", performance.now() < (player.energyBoostUntil || 0));
     const alive = dots.filter(d => d.alive);
@@ -5454,11 +6524,39 @@
     updateWallChargesHud(player, wallChargesHud);
     updateAmmoHud(player);
     updateTeamChartHud();
+    if (stormHud) {
+      if (!storm || !storm.enabled) {
+        stormHud.hidden = true;
+      } else {
+        stormHud.hidden = false;
+        const inStorm = player.alive && pointInStorm(player.x, player.y);
+        stormHud.classList.toggle("in-storm", !!(inStorm && storm.dps > 0));
+        stormHud.classList.toggle("closing", storm.mode === "shrink");
+        if (inStorm && storm.dps <= 0) {
+          stormHud.textContent = "Outside the circle · no storm damage yet · " +
+            (storm.mode === "shrink" ? "closing " : "closes in ") + formatStormClock(storm.timer);
+        } else if (inStorm) {
+          stormHud.textContent = "IN THE STORM · " + Math.round(storm.dps) + " DPS · " +
+            (storm.mode === "shrink" ? "closing " : "zone ") + formatStormClock(storm.timer);
+        } else if (storm.r <= 0) {
+          stormHud.textContent = "Storm covers the map";
+        } else if (storm.mode === "shrink") {
+          stormHud.textContent = "Storm closing · " + formatStormClock(storm.timer);
+        } else {
+          stormHud.textContent = "Storm circle · closing in " + formatStormClock(storm.timer);
+        }
+      }
+    }
+    if (healthBarWrap) {
+      healthBarWrap.classList.toggle("in-storm", !!(storm && storm.enabled && storm.dps > 0 && player.alive && pointInStorm(player.x, player.y)));
+    }
 
     if (twoPlayerMode && player2 && hudP2) {
-      const pct2 = clamp(player2.health / MAX_HEALTH, 0, 1) * 100;
+      const pct2 = clamp(player2.health / (player2.maxHealth || MAX_HEALTH), 0, 1) * 100;
       if (healthBarFillP2) healthBarFillP2.style.width = pct2 + "%";
-      if (healthLabelP2) healthLabelP2.textContent = Math.ceil(player2.health) + " / " + MAX_HEALTH;
+      if (healthLabelP2) healthLabelP2.textContent = Math.max(0, Math.ceil(player2.health)) + " / " + (player2.maxHealth || MAX_HEALTH);
+      if (shieldBarFillP2) shieldBarFillP2.style.width = clamp((player2.shield || 0) / (player2.maxShield || MAX_SHIELD), 0, 1) * 100 + "%";
+      if (shieldLabelP2) shieldLabelP2.textContent = Math.max(0, Math.ceil(player2.shield || 0)) + " / " + (player2.maxShield || MAX_SHIELD);
       if (energyBarFillP2) energyBarFillP2.style.width = clamp(player2.energy / MAX_ENERGY, 0, 1) * 100 + "%";
       if (energyBarWrapP2) energyBarWrapP2.classList.toggle("boosted", performance.now() < (player2.energyBoostUntil || 0));
       hudP2.innerHTML =
@@ -5480,7 +6578,7 @@
   }
 
   function isGunItem(item) {
-    return item && item.rarity;
+    return item && item.itemKind !== "med" && !!item.rarity;
   }
 
   function currentItem(e) {
@@ -5646,6 +6744,7 @@
   function tryShoot(e, aimX, aimY, now, accuracy) {
     const gun = currentGun(e);
     if (!gun) return;
+    if (isEntityUsingMed(e)) return;
     if (isOverchargeShotgun(gun.type)) return;
     if (!e.isAI && !isHoldToShootGun(gun)) {
       if (e.semiShotLocked) return;
@@ -6346,13 +7445,13 @@
       const dmg = isMeowie
         ? rollGunBaseDamage(gun)
         : Math.max(1, Math.round(centerDmg * (1 - dDist / (radius + d.radius)) * 0.85));
-      d.health -= dmg;
+      const hit = applyCombatDamage(d, dmg, shotOwner);
       const playerHit = shotOwner && shotOwner.isPlayer;
       damageTexts.push({
         x: d.x + rand(-12, 12),
         y: d.y - d.radius - (d.isPlayer ? 14 : 28),
         text: String(dmg),
-        color: playerHit ? "#ffb347" : (isMeowie ? meowieFxColor : "#ff6b35"),
+        color: playerHit ? (hit.healthHit > 0 ? "#ffb347" : "#7ecbff") : (isMeowie ? meowieFxColor : "#ff6b35"),
         life: playerHit ? 1.35 : 0.9,
         maxLife: playerHit ? 1.35 : 0.9,
         big: playerHit,
@@ -6580,61 +7679,8 @@
     return tryPlaceWallForEntity(player, mouseWorldX, mouseWorldY, now);
   }
 
-  function aiBoxUpForReload(d, now) {
-    if (!d || d.wallCharges < WALL_WOOD_COST) return 0;
-    if (now - (d.aiLastReloadBoxAt || 0) < 2500) return 0;
-    d.aiLastReloadBoxAt = now;
-
-    const x0 = Math.floor(d.x / BUILD_GRID_STEP) * BUILD_GRID_STEP;
-    const y0 = Math.floor(d.y / BUILD_GRID_STEP) * BUILD_GRID_STEP;
-    const x1 = x0 + BUILD_GRID_STEP;
-    const y1 = y0 + BUILD_GRID_STEP;
-    const candidates = [
-      { x: (x0 + x1) * 0.5, y: y0, angle: 0 },
-      { x: (x0 + x1) * 0.5, y: y1, angle: 0 },
-      { x: x0, y: (y0 + y1) * 0.5, angle: Math.PI * 0.5 },
-      { x: x1, y: (y0 + y1) * 0.5, angle: Math.PI * 0.5 },
-    ];
-    let built = 0;
-    for (const c of candidates) {
-      if (d.wallCharges < WALL_WOOD_COST) break;
-      const wall = {
-        x: c.x,
-        y: c.y,
-        len: WALL_LENGTH,
-        thick: WALL_THICK,
-        angle: c.angle,
-        hp: WALL_MAX_HP,
-        maxHp: WALL_MAX_HP,
-        buildType: "wall",
-        ownerId: d.id,
-      };
-      if (c.x < 0 || c.x > WORLD_W || c.y < 0 || c.y > WORLD_H) continue;
-      if (walls.some((w) => wallOverlaps(wall, w))) continue;
-      if (dots.some((other) => other.alive && other.id !== d.id && circleHitsWall(other.x, other.y, other.radius, wall))) continue;
-      if (circleHitsWall(d.x, d.y, d.radius, wall)) continue;
-      if (harvestables.some((node) => circleHitsWall(node.x, node.y, node.radius, wall))) continue;
-      walls.push(wall);
-      d.wallCharges -= WALL_WOOD_COST;
-      built++;
-    }
-    if (built > 0) {
-      damageTexts.push({
-        x: d.x,
-        y: d.y - d.radius - 22,
-        text: "BOX + RELOAD",
-        color: "#9ad4ff",
-        life: 0.75,
-        maxLife: 0.75,
-        big: false,
-      });
-    }
-    return built;
-  }
-
   function aiTryBuildWall(d, now, tune) {
-    // Keep enough wood in reserve for a four-wall emergency reload box.
-    if (d.wallCharges < WALL_WOOD_COST * 5 || now < d.aiWallCooldownUntil) return;
+    if (d.wallCharges < WALL_WOOD_COST || now < d.aiWallCooldownUntil) return;
 
     let tgt = d.aiTarget;
     if (!tgt || !tgt.alive) {
@@ -6674,7 +7720,12 @@
       id,
       label: p.label,
       color: p.color,
+      rarity: p.rarity || null,
       heal: p.heal || 0,
+      shield: p.shield || 0,
+      tickHeal: p.tickHeal || 0,
+      tickMs: p.tickMs || 0,
+      useMs: p.useMs || 0,
       energy: p.energy || 0,
       boostMs: p.boostMs || 0,
     };
@@ -6708,49 +7759,56 @@
     return false;
   }
 
+  function medItemCanHelp(e, potion) {
+    if (!e || !e.alive || !potion) return false;
+    ensureVitals(e);
+    const isEnergyBar = (potion.energy || 0) > 0 || (potion.boostMs || 0) > 0;
+    if (isEnergyBar) {
+      if (e.energy >= MAX_ENERGY && performance.now() < (e.energyBoostUntil || 0)) return false;
+      return true;
+    }
+    if ((potion.heal || 0) > 0 || (potion.tickHeal || 0) > 0) {
+      if (e.health < e.maxHealth) return true;
+    }
+    if ((potion.shield || 0) > 0) {
+      if (e.shield < e.maxShield) return true;
+    }
+    return false;
+  }
+
   function applyPotionToEntity(e, potion) {
     if (!e || !e.alive || !potion) return 0;
-    const before = e.health;
-    e.health = clamp(e.health + (potion.heal || 0), 0, e.maxHealth);
-    const gained = Math.round(e.health - before);
-    if (gained > 0) {
+    ensureVitals(e);
+    const hpGain = healEntityHealth(e, potion.heal || 0);
+    const shGain = healEntityShield(e, potion.shield || 0);
+    if (hpGain > 0) {
       damageTexts.push({
         x: e.x + rand(-10, 10),
         y: e.y - e.radius - (e.isPlayer ? 14 : 24),
-        text: "+" + gained,
+        text: "+" + Math.round(hpGain),
         color: "#5cff8a",
         life: e.isPlayer ? 1.1 : 0.85,
         maxLife: e.isPlayer ? 1.1 : 0.85,
         big: !!e.isPlayer,
       });
     }
-    return gained;
-  }
-
-  function tryUseMed(e, now) {
-    const item = currentItem(e);
-    if (!e || !e.alive || !isMedItem(item)) return false;
-    if (now - (e.lastMedUse || 0) < MED_USE_MS) return false;
-    const isEnergyBar = (item.energy || 0) > 0 || (item.boostMs || 0) > 0;
-    if (!isEnergyBar && e.health >= e.maxHealth) return false;
-    if (isEnergyBar && e.energy >= MAX_ENERGY && now < (e.energyBoostUntil || 0)) return false;
-    e.lastMedUse = now;
-    const gained = applyPotionToEntity(e, item);
-    if (isEnergyBar) {
-      e.energy = clamp(e.energy + (item.energy || MAX_ENERGY), 0, MAX_ENERGY);
-      e.energyBoostUntil = now + (item.boostMs || ENERGY_BOOST_MS);
+    if (shGain > 0) {
       damageTexts.push({
-        x: e.x,
-        y: e.y - e.radius - 20,
-        text: "ENERGY BOOST",
-        color: "#ffe66d",
-        life: 1,
-        maxLife: 1,
+        x: e.x + rand(-10, 10),
+        y: e.y - e.radius - (e.isPlayer ? 26 : 34),
+        text: "+" + Math.round(shGain) + " SH",
+        color: "#7ecbff",
+        life: e.isPlayer ? 1.1 : 0.85,
+        maxLife: e.isPlayer ? 1.1 : 0.85,
         big: !!e.isPlayer,
       });
-    } else if (gained <= 0) {
-      return false;
     }
+    return hpGain + shGain;
+  }
+
+  function consumeSelectedMed(e) {
+    if (!e) return;
+    if (isLocalTrackedPlayer(e)) bumpQuest("meds", 1);
     e.inventory[e.invIndex] = null;
     let next = -1;
     for (let i = 0; i < INV_SLOTS; i++) {
@@ -6761,18 +7819,125 @@
       refreshInventoryHud();
       updateHud();
     }
+  }
+
+  function tryUseMed(e, now) {
+    const item = currentItem(e);
+    if (!e || !e.alive || !isMedItem(item)) return false;
+    if (isEntityUsingMed(e)) return false;
+    if (!medItemCanHelp(e, item)) return false;
+    cancelEntityReload(e);
+    cancelOvercharge(e);
+    const isEnergyBar = (item.energy || 0) > 0 || (item.boostMs || 0) > 0;
+    const isKit = (item.tickHeal || 0) > 0;
+    e.lastMedUse = now;
+    e.medUse = {
+      slot: e.invIndex,
+      label: item.label,
+      until: isKit ? 0 : now + (item.useMs || MED_USE_MS),
+      tickHeal: item.tickHeal || 0,
+      tickMs: item.tickMs || 0,
+      nextTickAt: isKit ? now + (item.tickMs || 500) : 0,
+      consumed: false,
+      energy: isEnergyBar,
+    };
     return true;
   }
 
+  function finishMedChannel(e, now) {
+    if (!e || !e.medUse) return;
+    const slot = e.medUse.slot;
+    const item = e.inventory[slot];
+    if (item && isMedItem(item)) {
+      applyPotionToEntity(e, item);
+      if (e.medUse.energy) {
+        e.energy = clamp(e.energy + (item.energy || MAX_ENERGY), 0, MAX_ENERGY);
+        e.energyBoostUntil = now + (item.boostMs || ENERGY_BOOST_MS);
+        damageTexts.push({
+          x: e.x,
+          y: e.y - e.radius - 20,
+          text: "ENERGY BOOST",
+          color: "#ffe66d",
+          life: 1,
+          maxLife: 1,
+          big: !!e.isPlayer,
+        });
+      }
+      e.invIndex = slot;
+      consumeSelectedMed(e);
+    }
+    e.medUse = null;
+    if (e.isPlayer) updateHud();
+  }
+
+  function updateEntityMedUse(e, now) {
+    if (!e || !e.alive || !e.medUse) return;
+    const use = e.medUse;
+    if (use.tickHeal > 0) {
+      if (e.health >= e.maxHealth) {
+        if (!use.consumed && e.inventory[use.slot] && isMedItem(e.inventory[use.slot])) {
+          e.invIndex = use.slot;
+          consumeSelectedMed(e);
+        }
+        e.medUse = null;
+        return;
+      }
+      while (use.nextTickAt && now >= use.nextTickAt && e.health < e.maxHealth) {
+        const gained = healEntityHealth(e, use.tickHeal);
+        if (gained > 0) {
+          damageTexts.push({
+            x: e.x + rand(-8, 8),
+            y: e.y - e.radius - (e.isPlayer ? 14 : 22),
+            text: "+" + Math.round(gained),
+            color: "#5cff8a",
+            life: 0.7,
+            maxLife: 0.7,
+            big: !!e.isPlayer,
+          });
+        }
+        if (!use.consumed && e.inventory[use.slot] && isMedItem(e.inventory[use.slot])) {
+          e.invIndex = use.slot;
+          consumeSelectedMed(e);
+          use.consumed = true;
+        }
+        use.nextTickAt += use.tickMs || 500;
+        if (e.health >= e.maxHealth) break;
+      }
+      if (e.health >= e.maxHealth) e.medUse = null;
+      if (e.isPlayer) updateHud();
+      return;
+    }
+    const item = e.inventory[use.slot];
+    if (!item || !isMedItem(item)) {
+      e.medUse = null;
+      return;
+    }
+    if (now >= use.until) finishMedChannel(e, now);
+  }
+
   function aiTryUseMed(d, now) {
-    if (d.health >= d.maxHealth * 0.92) return;
+    if (!d || !d.alive || isEntityUsingMed(d) || isEntityReloading(d, now)) return;
+    ensureVitals(d);
+    const needHealth = d.health < d.maxHealth * 0.92;
+    const needShield = d.shield < d.maxShield * 0.92;
+    if (!needHealth && !needShield) return;
     for (let i = 0; i < INV_SLOTS; i++) {
-      if (!isMedItem(d.inventory[i])) continue;
-      if ((d.inventory[i].energy || 0) > 0) continue;
-      const prev = d.invIndex;
-      d.invIndex = i;
-      if (tryUseMed(d, now)) return;
-      d.invIndex = prev;
+      const item = d.inventory[i];
+      if (!isMedItem(item)) continue;
+      if ((item.energy || 0) > 0) continue;
+      const isShield = (item.shield || 0) > 0;
+      const isHealth = (item.heal || 0) > 0 || (item.tickHeal || 0) > 0;
+      if (needHealth && isHealth) {
+        const prev = d.invIndex;
+        d.invIndex = i;
+        if (tryUseMed(d, now)) return;
+        d.invIndex = prev;
+      } else if (!needHealth && needShield && isShield) {
+        const prev = d.invIndex;
+        d.invIndex = i;
+        if (tryUseMed(d, now)) return;
+        d.invIndex = prev;
+      }
     }
   }
 
@@ -6783,6 +7948,7 @@
       if (!applyAmmoPackToCurrentGun(e, ch.ammoPack)) return;
     }
     ch.open = true;
+    if (isLocalTrackedPlayer(e)) bumpQuest("chests", 1);
     if (ch.kind === "med") {
       addMedToEntity(e, ch.potion);
     } else if (ch.kind === "gun") {
@@ -6804,7 +7970,7 @@
   }
 
   function snapshotKillGun(gun) {
-    if (!gun) return null;
+    if (!gun || gun.storm) return null;
     const ng = normalizeGun(gun) || gun;
     return {
       type: ng.type,
@@ -6834,6 +8000,7 @@
   function formatPlayerDeathLine(victim) {
     if (!victim || !victim.lastDeath) return "";
     const d = victim.lastDeath;
+    if (d.storm) return "The storm eliminated you.";
     if (d.self) return "You died to your own " + d.gunLabel + ".";
     if (d.killerName) return d.killerName + " killed you with " + d.gunLabel + ".";
     return "You were eliminated.";
@@ -6850,7 +8017,9 @@
     if (!victim) return;
     const gunLabel = formatGunLabel(gun);
     let line;
-    if (killer && killer.id === victim.id) {
+    if (gun && gun.storm) {
+      line = victim.name + " was lost to the storm";
+    } else if (killer && killer.id === victim.id) {
       line = victim.name + " eliminated themselves with " + gunLabel;
     } else if (killer) {
       line = killer.name + " eliminated " + victim.name + " with " + gunLabel;
@@ -6909,8 +8078,14 @@
     if (!killer) return;
     killer.kills++;
     if (killer.isPlayer) {
-      killer.health = clamp(killer.health + KILL_HEAL, 0, MAX_HEALTH);
+      ensureVitals(killer);
+      let left = KILL_HEAL;
+      const toHp = Math.min(left, Math.max(0, killer.maxHealth - killer.health));
+      killer.health += toHp;
+      left -= toHp;
+      if (left > 0) killer.shield = clamp(killer.shield + left, 0, killer.maxShield);
     } else if (!killer.isPlayer) {
+      ensureVitals(killer);
       killer.health = clamp(killer.health + KILL_HEAL * 0.5, 0, killer.maxHealth);
     }
     if (!hasInfiniteAmmo(killer) && applyAmmoToInventoryGun(killer, KILL_AMMO)) {
@@ -6932,12 +8107,14 @@
     victim.x = x;
     victim.y = y;
     victim.health = victim.maxHealth;
+    victim.shield = victim.maxShield || MAX_SHIELD;
     victim.alive = true;
     victim.finishPlace = null;
     victim.inventory = [null, null, null, null, null];
     victim.invIndex = 0;
     cancelEntityReload(victim);
     cancelOvercharge(victim);
+    cancelMedChannel(victim);
     victim.bloomLevel = 0;
     victim.bloomGunType = null;
     matchStandings = matchStandings.filter((row) => row.id !== victim.id);
@@ -7054,21 +8231,34 @@
 
   function killEntity(killer, victim, killGun) {
     if (!victim || !victim.alive) return;
-    const gunSnap = snapshotKillGun(killGun);
+    cancelMedChannel(victim);
+    const stormKill = !!(killGun && killGun.storm);
+    const gunSnap = stormKill ? { storm: true } : snapshotKillGun(killGun);
     const selfKill = !!(killer && killer.id === victim.id);
     victim.lastDeath = {
       killerName: killer && !selfKill ? killer.name : null,
       self: selfKill,
-      gunLabel: formatGunLabel(gunSnap),
+      gunLabel: stormKill ? "the storm" : formatGunLabel(gunSnap),
       gunType: gunSnap ? gunSnap.type : null,
+      storm: stormKill,
     };
-    if (killer && !selfKill && isLocalTrackedPlayer(killer) && gunSnap) {
+    if (!stormKill && killer && !selfKill && isLocalTrackedPlayer(killer) && gunSnap) {
       bumpGunStat(gunSnap.type, "kills");
     }
-    if (isLocalTrackedPlayer(victim) && gunSnap) {
+    if (!stormKill && isLocalTrackedPlayer(victim) && gunSnap) {
       bumpGunStat(gunSnap.type, "deaths");
     }
     pushKillFeed(killer, victim, gunSnap);
+    noteLocalElim(killer, victim);
+    const nowHit = performance.now();
+    const hits = victim.assistHits || {};
+    for (const id of Object.keys(hits)) {
+      if (killer && String(killer.id) === id) continue;
+      if (nowHit - hits[id] > ASSIST_WINDOW_MS) continue;
+      const assister = dots.find((x) => String(x.id) === id);
+      if (assister) noteLocalAssist(assister);
+    }
+    victim.assistHits = {};
 
     if (gameMode === "revenge" && killer && killer.id !== victim.id && !victim.isBoss) {
       revengeKilledBy.set(victim.id, killer.id);
@@ -7300,6 +8490,7 @@
     e.x = clamp(e.x, e.radius, WORLD_W - e.radius);
     e.y = clamp(e.y, e.radius, WORLD_H - e.radius);
     resolveEntityWallCollisions(e);
+    if (moving) pushTrailPoint(e);
     if (gameMode === "bedwars" && e.bedwarsRole === "defender" && e.alive) {
       bedwarsClampDefenderInWedge(e);
     }
@@ -7359,6 +8550,7 @@
     if (!onlineMode || !onlineHost || !player2 || !player2.alive || !remoteInput) return;
     const ri = remoteInput;
     updateEntityReload(player2, now);
+    updateEntityMedUse(player2, now);
     player2.scoped = !!ri.scoped;
     player2.buildMode = ri.buildMode === "slant" ? "slant" : "wall";
     player2.buildMaterial = ri.buildMaterial === "stone" ? "stone" : "wood";
@@ -7379,7 +8571,10 @@
     if (ri.drop) dropCurrentWeapon(player2);
     if (typeof ri.invIndex === "number") {
       const next = clamp(ri.invIndex | 0, 0, INV_SLOTS - 1);
-      if (next !== player2.invIndex) cancelEntityReload(player2);
+      if (next !== player2.invIndex) {
+        cancelEntityReload(player2);
+        cancelMedChannel(player2);
+      }
       player2.invIndex = next;
     }
   }
@@ -7392,7 +8587,12 @@
         id: item.id,
         color: item.color,
         label: item.label,
-        heal: item.heal,
+        rarity: item.rarity || null,
+        heal: item.heal || 0,
+        shield: item.shield || 0,
+        tickHeal: item.tickHeal || 0,
+        tickMs: item.tickMs || 0,
+        useMs: item.useMs || 0,
         energy: item.energy || 0,
         boostMs: item.boostMs || 0,
         itemKind: "med",
@@ -7426,7 +8626,12 @@
         id: data.id,
         color: data.color,
         label: data.label,
-        heal: data.heal,
+        rarity: data.rarity || null,
+        heal: data.heal || 0,
+        shield: data.shield || 0,
+        tickHeal: data.tickHeal || 0,
+        tickMs: data.tickMs || 0,
+        useMs: data.useMs || 0,
         energy: data.energy || 0,
         boostMs: data.boostMs || 0,
       };
@@ -7447,6 +8652,8 @@
         y: player2.y,
         health: player2.health,
         maxHealth: player2.maxHealth,
+        shield: player2.shield || 0,
+        maxShield: player2.maxShield || MAX_SHIELD,
         alive: player2.alive,
         kills: player2.kills,
         invIndex: player2.invIndex,
@@ -7459,6 +8666,16 @@
         buildMode: player2.buildMode || "wall",
         buildMaterial: player2.buildMaterial || "wood",
         reloadUntil: player2.reloadUntil || 0,
+        medUse: player2.medUse ? {
+          slot: player2.medUse.slot,
+          label: player2.medUse.label,
+          until: player2.medUse.until,
+          tickHeal: player2.medUse.tickHeal || 0,
+          tickMs: player2.medUse.tickMs || 0,
+          nextTickAt: player2.medUse.nextTickAt || 0,
+          consumed: !!player2.medUse.consumed,
+          energy: !!player2.medUse.energy,
+        } : null,
         modulatedHeavy: !!player2.modulatedHeavy,
         inventory: player2.inventory.map(serializeInvSlot),
         name: player2Name,
@@ -7472,6 +8689,8 @@
         color: d.color,
         health: d.health,
         maxHealth: d.maxHealth,
+        shield: d.shield || 0,
+        maxShield: d.maxShield || MAX_SHIELD,
         alive: d.alive,
         isBoss: !!d.isBoss,
         isSignatureBoss: !!d.isSignatureBoss,
@@ -7496,6 +8715,20 @@
       damageTexts: damageTexts.map((t) => ({
         x: t.x, y: t.y, text: t.text, color: t.color, life: t.life, maxLife: t.maxLife, big: !!t.big,
       })),
+      storm: storm && storm.enabled ? {
+        enabled: true,
+        phase: storm.phase,
+        mode: storm.mode,
+        timer: storm.timer,
+        cx: storm.cx,
+        cy: storm.cy,
+        r: storm.r,
+        toCx: storm.toCx,
+        toCy: storm.toCy,
+        toR: storm.toR,
+        dps: storm.dps,
+        flash: storm.flash,
+      } : { enabled: false },
     };
   }
 
@@ -7515,6 +8748,8 @@
       }
       player.health = gv.health;
       player.maxHealth = gv.maxHealth;
+      player.shield = typeof gv.shield === "number" ? gv.shield : (player.shield || MAX_SHIELD);
+      player.maxShield = gv.maxShield || MAX_SHIELD;
       player.alive = gv.alive;
       player.kills = gv.kills;
       player.wallCharges = gv.wallCharges;
@@ -7526,8 +8761,10 @@
       player.buildMode = gv.buildMode === "slant" ? "slant" : "wall";
       player.buildMaterial = gv.buildMaterial === "stone" ? "stone" : "wood";
       player.reloadUntil = gv.reloadUntil || 0;
+      player.medUse = gv.medUse || null;
       if (typeof gv.modulatedHeavy === "boolean") player.modulatedHeavy = gv.modulatedHeavy;
       if (gv.inventory) player.inventory = gv.inventory.map(hydrateInvSlot);
+      if (typeof gv.invIndex === "number") player.invIndex = gv.invIndex;
       player.invIndex = clamp(player.invIndex, 0, INV_SLOTS - 1);
     }
     if (state.dots) {
@@ -7541,6 +8778,8 @@
           d.y += (sd.y - d.y) * 0.5;
           d.health = sd.health;
           d.maxHealth = sd.maxHealth;
+          d.shield = typeof sd.shield === "number" ? sd.shield : (d.shield || MAX_SHIELD);
+          d.maxShield = sd.maxShield || MAX_SHIELD;
           d.alive = sd.alive;
           d.kills = sd.kills || 0;
           d.color = sd.color;
@@ -7564,6 +8803,8 @@
             alive: sd.alive,
             health: sd.health,
             maxHealth: sd.maxHealth,
+            shield: typeof sd.shield === "number" ? sd.shield : MAX_SHIELD,
+            maxShield: sd.maxShield || MAX_SHIELD,
             speed: sd.isBoss ? BOSS_SPEED : DOT_SPEED,
             radius: sd.radius,
             inventory: [null, null, null, null, null],
@@ -7596,6 +8837,25 @@
       life: null,
     }));
     damageTexts = (state.damageTexts || []).map((t) => ({ ...t }));
+    if (state.storm) {
+      if (!storm) storm = emptyStormState();
+      storm.enabled = !!state.storm.enabled;
+      if (storm.enabled) {
+        storm.phase = state.storm.phase | 0;
+        storm.mode = state.storm.mode === "shrink" ? "shrink" : "wait";
+        storm.timer = Number(state.storm.timer) || 0;
+        storm.cx = Number(state.storm.cx) || storm.cx;
+        storm.cy = Number(state.storm.cy) || storm.cy;
+        storm.r = Number(state.storm.r);
+        if (!Number.isFinite(storm.r)) storm.r = STORM_START_R;
+        storm.toCx = Number(state.storm.toCx) || storm.toCx;
+        storm.toCy = Number(state.storm.toCy) || storm.toCy;
+        storm.toR = Number(state.storm.toR);
+        if (!Number.isFinite(storm.toR)) storm.toR = storm.r;
+        storm.dps = Number(state.storm.dps) || 0;
+        storm.flash = Number(state.storm.flash) || 0;
+      }
+    }
     if (player && player.alive) {
       const vw = viewHalfW();
       camX = clamp(player.x - vw * 0.5, 0, Math.max(0, WORLD_W - vw));
@@ -7678,6 +8938,7 @@
     if (next !== entity.invIndex) {
       cancelEntityReload(entity);
       cancelOvercharge(entity);
+      cancelMedChannel(entity);
     }
     entity.invIndex = next;
     refreshInventoryHud();
@@ -8097,6 +9358,7 @@
     harvestables = [];
     matchStandings = [];
     killFeed = [];
+    storm = emptyStormState();
     player = spawnDot({ id: 9999, name: playerName, color: playerColor, isPlayer: true, playerSlot: 1 });
     dots.push(player);
     player2 = null;
@@ -8299,6 +9561,11 @@
         tx = d.aiTarget.x;
         ty = d.aiTarget.y;
       }
+      const stormGoal = stormAiOverride(d);
+      if (stormGoal) {
+        tx = stormGoal.x;
+        ty = stormGoal.y;
+      }
       const dx = tx - d.x;
       const dy = ty - d.y;
       const len = Math.hypot(dx, dy) || 1;
@@ -8394,10 +9661,21 @@
       break;
     }
 
+    const stormGoal = stormAiOverride(d);
+    if (stormGoal) {
+      d.aiTarget = null;
+      d.aiWanderX = stormGoal.x;
+      d.aiWanderY = stormGoal.y;
+    }
+
     let tx = d.aiWanderX, ty = d.aiWanderY;
     if (d.aiTarget && d.aiTarget.alive) {
       tx = d.aiTarget.x;
       ty = d.aiTarget.y;
+    }
+    if (stormGoal) {
+      tx = stormGoal.x;
+      ty = stormGoal.y;
     }
 
     const dx = tx - d.x, dy = ty - d.y;
@@ -8427,7 +9705,6 @@
         return;
       }
     }
-    aiBoxUpForReload(d, now);
     tryStartReload(d, now);
   }
 
@@ -8474,7 +9751,7 @@
           .sort((a, b) => dist(d.x, d.y, a.x, a.y) - dist(d.x, d.y, b.x, b.y));
         aim = foes[0];
       }
-      if (aim && !isEntityReloading(d, now)) {
+      if (aim && !isEntityReloading(d, now) && !isEntityUsingMed(d)) {
         d.aiTarget = aim;
         const shootChance = spectateMode ? 0.98 : 0.48;
         if (dist(d.x, d.y, aim.x, aim.y) < (isSniperGun(gun.type) ? Math.max(tune.shootRange, getSniperFarRange() + 40) : tune.shootRange) && Math.random() < shootChance) {
@@ -8639,14 +9916,14 @@
           }
           const hitDist = dist(b.ox, b.oy, b.x, b.y);
           const dmg = gunDamage(b.gun, hitDist);
-          d.health -= dmg;
+          const hit = applyCombatDamage(d, dmg, shotOwner);
           const playerHit = shotOwner && shotOwner.isPlayer;
           const dmgFloatY = d.y - d.radius - (d.isPlayer ? 14 : 28);
           damageTexts.push({
             x: d.x + rand(-12, 12),
             y: dmgFloatY,
             text: String(dmg),
-            color: playerHit ? "#fff" : b.color,
+            color: playerHit ? (hit.healthHit > 0 ? "#fff" : "#7ecbff") : b.color,
             life: playerHit ? 1.35 : 0.9,
             maxLife: playerHit ? 1.35 : 0.9,
             big: playerHit,
@@ -8749,6 +10026,7 @@
       }
       mctx.fillRect(pad + ch.x * sx - 1, pad + ch.y * sy - 1, 3, 3);
     }
+    drawStormOnMinimap(pad, sx, sy);
     for (const d of dots) {
       if (!d.alive || d.hideOnMinimap) continue;
       const hl = isTeamGameMode() ? d.teamId === (player && player.teamId) : d.isPlayer;
@@ -8806,6 +10084,333 @@
     }
   }
 
+  function drawStormInViewport(cx, cy, vw, vh, focusEntity) {
+    if (!storm || !storm.enabled) return;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(cx, cy, vw, vh);
+    ctx.closePath();
+    if (storm.r > 0.5) {
+      ctx.moveTo(storm.cx + storm.r, storm.cy);
+      ctx.arc(storm.cx, storm.cy, storm.r, 0, Math.PI * 2);
+      ctx.closePath();
+    }
+    ctx.clip("evenodd");
+    const inFog = !!(focusEntity && focusEntity.alive && pointInStorm(focusEntity.x, focusEntity.y));
+    ctx.fillStyle = inFog ? "rgba(48, 14, 92, 0.56)" : "rgba(58, 22, 110, 0.40)";
+    ctx.fillRect(cx, cy, vw, vh);
+
+    ctx.strokeStyle = "rgba(206, 188, 255, 0.28)";
+    ctx.lineWidth = 1.15;
+    const t = performance.now() * 0.001;
+    const cols = 12;
+    const rows = 9;
+    for (let i = 0; i < cols * rows; i++) {
+      const gx = i % cols;
+      const gy = Math.floor(i / cols);
+      const px = cx + ((gx + 0.28) / cols) * vw + Math.sin(t * 2.15 + i) * 14;
+      const py = cy + ((gy + ((t * 1.55 + i * 0.17) % 1)) / rows) * vh;
+      ctx.beginPath();
+      ctx.moveTo(px, py);
+      ctx.lineTo(px + 8, py + 20);
+      ctx.stroke();
+    }
+    if (storm.flash > 0) {
+      ctx.fillStyle = "rgba(232, 214, 255," + (storm.flash * 0.58) + ")";
+      ctx.fillRect(cx, cy, vw, vh);
+    }
+    ctx.restore();
+
+    if (storm.r > 1) {
+      ctx.beginPath();
+      ctx.arc(storm.cx, storm.cy, storm.r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(236, 228, 255, 0.95)";
+      ctx.lineWidth = 7;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.arc(storm.cx, storm.cy, storm.r, 0, Math.PI * 2);
+      ctx.strokeStyle = "rgba(168, 118, 255, 0.75)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+    }
+
+    const showNext = storm.toR >= 0 && (Math.abs(storm.toR - storm.r) > 12 || dist(storm.cx, storm.cy, storm.toCx, storm.toCy) > 12);
+    if (showNext && storm.toR > 1) {
+      ctx.beginPath();
+      ctx.arc(storm.toCx, storm.toCy, storm.toR, 0, Math.PI * 2);
+      ctx.setLineDash([18, 14]);
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.86)";
+      ctx.lineWidth = 3;
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    if (focusEntity && focusEntity.alive && pointInStorm(focusEntity.x, focusEntity.y)) {
+      const aim = stormSafeAim(focusEntity.x, focusEntity.y, 24) || { x: storm.cx, y: storm.cy };
+      const ang = Math.atan2(aim.y - focusEntity.y, aim.x - focusEntity.x);
+      const ax = focusEntity.x + Math.cos(ang) * (focusEntity.radius + 28);
+      const ay = focusEntity.y + Math.sin(ang) * (focusEntity.radius + 28);
+      ctx.save();
+      ctx.translate(ax, ay);
+      ctx.rotate(ang);
+      ctx.fillStyle = "rgba(236, 220, 255, 0.95)";
+      ctx.beginPath();
+      ctx.moveTo(12, 0);
+      ctx.lineTo(-8, -9);
+      ctx.lineTo(-4, 0);
+      ctx.lineTo(-8, 9);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ctx.fillStyle = "rgba(236, 198, 255, 0.95)";
+      ctx.font = "bold 13px system-ui";
+      ctx.textAlign = "center";
+      ctx.fillText("STORM", focusEntity.x, focusEntity.y - focusEntity.radius - 36);
+    }
+  }
+
+  function drawStormOnMinimap(pad, sx, sy) {
+    if (!storm || !storm.enabled) return;
+    mctx.save();
+    mctx.beginPath();
+    mctx.rect(pad, pad, WORLD_W * sx, WORLD_H * sy);
+    mctx.closePath();
+    if (storm.r > 0.5) {
+      mctx.moveTo(pad + (storm.cx + storm.r) * sx, pad + storm.cy * sy);
+      mctx.ellipse(pad + storm.cx * sx, pad + storm.cy * sy, storm.r * sx, storm.r * sy, 0, 0, Math.PI * 2);
+      mctx.closePath();
+    }
+    mctx.clip("evenodd");
+    mctx.fillStyle = "rgba(118, 64, 196, 0.42)";
+    mctx.fillRect(pad, pad, WORLD_W * sx, WORLD_H * sy);
+    mctx.restore();
+
+    if (storm.r > 1) {
+      mctx.beginPath();
+      mctx.ellipse(pad + storm.cx * sx, pad + storm.cy * sy, storm.r * sx, storm.r * sy, 0, 0, Math.PI * 2);
+      mctx.strokeStyle = "rgba(232, 222, 255, 0.95)";
+      mctx.lineWidth = 1.6;
+      mctx.stroke();
+    }
+    const showNext = Math.abs(storm.toR - storm.r) > 24 || dist(storm.cx, storm.cy, storm.toCx, storm.toCy) > 24;
+    if (showNext && storm.toR > 1) {
+      mctx.beginPath();
+      mctx.ellipse(pad + storm.toCx * sx, pad + storm.toCy * sy, storm.toR * sx, storm.toR * sy, 0, 0, Math.PI * 2);
+      mctx.setLineDash([4, 3]);
+      mctx.strokeStyle = "rgba(255,255,255,0.88)";
+      mctx.lineWidth = 1.15;
+      mctx.stroke();
+      mctx.setLineDash([]);
+    }
+  }
+
+  function pushTrailPoint(e) {
+    if (!e || !e.isPlayer || e.playerSlot !== 1) return;
+    const trail = e.cosmeticTrail || "none";
+    if (trail === "none") return;
+    if (!e.trailPts) e.trailPts = [];
+    const last = e.trailPts[e.trailPts.length - 1];
+    if (last && dist(last.x, last.y, e.x, e.y) < 7) return;
+    e.trailPts.push({ x: e.x, y: e.y, life: 0.42 });
+    if (e.trailPts.length > 22) e.trailPts.shift();
+  }
+
+  function updateEntityTrail(e, dt) {
+    if (!e || !e.trailPts) return;
+    for (let i = e.trailPts.length - 1; i >= 0; i--) {
+      e.trailPts[i].life -= dt;
+      if (e.trailPts[i].life <= 0) e.trailPts.splice(i, 1);
+    }
+  }
+
+  function trailColor(kind, t) {
+    if (kind === "flame") return "rgba(255," + Math.round(90 + t * 80) + ",40," + (0.18 + t * 0.45) + ")";
+    if (kind === "frost") return "rgba(170,220,255," + (0.16 + t * 0.5) + ")";
+    if (kind === "sparks") return "rgba(255,220,90," + (0.2 + t * 0.55) + ")";
+    if (kind === "stardust") return "rgba(255,255,230," + (0.15 + t * 0.55) + ")";
+    if (kind === "nebula_wake") return "rgba(180,90,255," + (0.16 + t * 0.48) + ")";
+    if (kind === "rainbow_trail") {
+      const hue = (performance.now() / 8 + t * 80) % 360;
+      return "hsla(" + hue + ",90%,60%," + (0.18 + t * 0.5) + ")";
+    }
+    return "rgba(255,255,255," + (0.12 + t * 0.4) + ")";
+  }
+
+  function drawEntityTrail(e) {
+    if (!e || !e.trailPts || !e.trailPts.length) return;
+    const kind = e.cosmeticTrail || "none";
+    if (kind === "none") return;
+    for (let i = 0; i < e.trailPts.length; i++) {
+      const p = e.trailPts[i];
+      const t = clamp(p.life / 0.42, 0, 1);
+      ctx.fillStyle = trailColor(kind, t);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, e.radius * (0.35 + t * 0.7), 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  let bgStarCache = null;
+  function worldStars() {
+    if (bgStarCache) return bgStarCache;
+    bgStarCache = [];
+    let s = 1234567;
+    function rnd() {
+      s = (s * 1664525 + 1013904223) >>> 0;
+      return s / 4294967296;
+    }
+    for (let i = 0; i < 240; i++) {
+      bgStarCache.push({
+        x: rnd() * WORLD_W,
+        y: rnd() * WORLD_H,
+        r: rnd() * 1.5 + 0.35,
+        a: 0.25 + rnd() * 0.7,
+      });
+    }
+    return bgStarCache;
+  }
+
+  function fillWorldBackground() {
+    const id = equippedBgId();
+    if (id === "sunset") {
+      const g = ctx.createLinearGradient(0, 0, 0, WORLD_H);
+      g.addColorStop(0, "#1b1030");
+      g.addColorStop(0.42, "#c45c2c");
+      g.addColorStop(1, "#1a0c08");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      return;
+    }
+    if (id === "aurora") {
+      const g = ctx.createLinearGradient(0, 0, WORLD_W, WORLD_H);
+      g.addColorStop(0, "#04140f");
+      g.addColorStop(0.45, "#147a5c");
+      g.addColorStop(1, "#0a2a40");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      return;
+    }
+    if (id === "magma") {
+      ctx.fillStyle = "#140806";
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      const g = ctx.createRadialGradient(WORLD_W * 0.5, WORLD_H, 40, WORLD_W * 0.5, WORLD_H, WORLD_W * 0.7);
+      g.addColorStop(0, "rgba(255,90,20,0.45)");
+      g.addColorStop(1, "rgba(20,0,0,0)");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      return;
+    }
+    if (id === "glacier") {
+      const g = ctx.createLinearGradient(0, 0, 0, WORLD_H);
+      g.addColorStop(0, "#d8f0ff");
+      g.addColorStop(1, "#3a6280");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      return;
+    }
+    if (id === "starfield" || id === "nebula_space") {
+      if (id === "nebula_space") {
+        const g = ctx.createRadialGradient(WORLD_W * 0.4, WORLD_H * 0.4, 80, WORLD_W * 0.4, WORLD_H * 0.4, WORLD_W * 0.55);
+        g.addColorStop(0, "#6b2d8a");
+        g.addColorStop(1, "#070814");
+        ctx.fillStyle = g;
+      } else {
+        ctx.fillStyle = "#070814";
+      }
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      for (const st of worldStars()) {
+        ctx.globalAlpha = st.a;
+        ctx.fillStyle = "#fff";
+        ctx.beginPath();
+        ctx.arc(st.x, st.y, st.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+      return;
+    }
+    if (id === "grid") {
+      ctx.fillStyle = "#071018";
+      ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+      return;
+    }
+    ctx.fillStyle = "#050508";
+    ctx.fillRect(0, 0, WORLD_W, WORLD_H);
+  }
+
+  function fillEntityDot(d) {
+    ctx.beginPath();
+    ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
+    const skin = (d.isPlayer && d.playerSlot === 1) ? (d.cosmeticSkin || "solid") : "solid";
+    if (skin === "solid") {
+      ctx.fillStyle = d.color;
+      ctx.fill();
+      return;
+    }
+    ctx.save();
+    ctx.clip();
+    if (skin === "striped") {
+      ctx.fillStyle = d.color;
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+      ctx.strokeStyle = "rgba(10,10,12,0.72)";
+      ctx.lineWidth = 4;
+      for (let i = -d.radius * 2; i <= d.radius * 2; i += 7) {
+        ctx.beginPath();
+        ctx.moveTo(d.x + i - d.radius, d.y - d.radius);
+        ctx.lineTo(d.x + i + d.radius, d.y + d.radius);
+        ctx.stroke();
+      }
+    } else if (skin === "rainbow") {
+      if (typeof ctx.createConicGradient === "function") {
+        const g = ctx.createConicGradient(performance.now() / 400, d.x, d.y);
+        g.addColorStop(0, "#ff5b5b");
+        g.addColorStop(0.2, "#ffd15a");
+        g.addColorStop(0.4, "#5cff8a");
+        g.addColorStop(0.6, "#5ec8ff");
+        g.addColorStop(0.8, "#c07cff");
+        g.addColorStop(1, "#ff5b5b");
+        ctx.fillStyle = g;
+      } else {
+        ctx.fillStyle = "#c07cff";
+      }
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+    } else if (skin === "lava") {
+      const g = ctx.createRadialGradient(d.x - 3, d.y - 3, 1, d.x, d.y, d.radius);
+      g.addColorStop(0, "#ffd15a");
+      g.addColorStop(0.45, "#ff6b1a");
+      g.addColorStop(1, "#4a0c08");
+      ctx.fillStyle = g;
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+    } else if (skin === "subzero") {
+      const g = ctx.createRadialGradient(d.x - 3, d.y - 3, 1, d.x, d.y, d.radius);
+      g.addColorStop(0, "#f4ffff");
+      g.addColorStop(0.4, "#7ecbff");
+      g.addColorStop(1, "#163a62");
+      ctx.fillStyle = g;
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+    } else if (skin === "starry") {
+      ctx.fillStyle = "#101428";
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+      ctx.fillStyle = "#eef4ff";
+      for (let i = 0; i < 8; i++) {
+        const a = i * 0.9;
+        ctx.beginPath();
+        ctx.arc(d.x + Math.cos(a) * d.radius * 0.45, d.y + Math.sin(a * 1.4) * d.radius * 0.4, 1.1, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    } else if (skin === "nebula") {
+      const g = ctx.createRadialGradient(d.x - 2, d.y - 2, 1, d.x, d.y, d.radius);
+      g.addColorStop(0, "#ffb3e6");
+      g.addColorStop(0.45, "#9b5de5");
+      g.addColorStop(1, "#1b1030");
+      ctx.fillStyle = g;
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+    } else {
+      ctx.fillStyle = d.color;
+      ctx.fillRect(d.x - d.radius, d.y - d.radius, d.radius * 2, d.radius * 2);
+    }
+    ctx.restore();
+  }
+
   function paintViewport(cx, cy, screenX, screenY, vw, vh, opts) {
     opts = opts || {};
     ctx.save();
@@ -8814,13 +10419,15 @@
     ctx.clip();
     ctx.translate(screenX - cx, screenY - cy);
 
+    fillWorldBackground();
+
     const pad = GRID_STEP * 2;
     const x0 = Math.max(0, Math.floor((cx - pad) / GRID_STEP) * GRID_STEP);
     const x1 = Math.min(WORLD_W, cx + vw + pad);
     const y0 = Math.max(0, Math.floor((cy - pad) / GRID_STEP) * GRID_STEP);
     const y1 = Math.min(WORLD_H, cy + vh + pad);
 
-    ctx.strokeStyle = "#1a1a22";
+    ctx.strokeStyle = equippedBgId() === "grid" ? "#2a6a88" : (equippedBgId() === "glacier" ? "#7aa0b8" : "#1a1a22");
     ctx.lineWidth = 1;
     for (let x = x0; x <= x1; x += GRID_STEP) {
       ctx.beginPath();
@@ -9085,6 +10692,14 @@
         ctx.strokeText(t.text, t.x, t.y);
         ctx.fillStyle = t.color;
         ctx.fillText(t.text, t.x, t.y);
+      } else if (t.xp) {
+        const size = 16 + (1 - alpha) * 6;
+        ctx.font = "900 " + Math.round(size) + "px system-ui, sans-serif";
+        ctx.strokeStyle = "rgba(0,0,0,0.88)";
+        ctx.lineWidth = 5;
+        ctx.strokeText(t.text, t.x, t.y);
+        ctx.fillStyle = t.color;
+        ctx.fillText(t.text, t.x, t.y);
       } else {
         ctx.fillStyle = t.color;
         ctx.font = "bold 12px system-ui";
@@ -9094,6 +10709,7 @@
     }
 
     const sorted = [...dots].filter(d => d.alive).sort((a, b) => a.radius - b.radius);
+    for (const d of sorted) drawEntityTrail(d);
     for (const d of sorted) {
       if (d.isSignatureBoss) {
         drawSignatureBossPortrait(ctx, d.x, d.y, d.radius * 2.35, d.name);
@@ -9105,34 +10721,44 @@
           ctx.arc(d.x, d.y, d.radius + 6, 0, Math.PI * 2);
           ctx.stroke();
         }
-        ctx.fillStyle = d.color;
-        ctx.beginPath();
-        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
-        ctx.fill();
+        fillEntityDot(d);
       }
       if (d.isPlayer) {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
         ctx.strokeStyle = (isTeamGameMode() || (twoPlayerTeamMode && twoPlayerMode)) ? "#b8f0c8" : "#fff";
         ctx.lineWidth = 2;
         ctx.stroke();
       } else if (isTeamGameMode() && player && d.teamId === player.teamId) {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, d.radius, 0, Math.PI * 2);
         ctx.strokeStyle = "rgba(184,240,200,0.55)";
         ctx.lineWidth = 2;
         ctx.stroke();
       }
-      if (!d.isPlayer && d.health < d.maxHealth) {
+      if (!d.isPlayer && (d.health < d.maxHealth || (d.shield || 0) > 0)) {
         const w = d.radius * 2;
-        const pct = d.health / d.maxHealth;
+        const hpPct = clamp(d.health / d.maxHealth, 0, 1);
+        const shPct = clamp((d.shield || 0) / (d.maxShield || MAX_SHIELD), 0, 1);
+        ctx.fillStyle = "#222";
+        ctx.fillRect(d.x - w / 2, d.y - d.radius - 16, w, 4);
+        ctx.fillStyle = "#4aa3ff";
+        ctx.fillRect(d.x - w / 2, d.y - d.radius - 16, w * shPct, 4);
         ctx.fillStyle = "#222";
         ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w, 4);
         ctx.fillStyle = d.isSignatureBoss ? "#d8d8e0" : d.isBoss ? "#e74c3c" : "#2ecc71";
-        ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w * pct, 4);
+        ctx.fillRect(d.x - w / 2, d.y - d.radius - 10, w * hpPct, 4);
       }
       ctx.fillStyle = "#ccc";
       ctx.font = "10px system-ui";
       ctx.textAlign = "center";
       ctx.fillText(d.name, d.x, d.y + d.radius + 12);
       const held = currentGun(d);
-      if (held) {
+      if (isEntityUsingMed(d)) {
+        ctx.fillStyle = "#9ad4ff";
+        ctx.font = "9px system-ui";
+        ctx.fillText(d.medUse.label || "using", d.x, d.y + d.radius + 23);
+      } else if (held) {
         const reloading = isEntityReloading(d, performance.now());
         ctx.fillStyle = reloading ? "#9a9a9a" : (held.color || "#bbb");
         ctx.font = "9px system-ui";
@@ -9146,6 +10772,11 @@
         ctx.stroke();
       }
     }
+
+    const focusEntity = opts.spectateHighlightId != null
+      ? getSpectateTarget()
+      : (opts.isRightPane && player2 ? player2 : player);
+    drawStormInViewport(cx, cy, vw, vh, focusEntity);
 
     if (opts.p1Aim && player && player.alive && shootMouseDown && currentGun(player)) {
       ctx.strokeStyle = "rgba(255,255,255,0.15)";
@@ -9245,17 +10876,34 @@
       return;
     }
 
-    if (player && player.alive) updateEntityReload(player, now);
+    if (player && player.alive) {
+      updateEntityReload(player, now);
+      updateEntityMedUse(player, now);
+    }
     updatePlayer(dt, now);
-    if (twoPlayerMode && player2 && player2.alive) updateEntityReload(player2, now);
+    if (twoPlayerMode && player2 && player2.alive) {
+      updateEntityReload(player2, now);
+      updateEntityMedUse(player2, now);
+    }
     if (twoPlayerMode) updatePlayer2(dt, now);
     else if (onlineMode && onlineHost) updateOnlineRemotePlayer(dt, now);
     for (const d of dots) {
-      if (d.isAI && d.alive) updateEntityReload(d, now);
+      if (d.isAI && d.alive) {
+        updateEntityReload(d, now);
+        updateEntityMedUse(d, now);
+      }
       if (d.isAI) updateAIMovement(d, dt, now);
     }
     for (const d of dots) {
-      if (d.alive) updateEntityBloomDecay(d, dt, now);
+      if (d.alive) {
+        updateEntityBloomDecay(d, dt, now);
+        updateEntityTrail(d, dt);
+      }
+    }
+    if (!matchXp.dmgFlushAt) matchXp.dmgFlushAt = now;
+    if (now - matchXp.dmgFlushAt > 900) {
+      matchXp.dmgFlushAt = now;
+      flushQuestDamage();
     }
     resolveAllDotCollisions();
     if (player && player.alive) updateEntityWorldInteractions(player, now);
@@ -9265,6 +10913,7 @@
       if (d.isAI) updateAIInteractions(d, now);
     }
     updateBullets(dt, now);
+    updateStorm(dt);
     updateGround(dt);
     updateCameras();
     updateKillFeed(dt);
@@ -9716,5 +11365,6 @@
   }, { passive: false });
 })();
 </script>
+<div id="xpFeed" aria-live="polite"></div>
 </body>
 </html>

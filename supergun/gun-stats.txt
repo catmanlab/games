@@ -14,7 +14,7 @@ reload: 5
 hold to shoot: no
 
 Pump Shotgun
-damage: 93
+damage: 105
 bloom: +6
 fire speed: 0.75
 range: close
@@ -23,7 +23,7 @@ reload: 4
 hold to shoot: no
 
 Double Barrel Shotgun
-damage: 58
+damage: 105
 bloom: +16
 fire speed: 3
 range: very close
@@ -32,9 +32,9 @@ reload: 4
 hold to shoot: no
 
 Combat Shotgun
-damage: 65
+damage: 70
 bloom: +14
-fire speed: 1.7
+fire speed: 1.8
 range: short - mid
 mag: 8
 reload: 4.75
@@ -88,7 +88,7 @@ reload: 2
 hold to shoot: yes
 
 Tactical AR
-damage: 21
+damage: 24
 bloom: +12
 fire speed: 7
 range: mid or short
@@ -117,9 +117,9 @@ hold to shoot: yes
 ======== SMGS ========
 
 SMG 
-damage: 17
+damage: 16
 bloom: +16
-fire speed: 14
+fire speed: 13
 range: mid - short
 mag: 35
 reload: 2
@@ -135,7 +135,7 @@ reload: 2
 hold to shoot: yes
 
 Rapid Fire SMG
-damage: 14
+damage: 13
 bloom: +18
 fire speed: 16
 range: mid - short
@@ -144,9 +144,9 @@ reload: 1.65
 hold to shoot: yes
 
 Heavy SMG
-damage: 21
+damage: 19
 bloom: +12
-fire speed: 12
+fire speed: 11
 range: mid - short
 mag: 32
 reload: 2.1
@@ -173,7 +173,7 @@ reload: N/A
 hold to shoot: yes
 
 Tommy Gun
-damage: 22
+damage: 23
 bloom: +13
 fire speed: 8
 range: mid - short
@@ -202,7 +202,7 @@ reload: 2.2
 hold to shoot: no
 
 Auto Pistol
-damage: 18
+damage: 27
 bloom: +12
 fire speed: 7
 range: mid - short
@@ -222,7 +222,7 @@ reload: 3
 hold to shoot: no
 
 Heavy Sniper Rifle
-damage: 120
+damage: 140
 bloom: +1
 fire speed: 0.64
 range: mid - long
@@ -231,7 +231,7 @@ reload: 4
 hold to shoot: no
 
 Semi Auto Sniper Rifle
-damage: 97
+damage: 95
 bloom: +4
 fire speed: 1.2
 range: long - mid

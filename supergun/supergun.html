@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-24-med-stack" />
+  <meta name="supergun-build" content="2026-09-24-big-storm" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -287,6 +287,7 @@
     .xp-toast .xp-amt { color: #ffe66d; }
     .xp-toast.xp-double { color: #ffd56a; font-size: 1.2rem; }
     .xp-toast.xp-place { color: #9ad4ff; }
+    .xp-toast.xp-kredits { color: #ffe66d; }
     .xp-toast.xp-level { color: #fff; font-size: 1.28rem; }
     @keyframes xpPop {
       0% { opacity: 0; transform: translateY(10px) scale(0.9); }
@@ -1475,8 +1476,8 @@
       A shrinking <strong>storm circle</strong> marks the safe zone. Outside it, the <strong>storm</strong> deals rising damage. The next circle is a dashed ring on the map and minimap.
       The arena is <strong>massive</strong> — about <strong>80 seconds</strong> to run left to right at normal speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
       <strong>Accounts</strong> keep your name, color, difficulty, win stats, XP, quests, and Kredits on this device across restarts.
-      Elims grant <strong>24 XP</strong>, assists <strong>12 XP</strong>, and a double kill (two elims within 4s) a <strong>+16 XP</strong> bonus. Placement starts at <strong>64 XP</strong> for 10th and climbs by 4 each rank. Level 2 costs 150 XP; each next level costs 1.25× the last jump.
-      Spend <strong>Kredits</strong> in the Shop on skins, trails, and backgrounds. Claim daily quests on the Quests tab.
+      Elims grant <strong>24 XP</strong>, assists <strong>12 XP</strong>, and a double kill (two elims within 4s) a <strong>+16 XP</strong> bonus. Placement starts at <strong>64 XP</strong> and <strong>32 Kredits</strong> for 10th and climbs by 4 XP / 2 Kredits each rank. Level 2 costs 150 XP; each next level costs 1.25× the last jump.
+      Spend <strong>Kredits</strong> in the Shop on skins, trails, and backgrounds. You earn Kredits from placements, daily quests, and level-ups.
     </p>
     </div>
 
@@ -1627,14 +1628,19 @@
   const STORM_START_R = Math.min(WORLD_W, WORLD_H) * 0.48;
   const STORM_MAP_COVER_R = Math.hypot(WORLD_W * 0.5, WORLD_H * 0.5) + 120;
   const STORM_PHASES = [
-    { wait: 48, shrink: 40, radiusFrac: 0.70, dps: 2 },
-    { wait: 28, shrink: 32, radiusFrac: 0.46, dps: 4 },
-    { wait: 22, shrink: 26, radiusFrac: 0.30, dps: 7 },
-    { wait: 18, shrink: 22, radiusFrac: 0.18, dps: 10 },
-    { wait: 14, shrink: 18, radiusFrac: 0.10, dps: 14 },
-    { wait: 12, shrink: 16, radiusFrac: 0.055, dps: 18 },
-    { wait: 10, shrink: 14, radiusFrac: 0.028, dps: 24 },
-    { wait: 8, shrink: 18, radiusFrac: 0, dps: 32 },
+    { wait: 10, shrink: 16, radiusFrac: 1.98, dps: 1 },
+    { wait: 8, shrink: 14, radiusFrac: 1.72, dps: 2 },
+    { wait: 7, shrink: 12, radiusFrac: 1.48, dps: 3 },
+    { wait: 6, shrink: 11, radiusFrac: 1.26, dps: 4 },
+    { wait: 6, shrink: 10, radiusFrac: 1.06, dps: 5 },
+    { wait: 5, shrink: 10, radiusFrac: 0.88, dps: 7 },
+    { wait: 5, shrink: 9, radiusFrac: 0.72, dps: 9 },
+    { wait: 4, shrink: 8, radiusFrac: 0.58, dps: 12 },
+    { wait: 4, shrink: 8, radiusFrac: 0.46, dps: 15 },
+    { wait: 3, shrink: 7, radiusFrac: 0.36, dps: 19 },
+    { wait: 3, shrink: 7, radiusFrac: 0.28, dps: 24 },
+    { wait: 3, shrink: 6, radiusFrac: 0.22, dps: 28 },
+    { wait: 2, shrink: 8, radiusFrac: 0.16, dps: 32 },
   ];
   const MAX_HEALTH = 100;
   const MAX_SHIELD = 100;
@@ -2039,31 +2045,31 @@
   let matchXp = emptyMatchXp();
   const SKIN_ITEMS = [
     { id: "solid", label: "Solid", price: 0, desc: "Your color picker. Always owned." },
-    { id: "striped", label: "Striped", price: 75, desc: "Diagonal bands over your color." },
-    { id: "rainbow", label: "Rainbow", price: 200, desc: "Full spectrum swirl." },
-    { id: "lava", label: "Lava", price: 125, desc: "Hot magma cracks." },
-    { id: "subzero", label: "Subzero", price: 125, desc: "Frozen ice facets." },
-    { id: "starry", label: "Starry", price: 150, desc: "Night sky speckled with stars." },
-    { id: "nebula", label: "Nebula", price: 180, desc: "Pink-violet cosmic cloud." },
+    { id: "striped", label: "Striped", price: 200, desc: "Diagonal bands over your color." },
+    { id: "rainbow", label: "Rainbow", price: 500, desc: "Full spectrum swirl." },
+    { id: "lava", label: "Lava", price: 320, desc: "Hot magma cracks." },
+    { id: "subzero", label: "Subzero", price: 320, desc: "Frozen ice facets." },
+    { id: "starry", label: "Starry", price: 380, desc: "Night sky speckled with stars." },
+    { id: "nebula", label: "Nebula", price: 450, desc: "Pink-violet cosmic cloud." },
   ];
   const TRAIL_ITEMS = [
     { id: "none", label: "No trail", price: 0, desc: "Clean movement." },
-    { id: "sparks", label: "Sparks", price: 50, desc: "Tiny yellow sparks." },
-    { id: "flame", label: "Flame", price: 90, desc: "Orange fire wake." },
-    { id: "frost", label: "Frost", price: 90, desc: "Icy blue mist." },
-    { id: "rainbow_trail", label: "Rainbow trail", price: 140, desc: "Color-cycle path." },
-    { id: "stardust", label: "Stardust", price: 110, desc: "Glittering star motes." },
-    { id: "nebula_wake", label: "Nebula wake", price: 170, desc: "Purple cosmic dust." },
+    { id: "sparks", label: "Sparks", price: 140, desc: "Tiny yellow sparks." },
+    { id: "flame", label: "Flame", price: 240, desc: "Orange fire wake." },
+    { id: "frost", label: "Frost", price: 240, desc: "Icy blue mist." },
+    { id: "rainbow_trail", label: "Rainbow trail", price: 360, desc: "Color-cycle path." },
+    { id: "stardust", label: "Stardust", price: 280, desc: "Glittering star motes." },
+    { id: "nebula_wake", label: "Nebula wake", price: 420, desc: "Purple cosmic dust." },
   ];
   const BG_ITEMS = [
     { id: "default", label: "Default", price: 0, desc: "Classic dark arena." },
-    { id: "grid", label: "Blueprint", price: 40, desc: "Bright technical grid." },
-    { id: "sunset", label: "Sunset", price: 80, desc: "Warm dusk horizon." },
-    { id: "aurora", label: "Aurora", price: 100, desc: "Green-blue northern lights." },
-    { id: "magma", label: "Magma", price: 110, desc: "Dark red lava field." },
-    { id: "glacier", label: "Glacier", price: 90, desc: "Cold ice sheet." },
-    { id: "starfield", label: "Starfield", price: 120, desc: "Deep space stars." },
-    { id: "nebula_space", label: "Nebula space", price: 160, desc: "Violet galaxy backdrop." },
+    { id: "grid", label: "Blueprint", price: 100, desc: "Bright technical grid." },
+    { id: "sunset", label: "Sunset", price: 200, desc: "Warm dusk horizon." },
+    { id: "aurora", label: "Aurora", price: 260, desc: "Green-blue northern lights." },
+    { id: "magma", label: "Magma", price: 280, desc: "Dark red lava field." },
+    { id: "glacier", label: "Glacier", price: 230, desc: "Cold ice sheet." },
+    { id: "starfield", label: "Starfield", price: 300, desc: "Deep space stars." },
+    { id: "nebula_space", label: "Nebula space", price: 400, desc: "Violet galaxy backdrop." },
   ];
   const QUEST_DEFS = [
     { id: "elims_1", label: "Get 1 elim", goal: 1, key: "elims", xp: 40, kredits: 20 },
@@ -2857,6 +2863,7 @@
       assistXp: 0,
       doubleXp: 0,
       placeXp: 0,
+      placeKredits: 0,
       lastElimAt: 0,
       settled: false,
       damageQueued: 0,
@@ -2957,6 +2964,12 @@
     return Math.max(0, 104 - 4 * n);
   }
 
+  function placementKredits(place) {
+    const n = place | 0;
+    if (n < 1) return 0;
+    return Math.max(0, 52 - 2 * n);
+  }
+
   function equippedSkinId() {
     if (!currentUserSlug) return "solid";
     return loadProfile(currentUserSlug).progression.equippedSkin || "solid";
@@ -3019,6 +3032,18 @@
       feed.appendChild(lv);
       setTimeout(() => { if (lv.parentNode) lv.parentNode.removeChild(lv); }, 2800);
     }
+    while (feed.children.length > 6) feed.removeChild(feed.firstChild);
+  }
+
+  function pushKreditMark(amount, why) {
+    const feed = document.getElementById("xpFeed");
+    if (!feed || !amount) return;
+    const labels = { place: "Placement", quest: "Quest", level: "Level up" };
+    const el = document.createElement("div");
+    el.className = "xp-toast xp-kredits";
+    el.innerHTML = '<span class="xp-why">' + (labels[why] || "Kredits") + '</span> <span class="xp-amt">+' + amount + " Kredits</span>";
+    feed.appendChild(el);
+    setTimeout(() => { if (el.parentNode) el.parentNode.removeChild(el); }, 2400);
     while (feed.children.length > 6) feed.removeChild(feed.firstChild);
   }
 
@@ -3090,8 +3115,14 @@
     matchXp.settled = true;
     flushQuestDamage();
     const px = placementXp(place);
+    const pk = placementKredits(place);
     matchXp.placeXp = px;
+    matchXp.placeKredits = pk;
     if (px) grantXp(px, "place");
+    if (pk) {
+      grantKredits(pk);
+      pushKreditMark(pk, "place");
+    }
     bumpQuest("matches", 1);
     if ((place | 0) > 0 && (place | 0) <= 10) bumpQuest("top10", 1);
     if ((place | 0) > 0 && (place | 0) <= 5) bumpQuest("top5", 1);
@@ -3106,9 +3137,17 @@
     if (xp.elims) bits.push(xp.elims + " elim" + (xp.elims === 1 ? "" : "s") + " +" + xp.elimXp);
     if (xp.assists) bits.push(xp.assists + " assist" + (xp.assists === 1 ? "" : "s") + " +" + xp.assistXp);
     if (xp.doubles) bits.push(xp.doubles + " double" + (xp.doubles === 1 ? "" : "s") + " +" + xp.doubleXp);
-    if (xp.placeXp) bits.push("placement +" + xp.placeXp);
-    if (!bits.length && !total) return "";
-    return "XP this match: <strong>+" + total + "</strong>" + (bits.length ? "<br>" + bits.join(" · ") : "");
+    if (xp.placeXp) bits.push("placement +" + xp.placeXp + " XP");
+    const kredits = xp.placeKredits | 0;
+    if (!bits.length && !total && !kredits) return "";
+    let html = "";
+    if (total || bits.length) {
+      html = "XP this match: <strong>+" + total + "</strong>" + (bits.length ? "<br>" + bits.join(" · ") : "");
+    }
+    if (kredits) {
+      html += (html ? "<br>" : "") + "Placement Kredits: <strong>+" + kredits + "</strong>";
+    }
+    return html;
   }
 
   function showEndXp() {
@@ -3884,6 +3923,12 @@
     };
   }
 
+  function stormTargetRadius(phaseIndex) {
+    const spec = stormPhaseSpec(phaseIndex);
+    if (phaseIndex <= 0) return STORM_MAP_COVER_R * 0.98;
+    return Math.max(STORM_START_R * 0.16, STORM_START_R * spec.radiusFrac);
+  }
+
   function beginStormWait(phaseIndex) {
     const spec = stormPhaseSpec(phaseIndex);
     storm.phase = phaseIndex;
@@ -3892,10 +3937,17 @@
     storm.fromCx = storm.cx;
     storm.fromCy = storm.cy;
     storm.fromR = storm.r;
-    const next = pickNestedStormCircle(storm.cx, storm.cy, storm.r, STORM_START_R * spec.radiusFrac);
-    storm.toCx = next.x;
-    storm.toCy = next.y;
-    storm.toR = next.r;
+    const nextR = stormTargetRadius(phaseIndex);
+    if (phaseIndex <= 0) {
+      storm.toCx = WORLD_W * 0.5;
+      storm.toCy = WORLD_H * 0.5;
+      storm.toR = nextR;
+    } else {
+      const next = pickNestedStormCircle(storm.cx, storm.cy, storm.r, nextR);
+      storm.toCx = next.x;
+      storm.toCy = next.y;
+      storm.toR = next.r;
+    }
     if (phaseIndex > 0) storm.dps = spec.dps;
   }
 
@@ -4007,9 +4059,7 @@
         } else {
           storm.mode = "wait";
           storm.timer = 9999;
-          storm.r = 0;
-          storm.toR = 0;
-          storm.dps = Math.max(storm.dps, 32);
+          storm.dps = Math.max(storm.dps, spec.dps);
         }
       }
     }

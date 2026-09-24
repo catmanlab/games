@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-23-no-start-storm" />
+  <meta name="supergun-build" content="2026-09-24-med-stack" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -806,6 +806,17 @@
     .inv-slot .gun-icon.fallback {
       opacity: 0.4;
     }
+    .inv-slot .stack-count {
+      position: absolute;
+      right: 3px;
+      bottom: 1px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      color: #fff;
+      text-shadow: 0 1px 2px #000, 0 0 4px #000;
+      pointer-events: none;
+      line-height: 1;
+    }
     .inv-slot .med-dot {
       width: 10px;
       height: 14px;
@@ -1459,7 +1470,7 @@
       Open brown <strong>chests</strong> for guns. Green <strong>medicine chests</strong> can contain <strong>Bandages</strong> +15 health (3s), a <strong>Med Kit</strong> that heals 5 health every 0.5s, <strong>Mini Shield</strong> +25 shield (1.5s), <strong>Shield Potion</strong> +50 shield (3s), or an <strong>Energy Bar</strong> that refills sprint energy and temporarily boosts sprint speed. Black <strong>ammo baskets</strong> refill the gun you are holding (Common +10, Uncommon +15, Rare +20). Guns start with <strong>50 ammo</strong>. Each gun can fire a set number of shots before you must reload — press <strong>E</strong> (black reload line when empty). You can reload early; you cannot shoot while reloading. Shoot <strong>trees</strong> for wood and <strong>stones</strong> for stone. <strong>Scroll</strong> or press <strong>1–5</strong> to switch slots.
       Gun types: <strong>Shotguns</strong> — Tactical, Pump, Double Barrel, Combat, Auto. <strong>ARs</strong> — Assault Rifle, SCAR, FAMAS, AUG, Tactical AR, Heavy AR, Scoped AR. <strong>SMGs</strong> — SMG, Suppressed SMG, Rapid Fire SMG, Heavy SMG. <strong>LMGs</strong> — LMG, Minigun, Tommy Gun. <strong>Pistols</strong> — Pistol, Revolver, Auto Pistol. <strong>Snipers</strong> — Bolt Action, Heavy, Semi Auto. <strong>DMRs</strong> — DMR, Tactical DMR. <strong>RPG</strong> — explosive area damage. Each dot shows the <strong>gun and rarity</strong> it is holding.
       Press <strong>Q</strong> to drop the gun in your <strong>selected slot</strong> (aim direction).
-      Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full). You have <strong>100 health</strong> and <strong>100 shield</strong>. Guns hit shield first; the storm damages health only. Running out of health eliminates you — running out of shield does not.
+      Kills restore <strong>+50 HP</strong> and <strong>+20 ammo</strong> to the gun you are holding. Walk over dropped guns and potions to pick them up (they stay on the ground if your inventory is full). Matching potions stack in one slot. You have <strong>100 health</strong> and <strong>100 shield</strong>. Guns hit shield first; the storm damages health only. Running out of health eliminates you — running out of shield does not.
       Defeat <strong>5 red bosses</strong> for <strong>Legendary</strong> guns. Hunt <strong>7 signature bosses</strong> (hidden on the minimap) for <strong>Mythic</strong> versions of their guns. Chests give Common through Epic. Be the last dot alive to win.
       A shrinking <strong>storm circle</strong> marks the safe zone. Outside it, the <strong>storm</strong> deals rising damage. The next circle is a dashed ring on the map and minimap.
       The arena is <strong>massive</strong> — about <strong>80 seconds</strong> to run left to right at normal speed (<code>MAP_CROSS_SECONDS</code> in code). The view follows you; use the corner <strong>minimap</strong> to see the whole map.
@@ -1882,6 +1893,13 @@
     mini_shield: { label: "Mini Shield", color: "#7dd3fc", rarity: "uncommon", heal: 0, shield: 25, useMs: 1500 },
     shield_potion: { label: "Shield Potion", color: "#2196f3", rarity: "rare", heal: 0, shield: 50, useMs: 3000 },
     energy_bar: { label: "Energy Bar", color: "#f6c344", heal: 0, energy: MAX_ENERGY, boostMs: ENERGY_BOOST_MS, useMs: 450 },
+  };
+  const MED_STACK_MAX = {
+    bandage: 15,
+    medkit: 3,
+    mini_shield: 10,
+    shield_potion: 3,
+    energy_bar: 6,
   };
   const AMMO_PICKUP_WEIGHTS = [
     ["common", 0.50],
@@ -6332,12 +6350,24 @@
         inner.style.display = "block";
         typeEl.textContent = item.label;
         typeEl.style.display = "block";
+        const stack = medCount(item);
+        let badge = el.querySelector(".stack-count");
+        if (stack > 1) {
+          if (!badge) {
+            badge = document.createElement("span");
+            badge.className = "stack-count";
+            el.appendChild(badge);
+          }
+          badge.textContent = "x" + stack;
+        } else if (badge) {
+          badge.remove();
+        }
         const bits = [];
         if (item.tickHeal) bits.push("+" + item.tickHeal + " HP / 0.5s");
         else if (item.heal) bits.push("+" + item.heal + " HP");
         if (item.shield) bits.push("+" + item.shield + " shield");
         if (item.energy) bits.push("energy");
-        el.title = item.label + (bits.length ? " (" + bits.join(", ") + ")" : "") + " · use item key";
+        el.title = item.label + (stack > 1 ? " x" + stack : "") + (bits.length ? " (" + bits.join(", ") + ")" : "") + " · use item key";
       } else if (item && isGunItem(item)) {
         const ng = normalizeGun(item);
         entity.inventory[i] = ng;
@@ -6368,12 +6398,16 @@
         }
         typeEl.textContent = ng.typeLabel;
         typeEl.style.display = "block";
+        const gunBadge = el.querySelector(".stack-count");
+        if (gunBadge) gunBadge.remove();
         el.title = ng.label + " " + ng.typeLabel + " · " + getGunAmmo(ng) + " ammo · " + getReloadShotsLeft(ng) + " before reload";
       } else {
         if (inner) inner.remove();
         const wrapEl = el.querySelector(".gun-icon-wrap");
         if (wrapEl) wrapEl.remove();
         if (typeEl) typeEl.style.display = "none";
+        const emptyBadge = el.querySelector(".stack-count");
+        if (emptyBadge) emptyBadge.remove();
         el.title = "Empty";
       }
     });
@@ -6595,6 +6629,22 @@
 
   function isMedItem(item) {
     return item && item.itemKind === "med";
+  }
+
+  function medStackMax(id) {
+    return MED_STACK_MAX[id] || 15;
+  }
+
+  function medCount(item) {
+    if (!isMedItem(item)) return 0;
+    const n = item.count | 0;
+    return n > 0 ? n : 1;
+  }
+
+  function cloneMedItem(potion, count) {
+    const item = isMedItem(potion) ? { ...potion } : { ...potion, itemKind: "med" };
+    item.count = Math.max(1, count | 0);
+    return item;
   }
 
   function isGunItem(item) {
@@ -7748,6 +7798,7 @@
       useMs: p.useMs || 0,
       energy: p.energy || 0,
       boostMs: p.boostMs || 0,
+      count: 1,
     };
   }
 
@@ -7764,19 +7815,40 @@
 
   function addMedToEntity(e, potion, opts) {
     if (!e || !potion) return false;
-    const item = isMedItem(potion) ? { ...potion } : { ...potion, itemKind: "med" };
-    for (let i = 0; i < INV_SLOTS; i++) {
-      if (!e.inventory[i]) {
-        e.inventory[i] = item;
-        if (e.invIndex < 0 || !e.inventory[e.invIndex]) e.invIndex = i;
-        if (e.isPlayer) refreshInventoryHud();
-        return true;
+    let left = medCount(potion);
+    const started = left;
+    const max = medStackMax(potion.id);
+    for (let i = 0; i < INV_SLOTS && left > 0; i++) {
+      const slot = e.inventory[i];
+      if (!isMedItem(slot) || slot.id !== potion.id) continue;
+      const have = medCount(slot);
+      const room = max - have;
+      if (room <= 0) continue;
+      const add = Math.min(room, left);
+      slot.count = have + add;
+      left -= add;
+    }
+    while (left > 0) {
+      let empty = -1;
+      for (let i = 0; i < INV_SLOTS; i++) {
+        if (!e.inventory[i]) { empty = i; break; }
       }
+      if (empty < 0) break;
+      const add = Math.min(max, left);
+      e.inventory[empty] = cloneMedItem(potion, add);
+      if (e.invIndex < 0 || !e.inventory[e.invIndex]) e.invIndex = empty;
+      left -= add;
     }
+    potion.count = left;
+    const taken = started - left;
+    if (taken > 0 && e.isPlayer) refreshInventoryHud();
+    if (left <= 0) return true;
     if (!opts || opts.dropIfFull !== false) {
-      groundMeds.push({ x: e.x, y: e.y, potion: item, life: null });
+      groundMeds.push({ x: e.x, y: e.y, potion: cloneMedItem(potion, left), life: null });
+      potion.count = 0;
+      return true;
     }
-    return false;
+    return taken > 0;
   }
 
   function medItemCanHelp(e, potion) {
@@ -7829,6 +7901,15 @@
   function consumeSelectedMed(e) {
     if (!e) return;
     if (isLocalTrackedPlayer(e)) bumpQuest("meds", 1);
+    const item = e.inventory[e.invIndex];
+    if (isMedItem(item) && medCount(item) > 1) {
+      item.count = medCount(item) - 1;
+      if (e.isPlayer) {
+        refreshInventoryHud();
+        updateHud();
+      }
+      return;
+    }
     e.inventory[e.invIndex] = null;
     let next = -1;
     for (let i = 0; i < INV_SLOTS; i++) {
@@ -8473,7 +8554,9 @@
     for (let i = groundMeds.length - 1; i >= 0; i--) {
       const m = groundMeds[i];
       if (dist(e.x, e.y, m.x, m.y) < e.radius + 14) {
-        if (addMedToEntity(e, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
+        if (addMedToEntity(e, m.potion, { dropIfFull: false })) {
+          if ((m.potion.count | 0) <= 0) groundMeds.splice(i, 1);
+        }
       }
     }
   }
@@ -8615,6 +8698,7 @@
         useMs: item.useMs || 0,
         energy: item.energy || 0,
         boostMs: item.boostMs || 0,
+        count: medCount(item),
         itemKind: "med",
       };
     }
@@ -8654,6 +8738,7 @@
         useMs: data.useMs || 0,
         energy: data.energy || 0,
         boostMs: data.boostMs || 0,
+        count: Math.max(1, data.count | 0),
       };
     }
     if (data.kind === "gun") {
@@ -9756,7 +9841,9 @@
         const m = groundMeds[i];
         if (d.isBoss) continue;
         if (dist(d.x, d.y, m.x, m.y) < d.radius + 14) {
-          if (addMedToEntity(d, m.potion, { dropIfFull: false })) groundMeds.splice(i, 1);
+          if (addMedToEntity(d, m.potion, { dropIfFull: false })) {
+            if ((m.potion.count | 0) <= 0) groundMeds.splice(i, 1);
+          }
         }
       }
     }
@@ -10584,6 +10671,13 @@
       ctx.fillRect(m.x - 4, m.y - 7, 8, 12);
       ctx.strokeStyle = "rgba(255,255,255,0.35)";
       ctx.strokeRect(m.x - 4, m.y - 7, 8, 12);
+      const stack = pot ? medCount(pot) : 0;
+      if (stack > 1) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 10px system-ui";
+        ctx.textAlign = "center";
+        ctx.fillText("x" + stack, m.x, m.y + 16);
+      }
     }
 
     for (const w of walls) {

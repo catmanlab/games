@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-23-xp-shop" />
+  <meta name="supergun-build" content="2026-09-23-no-start-storm" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -1614,6 +1614,7 @@
   const WORLD_H = Math.round(WORLD_W * (4500 / 7200));
   const MAP_SCALE = WORLD_W / 7200;
   const STORM_START_R = Math.min(WORLD_W, WORLD_H) * 0.48;
+  const STORM_MAP_COVER_R = Math.hypot(WORLD_W * 0.5, WORLD_H * 0.5) + 120;
   const STORM_PHASES = [
     { wait: 48, shrink: 40, radiusFrac: 0.70, dps: 2 },
     { wait: 28, shrink: 32, radiusFrac: 0.46, dps: 4 },
@@ -3824,18 +3825,19 @@
   function emptyStormState() {
     return {
       enabled: false,
+      present: false,
       phase: 0,
       mode: "wait",
       timer: 0,
       cx: WORLD_W * 0.5,
       cy: WORLD_H * 0.5,
-      r: STORM_START_R,
+      r: STORM_MAP_COVER_R,
       fromCx: WORLD_W * 0.5,
       fromCy: WORLD_H * 0.5,
-      fromR: STORM_START_R,
+      fromR: STORM_MAP_COVER_R,
       toCx: WORLD_W * 0.5,
       toCy: WORLD_H * 0.5,
-      toR: STORM_START_R,
+      toR: STORM_MAP_COVER_R,
       shrinkDur: 1,
       dps: 0,
       damageAcc: 0,
@@ -3843,6 +3845,10 @@
       flash: 0,
       nextFlashIn: 3,
     };
+  }
+
+  function stormIsPresent() {
+    return !!(storm && storm.enabled && storm.present);
   }
 
   function stormPhaseSpec(index) {
@@ -3880,10 +3886,16 @@
     storm.mode = "shrink";
     storm.timer = spec.shrink;
     storm.shrinkDur = Math.max(0.01, spec.shrink);
+    if (!storm.present) {
+      storm.cx = WORLD_W * 0.5;
+      storm.cy = WORLD_H * 0.5;
+      storm.r = STORM_MAP_COVER_R;
+    }
     storm.fromCx = storm.cx;
     storm.fromCy = storm.cy;
     storm.fromR = storm.r;
     storm.dps = spec.dps;
+    storm.present = true;
     killFeed.push({ line: "The storm is closing", life: 3.8 });
     if (killFeed.length > 8) killFeed.splice(0, killFeed.length - 8);
   }
@@ -3892,12 +3904,19 @@
     storm = emptyStormState();
     storm.enabled = isStormMode();
     if (!storm.enabled) return;
+    storm.present = false;
+    storm.dps = 0;
+    storm.r = STORM_MAP_COVER_R;
+    storm.fromR = STORM_MAP_COVER_R;
     beginStormWait(0);
     storm.dps = 0;
+    storm.present = false;
+    storm.r = STORM_MAP_COVER_R;
+    storm.fromR = STORM_MAP_COVER_R;
   }
 
   function pointInStorm(x, y) {
-    if (!storm || !storm.enabled) return false;
+    if (!stormIsPresent()) return false;
     return dist(x, y, storm.cx, storm.cy) > storm.r + 0.5;
   }
 
@@ -3914,17 +3933,17 @@
   }
 
   function stormSafeAim(x, y, margin) {
-    if (!storm || !storm.enabled) return null;
+    if (!stormIsPresent()) return null;
     return stormAimToward(x, y, storm.cx, storm.cy, storm.r, margin);
   }
 
   function stormNextAim(x, y, margin) {
-    if (!storm || !storm.enabled) return null;
+    if (!stormIsPresent()) return null;
     return stormAimToward(x, y, storm.toCx, storm.toCy, storm.toR, margin);
   }
 
   function stormAiOverride(d) {
-    if (!storm || !storm.enabled || !d || !d.alive) return null;
+    if (!stormIsPresent() || !d || !d.alive) return null;
     const outsideNow = stormSafeAim(d.x, d.y, 70 + d.radius);
     if (outsideNow) return outsideNow;
     const next = stormNextAim(d.x, d.y, 90 + d.radius);
@@ -6527,15 +6546,16 @@
     if (stormHud) {
       if (!storm || !storm.enabled) {
         stormHud.hidden = true;
+      } else if (!storm.present) {
+        stormHud.hidden = false;
+        stormHud.classList.remove("in-storm", "closing");
+        stormHud.textContent = "Storm in " + formatStormClock(storm.timer);
       } else {
         stormHud.hidden = false;
         const inStorm = player.alive && pointInStorm(player.x, player.y);
         stormHud.classList.toggle("in-storm", !!(inStorm && storm.dps > 0));
         stormHud.classList.toggle("closing", storm.mode === "shrink");
-        if (inStorm && storm.dps <= 0) {
-          stormHud.textContent = "Outside the circle · no storm damage yet · " +
-            (storm.mode === "shrink" ? "closing " : "closes in ") + formatStormClock(storm.timer);
-        } else if (inStorm) {
+        if (inStorm) {
           stormHud.textContent = "IN THE STORM · " + Math.round(storm.dps) + " DPS · " +
             (storm.mode === "shrink" ? "closing " : "zone ") + formatStormClock(storm.timer);
         } else if (storm.r <= 0) {
@@ -6548,7 +6568,7 @@
       }
     }
     if (healthBarWrap) {
-      healthBarWrap.classList.toggle("in-storm", !!(storm && storm.enabled && storm.dps > 0 && player.alive && pointInStorm(player.x, player.y)));
+      healthBarWrap.classList.toggle("in-storm", !!(stormIsPresent() && storm.dps > 0 && player.alive && pointInStorm(player.x, player.y)));
     }
 
     if (twoPlayerMode && player2 && hudP2) {
@@ -8717,6 +8737,7 @@
       })),
       storm: storm && storm.enabled ? {
         enabled: true,
+        present: !!storm.present,
         phase: storm.phase,
         mode: storm.mode,
         timer: storm.timer,
@@ -8728,7 +8749,7 @@
         toR: storm.toR,
         dps: storm.dps,
         flash: storm.flash,
-      } : { enabled: false },
+      } : { enabled: false, present: false },
     };
   }
 
@@ -8841,19 +8862,24 @@
       if (!storm) storm = emptyStormState();
       storm.enabled = !!state.storm.enabled;
       if (storm.enabled) {
+        storm.present = state.storm.present != null
+          ? !!state.storm.present
+          : (state.storm.mode === "shrink" || (state.storm.phase | 0) > 0 || (Number(state.storm.dps) || 0) > 0);
         storm.phase = state.storm.phase | 0;
         storm.mode = state.storm.mode === "shrink" ? "shrink" : "wait";
         storm.timer = Number(state.storm.timer) || 0;
         storm.cx = Number(state.storm.cx) || storm.cx;
         storm.cy = Number(state.storm.cy) || storm.cy;
         storm.r = Number(state.storm.r);
-        if (!Number.isFinite(storm.r)) storm.r = STORM_START_R;
+        if (!Number.isFinite(storm.r)) storm.r = storm.present ? STORM_START_R : STORM_MAP_COVER_R;
         storm.toCx = Number(state.storm.toCx) || storm.toCx;
         storm.toCy = Number(state.storm.toCy) || storm.toCy;
         storm.toR = Number(state.storm.toR);
         if (!Number.isFinite(storm.toR)) storm.toR = storm.r;
         storm.dps = Number(state.storm.dps) || 0;
         storm.flash = Number(state.storm.flash) || 0;
+      } else {
+        storm.present = false;
       }
     }
     if (player && player.alive) {
@@ -10085,7 +10111,7 @@
   }
 
   function drawStormInViewport(cx, cy, vw, vh, focusEntity) {
-    if (!storm || !storm.enabled) return;
+    if (!stormIsPresent()) return;
     ctx.save();
     ctx.beginPath();
     ctx.rect(cx, cy, vw, vh);
@@ -10170,7 +10196,7 @@
   }
 
   function drawStormOnMinimap(pad, sx, sy) {
-    if (!storm || !storm.enabled) return;
+    if (!stormIsPresent()) return;
     mctx.save();
     mctx.beginPath();
     mctx.rect(pad, pad, WORLD_W * sx, WORLD_H * sy);

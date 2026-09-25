@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-24-big-storm" />
+  <meta name="supergun-build" content="2026-09-24-gun-art" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -1718,13 +1718,13 @@
     pistol: "pistol",
     revolver: "revolver",
     auto_pistol: "auto pistol",
-    smg: "submachine gun",
-    suppressed_smg: "suppresed smg",
+    smg: "smg",
+    suppressed_smg: "suppressed smg",
     rapid_fire_smg: "rapid fire smg",
     heavy_smg: "heavy smg",
     tactical_shotgun: "tactical shotgun",
     pump_shotgun: "pump shotgun",
-    double_barrel_shotgun: "double barrel shotgun",
+    double_barrel_shotgun: "double barrel",
     combat_shotgun: "combat shotgun",
     auto_shotgun: "auto shotgun",
     assault_rifle: "assault rifle",
@@ -1734,27 +1734,27 @@
     tactical_ar: "tactical ar",
     heavy_ar: "heavy ar",
     scoped_assault_rifle: "scoped ar",
-    lmg: "machine gun",
+    lmg: "lmg",
     minigun: "minigun",
     tommy_gun: "tommy gun",
-    bolt_action_sniper: "sniper",
-    heavy_sniper: "heavy sniper rifle",
-    semi_auto_sniper: "semi auto sniper rifle",
+    bolt_action_sniper: "bolt action",
+    heavy_sniper: "heavy sniper",
+    semi_auto_sniper: "semi auto",
     dmr: "DMR",
-    tactical_dmr: "tactical DMR",
+    tactical_dmr: "tactical dmr",
     rpg: "RPG",
   };
   const GUN_IMAGE_ALT_NAMES = {
     pistol: ["pistol", "Pistol"],
     revolver: ["revolver", "Revolver"],
     auto_pistol: ["auto pistol", "Auto Pistol", "autopistol"],
-    smg: ["submachine gun", "SMG", "smg"],
-    suppressed_smg: ["suppresed smg", "suppressed smg", "Suppressed SMG"],
+    smg: ["smg", "submachine gun", "SMG"],
+    suppressed_smg: ["suppressed smg", "suppresed smg", "Suppressed SMG"],
     rapid_fire_smg: ["rapid fire smg", "Rapid Fire SMG", "rapidfire smg"],
     heavy_smg: ["heavy smg", "Heavy SMG", "heavysmg"],
     tactical_shotgun: ["tactical shotgun", "Tactical Shotgun"],
     pump_shotgun: ["pump shotgun", "Pump Shotgun"],
-    double_barrel_shotgun: ["double barrel shotgun", "Double Barrel Shotgun", "double-barrel shotgun"],
+    double_barrel_shotgun: ["double barrel", "double barrel shotgun", "Double Barrel Shotgun", "double-barrel shotgun"],
     combat_shotgun: ["combat shotgun", "Combat Shotgun"],
     auto_shotgun: ["auto shotgun", "Auto Shotgun"],
     assault_rifle: ["assault rifle", "AR", "Assault Rifle"],
@@ -1764,14 +1764,14 @@
     tactical_ar: ["tactical ar", "Tactical AR", "tactical assault rifle", "Tacical assault rifle"],
     heavy_ar: ["heavy ar", "Heavy AR", "heavy assault rifle"],
     scoped_assault_rifle: ["scoped ar", "scoped assault rifle", "Scoped AR"],
-    lmg: ["machine gun", "LMG", "lmg", "Machine Gun", "light machine gun"],
+    lmg: ["lmg", "machine gun", "LMG", "Machine Gun", "light machine gun"],
     minigun: ["minigun", "Minigun", "mini gun"],
     tommy_gun: ["tommy gun", "Tommy Gun", "tommygun", "drum gun"],
-    bolt_action_sniper: ["sniper", "bolt action sniper rifle", "Bolt Action Sniper"],
-    heavy_sniper: ["heavy sniper rifle", "Heavy Sniper", "heavy sniper"],
-    semi_auto_sniper: ["semi auto sniper rifle", "Semi Auto Sniper", "semi-auto sniper"],
+    bolt_action_sniper: ["bolt action", "sniper", "bolt action sniper rifle", "Bolt Action Sniper"],
+    heavy_sniper: ["heavy sniper", "heavy sniper rifle", "Heavy Sniper"],
+    semi_auto_sniper: ["semi auto", "semi auto sniper rifle", "Semi Auto Sniper", "semi-auto sniper"],
     dmr: ["DMR", "dmr"],
-    tactical_dmr: ["tactical DMR", "Tactical DMR", "tactical dmr"],
+    tactical_dmr: ["tactical dmr", "tactical DMR", "Tactical DMR"],
     rpg: ["RPG", "rpg"],
   };
   const GUN_IMAGE_EXTS = [".jpg", ".jpeg", ".png", ".webp"];
@@ -1869,7 +1869,15 @@
   };
 
   const SIGNATURE_GUN_BASE = {};
-  const ART_SPRITE_GUN_IDS = new Set();
+  const ART_SPRITE_GUN_IDS = new Set([
+    "pistol", "revolver", "auto_pistol",
+    "smg", "suppressed_smg", "rapid_fire_smg", "heavy_smg",
+    "tactical_shotgun", "pump_shotgun", "double_barrel_shotgun", "combat_shotgun", "auto_shotgun",
+    "assault_rifle", "scar", "famas", "aug", "tactical_ar", "heavy_ar", "scoped_assault_rifle",
+    "lmg", "minigun", "tommy_gun",
+    "bolt_action_sniper", "heavy_sniper", "semi_auto_sniper",
+    "dmr", "tactical_dmr", "rpg",
+  ]);
   const SIGNATURE_GUN_IDS = new Set();
 
   const CHEST_DROP_WEIGHTS = [

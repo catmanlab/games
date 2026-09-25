@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-24-gun-art" />
+  <meta name="supergun-build" content="2026-09-25-duo-spawn" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -1628,19 +1628,19 @@
   const STORM_START_R = Math.min(WORLD_W, WORLD_H) * 0.48;
   const STORM_MAP_COVER_R = Math.hypot(WORLD_W * 0.5, WORLD_H * 0.5) + 120;
   const STORM_PHASES = [
-    { wait: 10, shrink: 16, radiusFrac: 1.98, dps: 1 },
-    { wait: 8, shrink: 14, radiusFrac: 1.72, dps: 2 },
-    { wait: 7, shrink: 12, radiusFrac: 1.48, dps: 3 },
-    { wait: 6, shrink: 11, radiusFrac: 1.26, dps: 4 },
-    { wait: 6, shrink: 10, radiusFrac: 1.06, dps: 5 },
-    { wait: 5, shrink: 10, radiusFrac: 0.88, dps: 7 },
-    { wait: 5, shrink: 9, radiusFrac: 0.72, dps: 9 },
-    { wait: 4, shrink: 8, radiusFrac: 0.58, dps: 12 },
-    { wait: 4, shrink: 8, radiusFrac: 0.46, dps: 15 },
-    { wait: 3, shrink: 7, radiusFrac: 0.36, dps: 19 },
-    { wait: 3, shrink: 7, radiusFrac: 0.28, dps: 24 },
-    { wait: 3, shrink: 6, radiusFrac: 0.22, dps: 28 },
-    { wait: 2, shrink: 8, radiusFrac: 0.16, dps: 32 },
+    { wait: 10, shrink: 16, radiusFrac: 1.74, dps: 1 },
+    { wait: 8, shrink: 14, radiusFrac: 1.50, dps: 2 },
+    { wait: 7, shrink: 12, radiusFrac: 1.28, dps: 3 },
+    { wait: 6, shrink: 11, radiusFrac: 1.10, dps: 4 },
+    { wait: 6, shrink: 10, radiusFrac: 0.92, dps: 5 },
+    { wait: 5, shrink: 10, radiusFrac: 0.76, dps: 7 },
+    { wait: 5, shrink: 9, radiusFrac: 0.62, dps: 9 },
+    { wait: 4, shrink: 8, radiusFrac: 0.50, dps: 12 },
+    { wait: 4, shrink: 8, radiusFrac: 0.40, dps: 15 },
+    { wait: 3, shrink: 7, radiusFrac: 0.31, dps: 19 },
+    { wait: 3, shrink: 7, radiusFrac: 0.24, dps: 24 },
+    { wait: 3, shrink: 6, radiusFrac: 0.18, dps: 28 },
+    { wait: 2, shrink: 8, radiusFrac: 0.13, dps: 32 },
   ];
   const MAX_HEALTH = 100;
   const MAX_SHIELD = 100;
@@ -3933,8 +3933,8 @@
 
   function stormTargetRadius(phaseIndex) {
     const spec = stormPhaseSpec(phaseIndex);
-    if (phaseIndex <= 0) return STORM_MAP_COVER_R * 0.98;
-    return Math.max(STORM_START_R * 0.16, STORM_START_R * spec.radiusFrac);
+    if (phaseIndex <= 0) return STORM_MAP_COVER_R * 0.86;
+    return Math.max(STORM_START_R * 0.13, STORM_START_R * spec.radiusFrac);
   }
 
   function beginStormWait(phaseIndex) {
@@ -6213,6 +6213,24 @@
     return spawnDot({ ...opts, x: pt.x, y: pt.y });
   }
 
+  function snapLocalTeammateSpawn() {
+    if (!twoPlayerMode || !twoPlayerTeamMode || !player || !player2) return;
+    const pad = DOT_R + 8;
+    const gap = player.radius + player2.radius + 18;
+    for (let t = 0; t < 24; t++) {
+      const ang = (t / 24) * Math.PI * 2;
+      const x = clamp(player.x + Math.cos(ang) * gap, pad, WORLD_W - pad);
+      const y = clamp(player.y + Math.sin(ang) * gap, pad, WORLD_H - pad);
+      if (!pointBlockedByWalls(x, y, player2.radius)) {
+        player2.x = x;
+        player2.y = y;
+        return;
+      }
+    }
+    player2.x = clamp(player.x + gap, pad, WORLD_W - pad);
+    player2.y = player.y;
+  }
+
   function initGame(opts) {
     opts = opts || {};
     dots = [];
@@ -6281,6 +6299,7 @@
     } else {
       nextId = spawnBattleRoyaleMatch(0);
     }
+    snapLocalTeammateSpawn();
     if (player) applyPlayerCosmetics(player);
 
     spawnHarvestables();

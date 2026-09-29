@@ -6,7 +6,7 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
-  <meta name="supergun-build" content="2026-09-25-online-spawn" />
+  <meta name="supergun-build" content="2026-09-29-team-spawn" />
   <meta name="supergun-ws-url" content="wss://games-supergun.onrender.com" />
   <meta name="supergun-share-url" content="https://catmanlab.github.io/games/supergun/supergun.html" />
   <meta name="supergun-wiki-url" content="https://sites.google.com/view/supergun-index" />
@@ -2252,8 +2252,8 @@
 
   const GAME_MODE_DESCRIPTIONS = {
     battle_royale: "Classic free-for-all. Stay inside the shrinking storm circle. Be the last dot alive.",
-    teams: "2–6 teams, 18 fighters total. Fixed team colors, no friendly fire. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins. The storm still closes in.",
-    bedwars: "2–6 teams with wedge territories from the map center. Each team has a beacon — respawn with no gun while it stands. Enemy beacons break after 20 shots. Defenders stay in their wedge; attackers roam. Last team standing wins.",
+    teams: "2–6 teams, 18 fighters total. Fixed team colors, no friendly fire. Teammates spawn together. Last team with living dots wins. If you die, spectate teammates first — you still win if your team wins. The storm still closes in.",
+    bedwars: "2–6 teams with wedge territories from the map center. Each team spawns together at its beacon and respawns with no gun while it stands. Enemy beacons break after 20 shots. Defenders stay in their wedge; attackers roam. Last team standing wins.",
     revenge: "No teams. Kill someone and they stay dead — until you die. Then everyone you eliminated respawns. Same for every dot. The storm still closes in.",
     gun_game: "Everyone starts on the first gun in the ladder. A kill moves you to the next gun. First player to get a kill with the last gun wins. Everyone respawns until that happens.",
   };
@@ -5958,18 +5958,51 @@
         members[k].bedwarsRole = k < dn ? "defender" : "attacker";
       }
     }
-    for (const e of dots) {
-      if (e.bedwarsRole === "defender") {
-        const { bisect, slice } = bedwarsTeamAngleBounds(e.teamId);
-        const maxRay = bedwarsMaxRayFromCenterInRect(BEDWARS_CX, BEDWARS_CY, bisect, WORLD_W, WORLD_H);
-        const rEnt = e.radius;
-        const distPos = clamp(maxRay * 0.36, rEnt + 85, maxRay * 0.52);
-        const j = rand(-0.14, 0.14) * slice;
-        const ang = bisect + j;
-        e.x = BEDWARS_CX + Math.cos(ang) * distPos;
-        e.y = BEDWARS_CY + Math.sin(ang) * distPos;
-      }
+  }
+
+  function pickTeamAnchor(anchors) {
+    return pickSpreadSpawnPoint(anchors.map((a) => ({ x: a.x, y: a.y })), {});
+  }
+
+  function bedwarsTeamSpawnAnchor(teamId) {
+    const slot = bedwarsBeaconSlot(teamId);
+    const { bisect } = bedwarsTeamAngleBounds(teamId);
+    const pad = DOT_R + 12;
+    for (let pull = 200; pull <= 640; pull += 40) {
+      const x = clamp(slot.x - Math.cos(bisect) * pull, pad, WORLD_W - pad);
+      const y = clamp(slot.y - Math.sin(bisect) * pull, pad, WORLD_H - pad);
+      if (!pointBlockedByWalls(x, y, DOT_R + 6)) return { x, y };
     }
+    return {
+      x: clamp(slot.x, pad, WORLD_W - pad),
+      y: clamp(slot.y, pad, WORLD_H - pad),
+    };
+  }
+
+  function pickClusterPoint(anchor, occupied) {
+    const pad = DOT_R + 8;
+    const bodyGap = DOT_R * 2 + 18;
+    const near = occupied.filter((p) => dist(anchor.x, anchor.y, p.x, p.y) < 900);
+    for (let n = 0; n < 48; n++) {
+      const rad = n === 0 ? 0 : bodyGap * (1 + Math.floor((n - 1) / 6));
+      const slot = n === 0 ? 0 : (n - 1) % 6;
+      const ang = slot * (Math.PI * 2 / 6) + Math.floor(Math.max(0, n - 1) / 6) * 0.42;
+      const x = clamp(anchor.x + Math.cos(ang) * rad, pad, WORLD_W - pad);
+      const y = clamp(anchor.y + Math.sin(ang) * rad, pad, WORLD_H - pad);
+      if (pointBlockedByWalls(x, y, DOT_R)) continue;
+      let blocked = false;
+      for (const p of near) {
+        if (dist(x, y, p.x, p.y) < bodyGap * 0.92) {
+          blocked = true;
+          break;
+        }
+      }
+      if (!blocked) return { x, y };
+    }
+    return {
+      x: clamp(anchor.x + rand(-24, 24), pad, WORLD_W - pad),
+      y: clamp(anchor.y + rand(-24, 24), pad, WORLD_H - pad),
+    };
   }
 
   function spawnTeamMatch(startId) {
@@ -5990,11 +6023,17 @@
       });
     }
 
+    const teamAnchors = [];
     for (let t = 0; t < teamsCount; t++) {
       const meta = teamMeta[t];
+      const anchor = gameMode === "bedwars" ? bedwarsTeamSpawnAnchor(t) : pickTeamAnchor(teamAnchors);
+      teamAnchors.push(anchor);
+      const occupied = dots.map((d) => ({ x: d.x, y: d.y }));
       for (let s = 0; s < meta.totalSlots; s++) {
+        const pt = pickClusterPoint(anchor, occupied);
+        occupied.push(pt);
         if (t === PLAYER_TEAM_ID && s === 0) {
-          player = spawnDotSpread({
+          player = spawnDot({
             id: nextId++,
             name: playerName,
             color: meta.color,
@@ -6002,25 +6041,29 @@
             playerSlot: 1,
             teamId: t,
             isTeamCaptain: true,
-          }, dots);
+            x: pt.x,
+            y: pt.y,
+          });
           meta.captainName = playerName;
           dots.push(player);
           continue;
         }
         if (t === PLAYER_TEAM_ID && s === 1 && (twoPlayerMode || (onlineMode && onlineHost && twoPlayerTeamMode))) {
-          player2 = spawnDotSpread({
+          player2 = spawnDot({
             id: nextId++,
             name: player2Name,
             color: meta.color,
             isPlayer: true,
             playerSlot: 2,
             teamId: t,
-          }, dots);
+            x: pt.x,
+            y: pt.y,
+          });
           dots.push(player2);
           continue;
         }
         if (t === 1 && s === 0 && onlineMode && onlineHost && !twoPlayerMode && !twoPlayerTeamMode) {
-          player2 = spawnDotSpread({
+          player2 = spawnDot({
             id: nextId++,
             name: player2Name,
             color: meta.color,
@@ -6028,7 +6071,9 @@
             playerSlot: 2,
             teamId: t,
             isTeamCaptain: true,
-          }, dots);
+            x: pt.x,
+            y: pt.y,
+          });
           meta.captainName = player2Name;
           dots.push(player2);
           continue;
@@ -6036,14 +6081,16 @@
         const isCaptain = s === 0;
         const botName = makeBotName(usedBotNames);
         if (isCaptain) meta.captainName = botName;
-        const bot = spawnDotSpread({
+        const bot = spawnDot({
           id: nextId++,
           name: botName,
           color: meta.color,
           isAI: true,
           teamId: t,
           isTeamCaptain: isCaptain,
-        }, dots);
+          x: pt.x,
+          y: pt.y,
+        });
         equipBotSpawnLoadout(bot);
         dots.push(bot);
       }
@@ -6231,6 +6278,7 @@
   }
 
   function snapLocalTeammateSpawn() {
+    if (isTeamGameMode()) return;
     if (!player || !player2) return;
     const localTeam = twoPlayerMode && twoPlayerTeamMode;
     const onlinePair = onlineMode && onlineHost;

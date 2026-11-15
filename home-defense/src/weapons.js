@@ -5,32 +5,80 @@ import { burst, tracer, ring, flash, light, shake, explode, fireworks } from './
 import { sfx } from './audio.js';
 import { damageEnemy, damageArea, eCenter } from './enemies.js';
 import { impulseProps, breakProp, wake } from './props.js';
-import { hurtPlayer } from './player.js';
+import { hurtPlayer, roster } from './player.js';
 import { announce } from './ui.js';
 import { damageFort } from './world.js';
+import { order } from './binds.js';
 
 export const RAR = [
-  { name: 'Common', col: 0x9aa0a6, css: '#b8bec6', mul: 1 }, { name: 'Uncommon', col: 0x3ddc61, css: '#3ddc61', mul: 1.15 },
-  { name: 'Rare', col: 0x3aa0ff, css: '#3aa0ff', mul: 1.3 }, { name: 'Epic', col: 0xb14aff, css: '#c77dff', mul: 1.5 },
-  { name: 'Legendary', col: 0xffb300, css: '#ffb300', mul: 1.8 },
+  { name: 'Common', col: 0x9aa0a6, css: '#b8bec6' }, { name: 'Uncommon', col: 0x3ddc61, css: '#3ddc61' },
+  { name: 'Rare', col: 0x3aa0ff, css: '#3aa0ff' }, { name: 'Epic', col: 0xb14aff, css: '#c77dff' },
+  { name: 'Legendary', col: 0xffb300, css: '#ffb300' },
 ];
+// Common is the listed gun stat. Each step up adds 2 damage and divides reload by 1.12.
+export function gunDamage(W, rar) { return W.dmg + 2 * rar; }
+export function gunReload(W, rar) { return W.reload / Math.pow(1.12, rar); }
 export const WP = [
   // rate = shots per second. Burst rifle: `burst` shots, `gap` seconds between them, then `rest` seconds before the next burst.
+  // Shotgun `dmg` is the full blast. `pellets` split that damage across the pattern.
   { id: 'ar', name: 'Assault Rifle', dmg: 36, rate: 5.5, mag: 30, reload: 1.8, spread: 0.012, col: 0xffc857, len: 0.62 },
-  { id: 'burst', name: 'Burst Assault Rifle', dmg: 37, burst: 2, gap: 0.10, rest: 0.44, mag: 24, reload: 1.8, spread: 0.007, col: 0x7ad7ff, len: 0.66 },
+  { id: 'burst', name: 'Burst Assault Rifle', dmg: 37, burst: 3, gap: 0.10, rest: 0.5, mag: 24, reload: 1.8, spread: 0.007, col: 0x7ad7ff, len: 0.66 },
+  { id: 'pump', name: 'Pump Shotgun', dmg: 87, rate: 0.7, mag: 5, reload: 1.8, spread: 0.028, pellets: 5, col: 0xe07a3d, len: 0.78 },
+  { id: 'tactical', name: 'Tactical Shotgun', dmg: 79, rate: 1.5, mag: 8, reload: 1.8, spread: 0.04, pellets: 5, col: 0x5dff9a, len: 0.7 },
+  { id: 'smg', name: 'SMG', dmg: 14, rate: 15, mag: 35, reload: 1.8, spread: 0.02, col: 0x3ee0ff, len: 0.48 },
+  { id: 'lmg', name: 'LMG', dmg: 21, rate: 8, mag: 60, reload: 1.8, spread: 0.016, col: 0xd4a017, len: 0.86 },
+  { id: 'pistol', name: 'Pistol', dmg: 26, rate: 6.75, mag: 8, reload: 1.8, spread: 0.012, col: 0xd5dbe3, len: 0.34 },
+  { id: 'revolver', name: 'Revolver', dmg: 55, rate: 1.65, mag: 6, reload: 1.8, spread: 0.006, col: 0xe0b15a, len: 0.42 },
+  { id: 'sniper', name: 'Sniper', dmg: 100, rate: 1, mag: 1, reload: 1.8, spread: 0.001, scope: true, range: 140, col: 0x8ecaff, len: 1.05 },
+  { id: 'rpg', name: 'RPG', dmg: 85, rate: 1, mag: 1, reload: 1.8, rocket: true, spread: 0.004, col: 0xff5a36, len: 0.9 },
 ];
+export const INV_SLOTS = 5;
+export const CAT_NAME = { ar: 'AR', shotgun: 'Shotgun', smg: 'SMG', heavy: 'Heavy', sidearm: 'Sidearm' };
+export function catOf(wi) {
+  if (wi <= 1) return 'ar';
+  if (wi <= 3) return 'shotgun';
+  if (wi === 4 || wi === 5) return 'smg';
+  if (wi === 6 || wi === 7) return 'sidearm';
+  return 'heavy';
+}
+export function slotFor(wi) { const i = order.indexOf(catOf(wi)); return i < 0 ? 0 : i; }
+export function makeLoadout() {
+  const a = Array(INV_SLOTS).fill(null);
+  const i = slotFor(0);
+  a[i] = { wi: 0, rar: 0, ammo: WP[0].mag };
+  return a;
+}
+export function remapWeapons(p, prev, next) {
+  if (!p) return;
+  const old = p.weapons.slice();
+  const curCat = prev[p.cur] || 'ar';
+  p.weapons = Array(INV_SLOTS).fill(null);
+  for (let i = 0; i < INV_SLOTS; i++) if (old[i]) p.weapons[Math.max(0, next.indexOf(prev[i]))] = old[i];
+  p.cur = Math.max(0, next.indexOf(curCat));
+  p.gunDirty = true;
+}
 
 export function gunMesh(wi, rar) {
-  const g = new THREE.Group(), W = WP[wi], rc = RAR[rar].col, dark = { m: 0.6, r: 0.4 }, body = wi === 0 ? 0x3a3f36 : 0x2b2f3a;
-  bx(g, 0.07, 0.12, 0.46, body, 0, 0, 0.14, dark);                                   // receiver
-  cyl(g, 0.022, 0.3, 0x555b63, 0, 0.02, 0.5, dark).rotation.x = Math.PI / 2;         // barrel
-  bx(g, 0.06, 0.1, 0.2, 0x1f1f1f, 0, -0.01, -0.18, dark);                            // stock
-  const mag = bx(g, 0.05, 0.2, 0.08, 0x1f1f1f, 0, -0.15, 0.16, dark); mag.rotation.x = 0.2;
-  bx(g, 0.03, 0.05, 0.14, 0x1f1f1f, 0, 0.09, 0.1, dark);                             // sight
-  bx(g, 0.075, 0.03, 0.16, W.col, 0, 0.03, 0.32, glow(W.col, 1.4));                  // handguard light
-  if (wi === 1) { cyl(g, 0.034, 0.1, 0x8d99ae, 0, 0.02, 0.62, dark).rotation.x = Math.PI / 2; bx(g, 0.03, 0.03, 0.03, W.col, 0, 0.12, 0.1, glow(W.col, 2.5)); }
+  const g = new THREE.Group(), W = WP[wi], rc = RAR[rar].col, dark = { m: 0.6, r: 0.4 };
+  const shot = !!W.pellets;
+  const body = W.id === 'burst' ? 0x2b2f3a : W.id === 'pump' ? 0x6b4423 : W.id === 'tactical' ? 0x243028 : W.id === 'smg' ? 0x1c2833 : W.id === 'lmg' ? 0x3a2a22 : W.id === 'pistol' ? 0x2a2e33 : W.id === 'revolver' ? 0x4a3b28 : W.id === 'sniper' ? 0x2a3340 : W.id === 'rpg' ? 0x3a322c : 0x3a3f36;
+  bx(g, shot ? 0.085 : W.id === 'lmg' ? 0.09 : W.id === 'smg' ? 0.06 : 0.07, shot ? 0.1 : W.id === 'smg' ? 0.09 : 0.12, shot ? 0.34 : W.id === 'smg' ? 0.28 : W.id === 'lmg' ? 0.52 : 0.46, body, 0, 0, shot ? 0.06 : W.id === 'smg' ? 0.06 : 0.14, dark);
+  cyl(g, shot ? 0.04 : W.id === 'lmg' ? 0.03 : 0.018, W.id === 'lmg' ? 0.5 : W.id === 'smg' ? 0.16 : shot ? (W.id === 'pump' ? 0.46 : 0.36) : 0.3, 0x555b63, 0, shot ? 0.035 : 0.02, W.id === 'lmg' ? 0.62 : W.id === 'smg' ? 0.34 : shot ? 0.46 : 0.5, dark).rotation.x = Math.PI / 2;
+  bx(g, 0.06, 0.1, shot || W.id === 'smg' ? 0.12 : W.id === 'lmg' ? 0.22 : 0.2, 0x1f1f1f, 0, -0.01, shot || W.id === 'smg' ? -0.12 : -0.18, dark);
+  if (W.id === 'pump') bx(g, 0.05, 0.04, 0.18, 0xc48a4a, 0, -0.015, 0.24, dark);
+  else if (W.id === 'tactical') { const mag = bx(g, 0.055, 0.11, 0.07, 0x1a1a1a, 0, -0.1, 0.1, dark); mag.rotation.x = 0.15; }
+  else if (W.id === 'lmg') bx(g, 0.1, 0.16, 0.16, 0x1a1a1a, 0, -0.1, 0.06, dark);
+  else if (W.id === 'smg') { const mag = bx(g, 0.035, 0.24, 0.045, 0x1f1f1f, 0, -0.16, 0.06, dark); mag.rotation.x = 0.12; }
+  else { const mag = bx(g, 0.05, 0.2, 0.08, 0x1f1f1f, 0, -0.15, 0.16, dark); mag.rotation.x = 0.2; }
+  bx(g, 0.03, 0.05, 0.14, 0x1f1f1f, 0, shot ? 0.08 : 0.09, 0.1, dark);
+  bx(g, shot ? 0.095 : 0.075, 0.03, shot ? 0.22 : 0.16, W.col, 0, 0.03, shot ? 0.26 : 0.32, glow(W.col, 1.4));
+  if (W.id === 'burst') { cyl(g, 0.034, 0.1, 0x8d99ae, 0, 0.02, 0.62, dark).rotation.x = Math.PI / 2; bx(g, 0.03, 0.03, 0.03, W.col, 0, 0.12, 0.1, glow(W.col, 2.5)); }
+  if (W.id === 'pistol') g.scale.set(0.7, 0.7, 0.62);
+  if (W.id === 'revolver') { cyl(g, 0.048, 0.07, 0xc9b27a, 0, 0.02, 0.2, dark).rotation.x = Math.PI / 2; }
+  if (W.id === 'sniper') { cyl(g, 0.014, 0.62, 0x22262c, 0, 0.02, 0.72, dark).rotation.x = Math.PI / 2; cyl(g, 0.026, 0.22, 0x111418, 0, 0.11, 0.16, dark).rotation.x = Math.PI / 2; cyl(g, 0.02, 0.02, 0x9ad7ff, 0, 0.11, -0.02, glow(0x9ad7ff, 1.6)).rotation.x = Math.PI / 2; }
+  if (W.id === 'rpg') { cyl(g, 0.06, 0.62, 0x4a4038, 0, 0.02, 0.5, dark).rotation.x = Math.PI / 2; cyl(g, 0.038, 0.18, W.col, 0, 0.02, 0.86, glow(W.col, 1.3)).rotation.x = Math.PI / 2; }
   bx(g, 0.05, 0.14, 0.07, 0x222222, 0, -0.11, 0.0);
-  bx(g, 0.012, 0.05, 0.22, rc, 0.04, 0.0, 0.1, glow(rc, 2.2)); bx(g, 0.012, 0.05, 0.22, rc, -0.04, 0.0, 0.1, glow(rc, 2.2)); // rarity strips
+  bx(g, 0.012, 0.05, 0.22, rc, 0.04, 0.0, 0.1, glow(rc, 2.2)); bx(g, 0.012, 0.05, 0.22, rc, -0.04, 0.0, 0.1, glow(rc, 2.2));
   return g;
 }
 
@@ -39,10 +87,18 @@ const _o = new THREE.Vector3(), _d = new THREE.Vector3(), _c = new THREE.Vector3
 export const AIM = { o: new THREE.Vector3(), d: new THREE.Vector3(), point: new THREE.Vector3() };
 export function updateAim() {
   const p = G.player;
-  G.camera.getWorldPosition(AIM.o); G.camera.getWorldDirection(AIM.d);
-  AIM.o.addScaledVector(AIM.d, p.fp ? 0.1 : p.camDist + 0.25);
+  if (!p.local) {
+    const cp = Math.cos(p.pitch), sp = Math.sin(p.pitch);
+    const eye = p.pos.y + (p.height > 1 ? 1.55 : 0.8);
+    AIM.o.set(p.pos.x, eye, p.pos.z);
+    AIM.d.set(Math.sin(p.yaw) * cp, sp, Math.cos(p.yaw) * cp);
+  } else {
+    G.camera.getWorldPosition(AIM.o); G.camera.getWorldDirection(AIM.d);
+    AIM.o.addScaledVector(AIM.d, p.fp ? 0.1 : (p.camDist || 0) + 0.25);
+  }
   const h = hitscan(AIM.o, AIM.d, 80);
   AIM.point.copy(AIM.o).addScaledVector(AIM.d, h.t); AIM.enemy = h.enemy;
+  if (p.aimD) p.aimD.copy(AIM.d); if (p.aimO) p.aimO.copy(AIM.o);
 }
 export function hitscan(o, d, max) {
   const res = { t: max, enemy: null, crit: false, box: null, axis: 0, sign: 0 };
@@ -65,37 +121,62 @@ function impactFx(p, col, h) {
 }
 
 // ---------- 开火 ----------
+function equipped(p) {
+  const w = p.weapons[p.cur];
+  return w ? { w, W: WP[w.wi] } : null;
+}
 export function tryReload(p) {
-  const w = p.weapons[p.cur]; if (!w || p.reloadT > 0 || w.ammo >= WP[p.cur].mag) return;
-  p.reloadT = WP[p.cur].reload; p.charge = 0; sfx.reload();
+  const eq = equipped(p); if (!eq || p.reloadT > 0 || eq.w.ammo >= eq.W.mag) return;
+  p.reloadT = gunReload(eq.W, eq.w.rar); p.charge = 0; sfx.reload();
 }
 function shoot(p, w, W) {
-  const mul = RAR[w.rar].mul, col = W.col, mz = p.muzzle;
+  const col = W.col, mz = p.muzzle, pellets = W.pellets || 1;
   w.ammo--;
-  spreadDir(AIM.d, W.spread * (p.ads ? 0.5 : 1) * (p.onGround ? 1 : 1.3), _d);
-  const h = hitscan(AIM.o, _d, 70);
-  _p.copy(AIM.o).addScaledVector(_d, h.t);
-  tracer(mz, _p, col, 0.035, 0.09);
-  if (h.enemy) { damageEnemy(h.enemy, W.dmg * mul, { dir: _d, knock: 1.6, point: _p.clone(), crit: h.crit }); impactFx(_p, h.crit ? 0xffe14d : col); }
-  else if (h.box) impactFx(_p, col);
-  flash(mz, col, 0.22, 0.05); light(mz, col, 12, 0.06);
-  p.recoil += 0.014; shake(0.05); sfx.rifle();
+  const spread = W.spread * (p.ads ? 0.5 : 1) * (p.onGround ? 1 : 1.3);
+  const per = gunDamage(W, w.rar) / pellets;
+  const hits = [];
+  for (let i = 0; i < pellets; i++) {
+    spreadDir(AIM.d, spread, _d);
+    const h = hitscan(AIM.o, _d, W.range || 70);
+    _p.copy(AIM.o).addScaledVector(_d, h.t);
+    tracer(mz, _p, col, pellets > 1 ? 0.02 : 0.035, 0.09);
+    if (h.enemy) {
+      let slot = null;
+      for (const s of hits) if (s.e === h.enemy) { slot = s; break; }
+      if (!slot) { slot = { e: h.enemy, dmg: 0, crit: false, dir: _d.clone(), point: _p.clone() }; hits.push(slot); }
+      slot.dmg += per; if (h.crit) slot.crit = true;
+    } else if (h.box) impactFx(_p, col);
+  }
+  for (const s of hits) { damageEnemy(s.e, s.dmg, { dir: s.dir, knock: pellets > 1 ? 2.6 : 1.6, point: s.point, crit: s.crit }); impactFx(s.point, s.crit ? 0xffe14d : col); }
+  flash(mz, col, pellets > 1 ? 0.42 : 0.22, 0.05); light(mz, col, pellets > 1 ? 18 : 12, 0.06);
+  p.recoil += pellets > 1 ? 0.04 : W.id === 'sniper' ? 0.055 : W.id === 'revolver' ? 0.03 : W.id === 'lmg' ? 0.022 : W.id === 'pistol' || W.id === 'smg' ? 0.008 : 0.014;
+  shake(pellets > 1 ? 0.12 : W.id === 'sniper' ? 0.1 : W.id === 'lmg' ? 0.08 : 0.05);
+  if (pellets > 1) sfx.shotgun(); else if (W.id === 'smg' || W.id === 'pistol') sfx.smg(); else sfx.rifle();
 }
+function fireRocket(p, w, W) {
+  w.ammo--;
+  _d.copy(AIM.d);
+  spawnShot('rocket', p.muzzle, _d, 32, gunDamage(W, w.rar), W.col, 0.14, 'p');
+  flash(p.muzzle, W.col, 0.7, 0.08); light(p.muzzle, W.col, 22, 0.08);
+  p.recoil += 0.09; shake(0.22); sfx.rocket();
+}
+function launch(p, w, W) { W.rocket ? fireRocket(p, w, W) : shoot(p, w, W); }
 export function updateWeapon(dt, fire, firePressed) {
-  const p = G.player, w = p.weapons[p.cur], W = WP[p.cur];
+  const p = G.player, eq = equipped(p);
   p.fireT -= dt;
-  if (!w) return;
+  if (!eq) return;
+  const { w, W } = eq;
   if (p.reloadT > 0) { p.reloadT -= dt; p.burstLeft = 0; if (p.reloadT <= 0) { w.ammo = W.mag; sfx.swap(); } return; }
   if (w.ammo <= 0) { p.burstLeft = 0; if (firePressed) sfx.empty(); tryReload(p); return; }
   if (W.burst) {
     // 点射：扣一次扳机打完整组，组内间隔 gap，打完后等 rest 才能打下一组
     if (p.burstLeft > 0) {
       p.burstT -= dt;
-      if (p.burstT <= 0) { shoot(p, w, W); p.burstLeft--; if (p.burstLeft > 0) p.burstT += W.gap; else p.fireT = W.rest + p.burstT; }
+      if (p.burstT <= 0) { launch(p, w, W); p.burstLeft--; if (p.burstLeft > 0) p.burstT += W.gap; else p.fireT = W.rest + p.burstT; }
     } else if (fire && p.fireT <= 0) {
-      const carry = Math.max(p.fireT, -dt); shoot(p, w, W); p.burstLeft = W.burst - 1; p.burstT = W.gap + carry; if (p.burstLeft <= 0) p.fireT = W.rest + carry;
+      const carry = Math.max(p.fireT, -dt); launch(p, w, W); p.burstLeft = W.burst - 1; p.burstT = W.gap + carry; if (p.burstLeft <= 0) p.fireT = W.rest + carry;
     }
-  } else if (fire && p.fireT <= 0) { p.fireT = Math.max(p.fireT, -dt) + 1 / W.rate; shoot(p, w, W); } // 保留余量，射速不受帧率影响
+  } else if (fire && p.fireT <= 0) { p.fireT = Math.max(p.fireT, -dt) + 1 / W.rate; launch(p, w, W); } // 保留余量，射速不受帧率影响
   if (w.ammo <= 0) tryReload(p);
 }
 
@@ -119,9 +200,12 @@ function rocketBoom(s) {
   const c = s.pos.clone(); c.y = Math.max(0.3, c.y);
   explode(c, 4.2, [0xffffff, 0xffd60a, 0xff7b00, 0xff4d6d]); fireworks(c, 5);
   damageArea(c, 4.4, s.dmg, 10); impulseProps(c, 5, 10, true);
-  const p = G.player; _q.set(p.pos.x, p.pos.y + 0.9, p.pos.z);
-  const d = _q.distanceTo(c);
-  if (d < 4.2) { _q.sub(c).normalize(); _q.y = Math.max(_q.y, 0.45); p.vel.addScaledVector(_q.normalize(), 13 * (1 - d / 6)); p.onGround = false; }
+  for (const p of roster()) {
+    if (!p || p.dead) continue;
+    _q.set(p.pos.x, p.pos.y + 0.9, p.pos.z);
+    const d = _q.distanceTo(c);
+    if (d < 4.2) { _q.sub(c).normalize(); _q.y = Math.max(_q.y, 0.45); p.vel.addScaledVector(_q.normalize(), 13 * (1 - d / 6)); p.onGround = false; }
+  }
 }
 function blackHole(s) {
   const c = s.pos.clone(); c.y = Math.max(1.0, c.y); s.dead = true; G.scene.remove(s.m);
@@ -148,7 +232,7 @@ function blackHole(s) {
 }
 
 export function updateShots(dt) {
-  const p = G.player, S = G.shots;
+  const S = G.shots;
   for (let i = S.length - 1; i >= 0; i--) {
     const s = S[i]; let dead = s.dead;
     if (!dead) {
@@ -170,20 +254,26 @@ export function updateShots(dt) {
             dead = true; break;
           }
           if (s.team === 'e') {
-            // 被手里的东西挡住/弹回
-            const h = p.held;
-            if (h && s.pos.distanceTo(h.pos) < (p.blocking ? 0.95 : 0.6) + s.r) {
-              if (h.T.reflect || p.blocking) {
-                s.team = 'p'; s.vel.copy(AIM.d).multiplyScalar(s.vel.length() * (h.T.reflect ? 2.2 : 1.5)); s.dmg *= h.T.reflect ? 5 : 3; s.col = 0x80ffdb;
+            let hitP = null, blocked = false;
+            for (const pl of roster()) {
+              if (!pl || pl.dead) continue;
+              const h = pl.held;
+              if (h && s.pos.distanceTo(h.pos) < (pl.blocking ? 0.95 : 0.6) + s.r) { hitP = pl; blocked = true; break; }
+              const py = clamp(s.pos.y, pl.pos.y + 0.25, pl.pos.y + pl.height - 0.2);
+              if (Math.hypot(s.pos.x - pl.pos.x, s.pos.z - pl.pos.z, s.pos.y - py) < 0.4 + s.r) { hitP = pl; break; }
+            }
+            if (hitP && blocked) {
+              const h = hitP.held;
+              if (h.T.reflect || hitP.blocking) {
+                const aim = hitP.aimD || AIM.d;
+                s.team = 'p'; s.vel.copy(aim).multiplyScalar(s.vel.length() * (h.T.reflect ? 2.2 : 1.5)); s.dmg *= h.T.reflect ? 5 : 3; s.col = 0x80ffdb;
                 s.m.material.color.set(0x80ffdb).multiplyScalar(2.5); s.life = 3;
-                h.T.reflect ? sfx.clang() : sfx.block(); flash(s.pos, 0x80ffdb, 0.6, 0.12); ring(s.pos, 0x80ffdb, 1, 0.2); p.blocks++;
-              } else { sfx.block(); burst(s.pos, { n: 10, color: s.col, speed: [1, 4], life: [0.15, 0.35] }); dead = true; }
-              if (h.T.fragile && !dead) { /* 反弹成功，易碎品也保住 */ } else if (h.T.fragile) breakProp(h);
+                h.T.reflect ? sfx.clang() : sfx.block(); flash(s.pos, 0x80ffdb, 0.6, 0.12); ring(s.pos, 0x80ffdb, 1, 0.2); hitP.blocks++;
+              } else { sfx.block(); burst(s.pos, { n: 10, color: s.col, speed: [1, 4], life: [0.15, 0.35] }); dead = true; if (h.T.fragile) breakProp(h); }
               continue;
             }
-            const py = clamp(s.pos.y, p.pos.y + 0.25, p.pos.y + p.height - 0.2);
-            if (Math.hypot(s.pos.x - p.pos.x, s.pos.z - p.pos.z, s.pos.y - py) < 0.4 + s.r) {
-              if (hurtPlayer(s.dmg, s.pos, 2)) burst(s.pos, { n: 10, color: s.col, speed: [1, 4], life: [0.15, 0.35] });
+            if (hitP) {
+              if (hurtPlayer(s.dmg, s.pos, 2, hitP)) burst(s.pos, { n: 10, color: s.col, speed: [1, 4], life: [0.15, 0.35] });
               dead = true;
             }
           } else {
@@ -216,9 +306,57 @@ function rollRarity(bias = 0) {
   return 0;
 }
 function rollWeapon(bias) {
-  const p = G.player, missing = WP.map((_, i) => i).filter((i) => !p.weapons[i]);
+  const p = G.player, owned = new Set(p.weapons.filter(Boolean).map((w) => w.wi));
+  const missing = WP.map((_, i) => i).filter((i) => !owned.has(i));
   const wi = missing.length && Math.random() < 0.75 ? pick(missing) : (Math.random() * WP.length) | 0;
-  return { wi, rar: Math.max(rollRarity(bias), p.weapons[wi] && Math.random() < 0.6 ? Math.min(4, p.weapons[wi].rar + 1) : 0) };
+  const have = p.weapons.find((w) => w && w.wi === wi);
+  return { wi, rar: Math.max(rollRarity(bias), have && Math.random() < 0.6 ? Math.min(4, have.rar + 1) : 0) };
+}
+function grantWeapon(p, data, slot, equip) {
+  const ammo = typeof data.ammo === 'number' ? data.ammo : WP[data.wi].mag;
+  p.weapons[slot] = { wi: data.wi, rar: data.rar, ammo };
+  if (equip) p.cur = slot;
+  if (equip || p.cur === slot) { p.reloadT = 0; p.charge = 0; p.burstLeft = 0; p.gunDirty = true; }
+  announce(`${RAR[data.rar].name} · ${WP[data.wi].name}`, 'loot', 2, RAR[data.rar].css);
+  data.rar >= 3 ? sfx.rare() : sfx.pickup();
+  return data.rar >= 3;
+}
+/** 'take' | 'upgrade' | 'scrap' | 'full' */
+export function offerWeapon(p, data) {
+  const owned = p.weapons.findIndex((w) => w && w.wi === data.wi);
+  if (owned >= 0) {
+    if (p.weapons[owned].rar < data.rar) { grantWeapon(p, data, owned, false); return 'upgrade'; }
+    return 'scrap';
+  }
+  const prefer = slotFor(data.wi);
+  let slot = -1;
+  if (!p.weapons[prefer]) slot = prefer;
+  else for (let n = 1; n < INV_SLOTS; n++) {
+    const i = (prefer + n) % INV_SLOTS;
+    if (!p.weapons[i]) { slot = i; break; }
+  }
+  if (slot >= 0) { grantWeapon(p, data, slot, true); return 'take'; }
+  return 'full';
+}
+export function findSwapGun(p) {
+  if (!p || p.held || p.weapons.some((s) => !s)) return null;
+  let best = null, bd = 1.2;
+  for (const k of G.pickups) {
+    if (k.kind !== 'weapon' || k.t < 0.4) continue;
+    if (p.weapons.some((w) => w && w.wi === k.data.wi)) continue;
+    const d = Math.hypot(k.pos.x - p.pos.x, k.pos.z - p.pos.z), dy = Math.abs(k.pos.y - (p.pos.y + 0.8));
+    if (dy < 2 && d < bd) { bd = d; best = k; }
+  }
+  return best;
+}
+export function replaceCurrentGun(p, k) {
+  const slot = p.cur;
+  const old = p.weapons[slot];
+  const boom = grantWeapon(p, k.data, slot, true);
+  G.scene.remove(k.g, k.beam);
+  const i = G.pickups.indexOf(k); if (i >= 0) G.pickups.splice(i, 1);
+  if (old) spawnPickup('weapon', new THREE.Vector3(p.pos.x, 0.9, p.pos.z), { wi: old.wi, rar: old.rar, ammo: old.ammo });
+  if (boom) fireworks(k.pos, 2);
 }
 export function spawnPickup(kind, pos, data = {}, pop = true) {
   const g = new THREE.Group(); let col = 0xffffff;
@@ -230,7 +368,7 @@ export function spawnPickup(kind, pos, data = {}, pop = true) {
   const beam = new THREE.Mesh(GEO.cyl, new THREE.MeshBasicMaterial({ color: new THREE.Color(col).multiplyScalar(1.6), transparent: true, opacity: kind === 'weapon' ? 0.22 : 0.1, blending: THREE.AdditiveBlending, depthWrite: false }));
   beam.scale.set(kind === 'weapon' ? 0.3 : 0.16, kind === 'weapon' ? 3.2 : 1.2, kind === 'weapon' ? 0.3 : 0.16);
   G.scene.add(g, beam); g.position.copy(pos);
-  const k = { kind, data, g, beam, pos: g.position, vy: pop ? rand(4, 6) : 0, vx: pop ? rand(-2, 2) : 0, vz: pop ? rand(-2, 2) : 0, col, t: 0 };
+  const k = { kind, data, g, beam, pos: g.position, vy: pop ? rand(4, 6) : 0, vx: pop ? rand(-2, 2) : 0, vz: pop ? rand(-2, 2) : 0, col, t: 0, nid: data.nid || ++G.pickupSeq };
   G.pickups.push(k); return k;
 }
 export function dropLoot(c, type) {
@@ -256,26 +394,30 @@ export function supplyDrop() {
 }
 
 export function updatePickups(dt) {
-  const p = G.player, K = G.pickups;
+  const K = G.pickups;
   for (let i = K.length - 1; i >= 0; i--) {
     const k = K[i]; k.t += dt;
-    k.vy -= 14 * dt; k.pos.y += k.vy * dt; k.pos.x = clamp(k.pos.x + k.vx * dt, 0.5, G.W - 0.5); k.pos.z = clamp(k.pos.z + k.vz * dt, 0.5, G.D - 0.5);
+    k.vy -= 14 * dt; k.pos.y += k.vy * dt; k.pos.x = clamp(k.pos.x + k.vx * dt, G.X0 + 1, G.X1 - 1); k.pos.z = clamp(k.pos.z + k.vz * dt, G.Z0 + 1, G.Z1 - 1);
     if (k.pos.y < 0.55) { k.pos.y = 0.55; k.vy = 0; k.vx = k.vz = 0; }
     k.g.rotation.y += dt * 2; k.g.position.y += Math.sin(k.t * 3) * 0.002;
     k.beam.position.set(k.pos.x, k.pos.y + k.beam.scale.y / 2 - 0.3, k.pos.z);
     if (k.t < 0.4) continue;
-    const d = Math.hypot(k.pos.x - p.pos.x, k.pos.z - p.pos.z), dy = Math.abs(k.pos.y - (p.pos.y + 0.8));
-    if (d < 5 && d > 0.2 && dy < 2.5 && k.kind !== 'weapon') { k.pos.x += (p.pos.x - k.pos.x) / d * dt * 7; k.pos.z += (p.pos.z - k.pos.z) / d * dt * 7; } // 磁吸
-    if (d > 1.2 || dy > 2) continue;
+    let p = null, bd = 1.25, mag = null, md = 5;
+    for (const pl of roster()) {
+      if (!pl || pl.dead) continue;
+      const d = Math.hypot(k.pos.x - pl.pos.x, k.pos.z - pl.pos.z), dy = Math.abs(k.pos.y - (pl.pos.y + 0.8));
+      if (dy >= 2.5) continue;
+      if (d < md) { md = d; mag = pl; }
+      if (d < bd && dy < 2) { bd = d; p = pl; }
+    }
+    if (mag && md < 5 && md > 0.2 && k.kind !== 'weapon') { k.pos.x += (mag.pos.x - k.pos.x) / md * dt * 7; k.pos.z += (mag.pos.z - k.pos.z) / md * dt * 7; }
+    if (!p) continue;
     let take = true;
     if (k.kind === 'weapon') {
-      const { wi, rar } = k.data, cur = p.weapons[wi];
-      if (!cur || cur.rar < rar) {
-        const had = !!cur; p.weapons[wi] = { rar, ammo: WP[wi].mag }; p.gunDirty = true;
-        if (!had || p.cur === wi) { p.cur = wi; p.reloadT = 0; p.charge = 0; }
-        announce(`${RAR[rar].name} · ${WP[wi].name}`, 'loot', 2, RAR[rar].css); rar >= 3 ? sfx.rare() : sfx.pickup();
-        if (rar >= 3) { fireworks(k.pos, 2); }
-      } else { p.mats += 10; sfx.pickup(); }
+      const got = offerWeapon(p, k.data);
+      if (got === 'full') take = false;
+      else if (got === 'scrap') { p.mats += 10; sfx.pickup(); }
+      else if (k.data.rar >= 3) fireworks(k.pos, 2);
     } else if (k.kind === 'shield') { if (p.shield >= 100) take = false; else { p.shield = Math.min(100, p.shield + 35); sfx.pickup(); } }
     else if (k.kind === 'health') { if (p.hp >= 100) take = false; else { p.hp = Math.min(100, p.hp + 30); sfx.pickup(); } }
     else if (k.kind === 'nade') { p.nades = Math.min(6, p.nades + 1); sfx.pickup(); }
@@ -289,4 +431,5 @@ export function updatePickups(dt) {
 export function resetShots() {
   for (const s of G.shots) G.scene.remove(s.m); G.shots.length = 0;
   for (const k of G.pickups) G.scene.remove(k.g, k.beam); G.pickups.length = 0;
+  G.pickupSeq = 0;
 }

@@ -4,9 +4,13 @@ export { THREE };
 
 export const G = {
   scene: null, camera: null, renderer: null,
-  statics: [], props: [], enemies: [], shots: [], pickups: [], chests: [], flips: [], walls: [],
+  statics: [], props: [], enemies: [], shots: [], pickups: [], chests: [], flips: [], walls: [], builds: [],
   player: null, time: 0, dt: 0, timeScale: 1, slowT: 0, shake: 0,
-  state: 'menu', wave: 0, H: 4, W: 24, D: 22, timers: [], anim: [],
+  state: 'menu', settingsOpen: false, wave: 0, H: 4, W: 24, D: 22,
+  // 房子仍是 0..W × 0..D；院子向外扩到 X0..X1、Z0..Z1
+  X0: -44, Z0: -44, X1: 68, Z1: 66,
+  timers: [], anim: [],
+  enemySeq: 0, propSeq: 0, fortSeq: 0, pickupSeq: 0,
 };
 
 export const rand = (a = 1, b) => (b === undefined ? Math.random() * a : a + Math.random() * (b - a));

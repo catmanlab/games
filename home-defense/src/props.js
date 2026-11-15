@@ -54,6 +54,7 @@ export function spawnProp(type, x, y, z, o = {}) {
     type, T, g, pos: g.position, vel: new THREE.Vector3(), av: new THREE.Vector3(), r: T.r, m: T.m,
     awake: !!o.awake, thrown: false, hits: new Set(), held: false, dead: false, rest: 0,
     life: o.life ?? -1, home: o.life ? null : { x, y: y + T.r, z, rot: g.rotation.y },
+    nid: o.nid || ++G.propSeq,
   };
   if (o.vel) { p.vel.copy(o.vel); p.awake = true; }
   G.props.push(p);
@@ -78,7 +79,12 @@ export function impulseProps(c, radius, force, markThrown) {
 export function breakProp(p, quiet) {
   if (p.dead) return;
   p.dead = true; p.g.visible = false; p.awake = false; p.thrown = false;
-  if (p.held && G.player) { G.player.held = null; p.held = false; }
+  if (p.held) {
+    if (G.human && G.human.held === p) G.human.held = null;
+    if (G.partner && G.partner.held === p) G.partner.held = null;
+    if (G.player && G.player.held === p) G.player.held = null;
+    p.held = false;
+  }
   if (quiet) return;
   if (p.T.explosive) {
     explode(p.pos, 3.2, [0xffffff, 0xffd60a, 0xff7b00, 0xd00000]);

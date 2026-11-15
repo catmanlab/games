@@ -5,7 +5,7 @@ import { burst, explode, ring, flash, shake, light } from './fx.js';
 import { sfx } from './audio.js';
 import { spawnProp, resetProps } from './props.js';
 import { fireOrb, dropLoot, supplyDrop } from './weapons.js';
-import { hurtPlayer, onKill } from './player.js';
+import { hurtPlayer, onKill, roster } from './player.js';
 import { dmgNum, announce } from './ui.js';
 import { damageFort } from './world.js';
 
@@ -61,7 +61,7 @@ const BUILD = {
 };
 
 const barGeoMat = (c) => new THREE.SpriteMaterial({ color: c, depthTest: false, transparent: true });
-export function spawnEnemy(type, x, z) {
+export function spawnEnemy(type, x, z, nid) {
   const T = ET[type], g = new THREE.Group();
   const sc = 1 + 0.1 * (G.wave - 1);
   const e = {
@@ -70,7 +70,7 @@ export function spawnEnemy(type, x, z) {
     dead: false, spawnT: 0.35, flash: 0, chill: 0, frozenT: 0, atkT: rand(0.6, 1.6), losT: rand(0.25), los: false, phase: rand(6.28),
     stuckT: 0, lastX: x, lastZ: z, state: 'chase', stT: 4, fuse: -1, dmgMul: type === 'boss' ? 1 : 1 + 0.05 * (G.wave - 1), stunT: 0, stinkT: 0,
   };
-  e.maxHp = e.hp;
+  e.maxHp = e.hp; e.nid = nid || ++G.enemySeq;
   BUILD[type](g, e, T);
   g.position.set(x, T.fly ? 2.2 : 0, z); g.scale.setScalar(0.01);
   G.scene.add(g);
@@ -121,8 +121,11 @@ export function damageArea(c, radius, dmg, knock = 6, o = {}) {
     damageEnemy(e, dmg * (1 - 0.6 * clamp(d / radius, 0, 1)), { dir: _d.clone(), knock, src: 'area', chill: o.chill });
   }
   if (o.hurtPlayer) {
-    const p = G.player, d = _v.set(p.pos.x, p.pos.y + 0.9, p.pos.z).distanceTo(c);
-    if (d < radius) hurtPlayer(o.hurtPlayer * (1 - 0.5 * d / radius), c, 7);
+    for (const p of roster()) {
+      if (!p || p.dead) continue;
+      const d = _v.set(p.pos.x, p.pos.y + 0.9, p.pos.z).distanceTo(c);
+      if (d < radius) hurtPlayer(o.hurtPlayer * (1 - 0.5 * d / radius), c, 7, p);
+    }
   }
   for (const w of [...G.walls]) {
     if (Math.hypot(w.g.position.x - c.x, w.g.position.z - c.z) < radius + 0.8 && o.hurtPlayer) damageFort(w, dmg * 0.6);
@@ -152,6 +155,20 @@ function killEnemy(e, info) {
 function removeEnemy(e) {
   G.scene.remove(e.g); if (e.bar0) G.scene.remove(e.bar0, e.bar1);
 }
+export function despawnEnemy(e) {
+  removeEnemy(e);
+  const i = G.enemies.indexOf(e); if (i >= 0) G.enemies.splice(i, 1);
+  if (G.boss === e) G.boss = null;
+}
+function nearestPlayer(x, z) {
+  let best = G.human || G.player, bd = 1e15;
+  for (const p of roster()) {
+    if (!p || p.dead) continue;
+    const d = (p.pos.x - x) ** 2 + (p.pos.z - z) ** 2;
+    if (d < bd) { bd = d; best = p; }
+  }
+  return best;
+}
 
 function losTo(e, tgt) {
   eCenter(e, _v); if (e.T.hy) _v.y = e.pos.y + e.T.hy;
@@ -162,9 +179,9 @@ function losTo(e, tgt) {
 
 let flowT = 0;
 export function updateEnemies(dt) {
-  const p = G.player, E = G.enemies;
-  flowT -= dt; if (flowT <= 0) { flowT = 0.25; updateFlow(p.pos.x, p.pos.z); }
-  const tgt = _r.set(p.pos.x, p.pos.y + (p.slideT > 0 ? 0.5 : 1.0), p.pos.z);
+  const E = G.enemies;
+  const flowP = nearestPlayer(0, 0);
+  flowT -= dt; if (flowT <= 0 && flowP) { flowT = 0.25; updateFlow(flowP.pos.x, flowP.pos.z); }
   G.camera.getWorldDirection(_c); const rx = -_c.z, rz = _c.x, rl = Math.hypot(rx, rz) || 1; // 相机右方向
   for (let i = E.length - 1; i >= 0; i--) {
     const e = E[i];
@@ -209,6 +226,8 @@ export function updateEnemies(dt) {
       continue;
     }
     if (e.chill > 0) e.chill = Math.max(0, e.chill - 0.25 * dt);
+    const p = nearestPlayer(e.pos.x, e.pos.z);
+    const tgt = _r.set(p.pos.x, p.pos.y + (p.slideT > 0 || p.crouch ? 0.5 : 1.0), p.pos.z);
     const dx = p.pos.x - e.pos.x, dz = p.pos.z - e.pos.z, dist = Math.hypot(dx, dz), dy = p.pos.y - e.pos.y;
     e.losT -= dt; if (e.losT <= 0) { e.losT = 0.25; e.los = dist < 18 && losTo(e, tgt); }
     const slow = 1 - 0.6 * e.chill;
@@ -220,7 +239,7 @@ export function updateEnemies(dt) {
       e.wheel.rotation.x += spd * dt * 3;
       e.atkT -= dt;
       const reach = dist < 1.45 && Math.abs(dy) < 1.7;
-      if (reach) { mvx = mvz = 0; if (e.atkT <= 0) { e.atkT = 0.9; e.lunge = 0.25; hurtPlayer(9 * e.dmgMul, e.pos, 4); } }
+      if (reach) { mvx = mvz = 0; if (e.atkT <= 0) { e.atkT = 0.9; e.lunge = 0.25; hurtPlayer(9 * e.dmgMul, e.pos, 4, p); } }
       if (e.lunge > 0) { e.lunge -= dt; }
       const sw = e.lunge > 0 ? -1.2 : Math.sin(G.time * 8 + e.phase) * 0.25;
       e.armL.rotation.x = sw; e.armR.rotation.x = e.lunge > 0 ? -1.2 : -sw;
@@ -269,7 +288,7 @@ export function updateEnemies(dt) {
       const touch = dist < e.r + 0.55 && dy < 1.5 && dy > -1;
       if (e.state === 'chase') {
         spd *= rage; e.eye.emissiveIntensity = 2.5;
-        if (touch && e.atkT <= 0) { e.atkT = 0.8; hurtPlayer(16 * e.dmgMul, e.pos, 9); }
+        if (touch && e.atkT <= 0) { e.atkT = 0.8; hurtPlayer(16 * e.dmgMul, e.pos, 9, p); }
         if (e.stT <= 0) {
           const r = Math.random();
           if (r < 0.4) { e.state = 'spin'; e.stT = 2.6; e.shT = 0; }
@@ -294,7 +313,7 @@ export function updateEnemies(dt) {
         mvx = mvz = 0; face = Math.atan2(e.cdx, e.cdz);
         e.pos.x += e.cdx * 15 * dt; e.pos.z += e.cdz * 15 * dt;
         burst({ x: e.pos.x, y: 0.2, z: e.pos.z }, { n: 2, color: [0xff0054, 0xffd60a], speed: [1, 3], life: [0.2, 0.5], size: [0.15, 0.3] });
-        if (touch && e.atkT <= 0) { e.atkT = 0.6; hurtPlayer(30 * e.dmgMul, e.pos, 14); }
+        if (touch && e.atkT <= 0) { e.atkT = 0.6; hurtPlayer(30 * e.dmgMul, e.pos, 14, p); }
         const hb = circleResolve(e.pos, 1.0, 0.2, 1.2);
         if (hb || e.stT <= 0) {
           if (hb) { shake(0.6, e.pos); sfx.slam(); ring({ x: e.pos.x, y: 0.1, z: e.pos.z }, 0xff0054, 4, 0.4); if (hb.tag === 'fort') damageFort(hb.ref, 999); }
@@ -313,8 +332,9 @@ export function updateEnemies(dt) {
     e.pos.x += e.vel.x * dt; e.pos.z += e.vel.z * dt;
     const cr = e.type === 'boss' ? 0.9 : e.r * 0.7;
     const hb = circleResolve(e.pos, cr, e.pos.y + (T.fly ? -0.3 : 0.2), e.pos.y + (T.fly ? 0.3 : 1.2));
+    if (e.type === 'roller' && e.pos.y > 0.02) e.pos.y = Math.max(supportY(e.pos.x, e.pos.z, e.pos.y), e.pos.y - 16 * dt);
     if (hb && hb.tag === 'fort' && hb.ref) damageFort(hb.ref, 30 * dt);
-    e.pos.x = clamp(e.pos.x, 0.4, G.W - 0.4); e.pos.z = clamp(e.pos.z, 0.4, G.D - 0.4);
+    e.pos.x = clamp(e.pos.x, G.X0 + 1, G.X1 - 1); e.pos.z = clamp(e.pos.z, G.Z0 + 1, G.Z1 - 1);
     e.g.rotation.y = e.state === 'spin' ? face : dampAngle(e.g.rotation.y, face, 8, dt);
     // 防卡死：长时间没前进就传送到玩家附近
     e.stuckT += dt;
@@ -333,6 +353,17 @@ export function updateEnemies(dt) {
   }
 }
 function dampAngle(a, b, k, dt) { let d = b - a; while (d > Math.PI) d -= Math.PI * 2; while (d < -Math.PI) d += Math.PI * 2; return a + d * (1 - Math.exp(-k * dt)); }
+function supportY(x, z, feet) {
+  let y = 0;
+  for (const b of G.statics) {
+    if (b.off) continue;
+    const tag = b.tag;
+    if (tag !== 'bwall' && tag !== 'bfloor' && tag !== 'bstair' && tag !== 'bceil' && tag !== 'fort') continue;
+    if (x < b.min.x || x > b.max.x || z < b.min.z || z > b.max.z) continue;
+    if (b.max.y <= feet + 0.35 && b.max.y > y) y = b.max.y;
+  }
+  return y;
+}
 
 // ---------- 传送门出场与波次 ----------
 function portalSpawn(type, minCells = 14, maxCells = 9999) {
@@ -363,7 +394,7 @@ export function updateWaves(dt) {
   if (W.phase === 'count') {
     W.t -= dt;
     if (W.t <= 0) {
-      W.phase = 'fight'; W.spawnT = 0; updateFlow(G.player.pos.x, G.player.pos.z);
+      W.phase = 'fight'; W.spawnT = 0; { const fp = nearestPlayer(0, 0); if (fp) updateFlow(fp.pos.x, fp.pos.z); }
       const boss = G.wave % 5 === 0;
       announce(boss ? `WAVE ${G.wave} · BOSS INCOMING!` : `WAVE ${G.wave}`, boss ? 'boss' : 'wave', 2.2);
       boss ? sfx.boss() : sfx.wave();
@@ -381,10 +412,10 @@ export function updateWaves(dt) {
     }
   } else if (W.phase === 'clear') {
     W.t -= dt;
-    if (W.t <= 0) { supplyDrop(); const p = G.player; p.hp = Math.min(100, p.hp + 25); startCountdown(false); }
+    if (W.t <= 0) { supplyDrop(); for (const p of roster()) if (p && !p.dead) p.hp = Math.min(100, p.hp + 25); startCountdown(false); }
   }
 }
 export function resetEnemies() {
   for (const e of G.enemies) removeEnemy(e);
-  G.enemies.length = 0; G.boss = null; G.wave = 0; W.phase = 'idle'; W.queue = []; W.pending = 0;
+  G.enemies.length = 0; G.boss = null; G.wave = 0; G.enemySeq = 0; W.phase = 'idle'; W.queue = []; W.pending = 0;
 }

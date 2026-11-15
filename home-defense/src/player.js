@@ -3,15 +3,16 @@ import { G, THREE, rand, clamp, lerp, damp, bx, cyl, sph, mat, glow } from './g.
 import { moveBox, raycast } from './phys.js';
 import { burst, ring, flash, shake, tracer, confetti, light } from './fx.js';
 import { sfx, toggleMute } from './audio.js';
-import { WP, RAR, gunMesh, updateWeapon, tryReload, throwNade, AIM, updateAim, chestLoot } from './weapons.js';
+import { WP, RAR, INV_SLOTS, makeLoadout, gunMesh, updateWeapon, tryReload, throwNade, AIM, updateAim, chestLoot, findSwapGun, replaceCurrentGun } from './weapons.js';
 import { damageArea } from './enemies.js';
 import { impulseProps, wake } from './props.js';
-import { flipTable, openChest, buildFort } from './world.js';
+import { flipTable, openChest, buildFort, SPAWN } from './world.js';
 import { announce, feed, setHint } from './ui.js';
-import { SPAWN } from './world.js';
+import { bindInput, down, hit, setInputOverride, HELD_BITS, EDGE_BITS, order } from './binds.js';
 
 export const keys = {}, pressed = {};
-export const mouse = { l: false, r: false, lp: false, lr: false, dx: 0, dy: 0 };
+export const mouse = { l: false, r: false, lp: false, lr: false, rp: false, dx: 0, dy: 0 };
+bindInput(mouse, pressed, keys);
 export function initInput(dom) {
   addEventListener('keydown', (e) => {
     if (e.code === 'Tab' || e.code === 'Space' || e.code.startsWith('Arrow') || e.altKey) e.preventDefault();
@@ -20,21 +21,35 @@ export function initInput(dom) {
   addEventListener('keyup', (e) => { keys[e.code] = false; });
   addEventListener('blur', () => { for (const k in keys) keys[k] = false; mouse.l = mouse.r = false; });
   addEventListener('mousemove', (e) => { if (document.pointerLockElement === dom || G.fakeLock) { mouse.dx += e.movementX; mouse.dy += e.movementY; } });
-  addEventListener('mousedown', (e) => { if (G.state !== 'play') return; if (e.button === 0) { mouse.l = true; mouse.lp = true; } if (e.button === 2) mouse.r = true; });
+  addEventListener('mousedown', (e) => { if (G.state !== 'play') return; if (e.button === 0) { mouse.l = true; mouse.lp = true; } if (e.button === 2) { mouse.r = true; mouse.rp = true; } });
   addEventListener('mouseup', (e) => { if (e.button === 0) { if (mouse.l) mouse.lr = true; mouse.l = false; } if (e.button === 2) mouse.r = false; });
   addEventListener('contextmenu', (e) => e.preventDefault());
-  addEventListener('wheel', (e) => { if (G.state === 'play') cycleWeapon(e.deltaY > 0 ? 1 : -1); }, { passive: true });
+  addEventListener('wheel', (e) => {
+    if (G.state !== 'play') return;
+    if (G.netRole === 'guest') { G.wheelAcc = (G.wheelAcc || 0) + (e.deltaY > 0 ? 1 : -1); return; }
+    cycleWeapon(e.deltaY > 0 ? 1 : -1);
+  }, { passive: true });
 }
 
-const P = {
-  pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, height: 1.8, hw: 0.32,
-  muzzle: new THREE.Vector3(), camDist: 3.4,
+const TINTS = {
+  local: { suit: 0x1b263b, arm: 0x415a77, neon: 0x00f5d4, neon2: 0xff4dd8, cape: 0xd90429 },
+  partner: { suit: 0x14213d, arm: 0x3d5a80, neon: 0xffd60a, neon2: 0x4cc9f0, cape: 0x3a86ff },
 };
-export function createPlayer() {
-  G.player = P;
+function alloc(local) {
+  return {
+    pos: new THREE.Vector3(), vel: new THREE.Vector3(), yaw: 0, pitch: 0, height: 1.8, hw: 0.32,
+    muzzle: new THREE.Vector3(), camDist: 3.4, local: !!local,
+    aimD: new THREE.Vector3(0, 0, 1), aimO: new THREE.Vector3(),
+    netHeld: 0, netEdge: 0, netFire: false, netAds: false, netFireP: false, netFireR: false, netWheel: 0,
+    netYaw: 0, netPitch: 0, respawnT: 0, left: false,
+  };
+}
+let P = null;
+function buildBody(into, tint) {
+  const P = into;
   const root = new THREE.Group(), body = new THREE.Group(); root.add(body); G.scene.add(root);
   P.root = root; P.body = body;
-  const suit = 0x1b263b, arm = 0x415a77, neon = 0x00f5d4, neon2 = 0xff4dd8, o = { m: 0.4, r: 0.45 };
+  const suit = tint.suit, arm = tint.arm, neon = tint.neon, neon2 = tint.neon2, o = { m: 0.4, r: 0.45 };
   // 躯干
   const torso = new THREE.Group(); torso.position.y = 0.95; body.add(torso); P.torso = torso;
   bx(torso, 0.5, 0.56, 0.28, suit, 0, 0.3, 0, o); bx(torso, 0.42, 0.2, 0.26, arm, 0, 0.02, 0, o);
@@ -47,7 +62,7 @@ export function createPlayer() {
   bx(head, 0.3, 0.07, 0.02, neon, 0, 0.14, 0.2, glow(neon, 3)); bx(head, 0.06, 0.16, 0.26, neon2, 0, 0.33, -0.02, glow(neon2, 1.6));
   // 披风
   const cape = new THREE.Group(); cape.position.set(0, 0.55, -0.16); torso.add(cape); P.cape = cape;
-  bx(cape, 0.46, 0.75, 0.02, 0xd90429, 0, -0.38, 0, { r: 0.9 }); bx(cape, 0.46, 0.06, 0.025, 0xffd60a, 0, -0.73, 0, glow(0xffd60a, 0.8));
+  bx(cape, 0.46, 0.75, 0.02, tint.cape, 0, -0.38, 0, { r: 0.9 }); bx(cape, 0.46, 0.06, 0.025, 0xffd60a, 0, -0.73, 0, glow(0xffd60a, 0.8));
   // 手臂（肩-肘两段）
   const mkArm = (sx) => {
     const sh = new THREE.Group(); sh.position.set(sx * 0.32, 0.5, 0); torso.add(sh);
@@ -75,23 +90,67 @@ export function createPlayer() {
   P.mark.visible = false; P.mark.renderOrder = 15; G.scene.add(P.mark);
   P.rope = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(0x00f5d4).multiplyScalar(2.2) }));
   P.rope.visible = false; P.rope.frustumCulled = false; G.scene.add(P.rope);
-  P.ghost = new THREE.Mesh(new THREE.BoxGeometry(3, 2.4, 0.4), new THREE.MeshBasicMaterial({ color: 0x80ffdb, transparent: true, opacity: 0.18, depthWrite: false }));
-  P.ghost.visible = false; G.scene.add(P.ghost);
-  resetPlayer();
+  if (!P.local) P.root.visible = false;
+  return P;
 }
-export function resetPlayer() {
-  Object.assign(P, {
-    hp: 100, shield: 50, onGround: false, jumps: 0, fuel: 1, dashCd: 0, dashT: 0, grappleCd: 0, grapple: null, slideT: 0, slamming: false,
-    held: null, throwCharge: 0, blocking: false, weapons: WP.map((W, i) => (i === 0 ? { rar: 0, ammo: W.mag } : null)), cur: 0, burstLeft: 0, burstT: 0, fireT: 0, reloadT: 0, charge: 0,
-    mats: 30, nades: 1, score: 0, kills: 0, combo: 0, comboT: 0, hitMark: 0, hitCrit: false, hurtT: 0, recoil: 0, ads: false, fp: false, emoteT: 0,
-    runPh: 0, gunDirty: true, wallT: 0, wallN: null, coyote: 0, jetting: false, invT: 0, blocks: 0, dead: false, buildMode: false, lean: 0, airT: 0, landT: 0,
-    spin: 0, camDist: 3.4, fov: 75, yaw: SPAWN.yaw, pitch: 0, height: 1.8,
+export function createPlayer() {
+  P = buildBody(alloc(true), TINTS.local);
+  G.player = G.human = P;
+  resetPlayer(P);
+}
+export function ensurePartner() {
+  if (G.partner) { G.partner.left = false; return G.partner; }
+  G.partner = buildBody(alloc(false), TINTS.partner);
+  resetPlayer(G.partner);
+  return G.partner;
+}
+export function roster() {
+  const a = [];
+  if (G.human) a.push(G.human);
+  if (G.coop && G.partner && !G.partner.left) a.push(G.partner);
+  return a;
+}
+export function simRemote(dt) {
+  if (!G.coop || !G.partner || G.partner.left || G.netRole === 'guest') return;
+  const saved = P;
+  P = G.player = G.partner;
+  setInputOverride({
+    down: (a) => !!(P.netHeld & (HELD_BITS[a] || 0)),
+    hit: (a) => !!(P.netEdge & (EDGE_BITS[a] || 0)),
   });
-  P.pos.set(SPAWN.x, 0, SPAWN.z); P.vel.set(0, 0, 0);
+  try { updatePlayer(dt); }
+  finally { setInputOverride(null); P = G.player = saved; }
+}
+export function lookLocal() {
+  const p = G.human || G.player; if (!p) return;
+  const ads = G.netRole === 'guest' ? mouse.r : p.ads;
+  const scoped = !!(p.weapons && p.weapons[p.cur] && WP[p.weapons[p.cur].wi].scope && ads && !p.held);
+  const sens = 0.0022 * (scoped ? 0.22 : ads ? 0.6 : 1);
+  p.yaw -= mouse.dx * sens; p.pitch = clamp(p.pitch - mouse.dy * sens, -1.35, 1.35);
+  mouse.dx = mouse.dy = 0;
+}
+export function drawAvatars(dt) {
+  const saved = G.player;
+  G.player = P = G.human;
+  updateCamera(dt); animate(dt, Math.hypot(P.vel.x, P.vel.z));
+  if (G.coop && G.partner && !G.partner.left) { G.player = P = G.partner; animate(dt, Math.hypot(P.vel.x, P.vel.z)); }
+  G.player = P = saved;
+}
+export function resetPlayer(who = G.player) {
+  Object.assign(who, {
+    hp: 100, shield: 50, onGround: false, jumps: 0, fuel: 1, dashCd: 0, dashT: 0, grappleCd: 0, grapple: null, slideT: 0, slamming: false,
+    held: null, throwCharge: 0, blocking: false, weapons: makeLoadout(), cur: 0, burstLeft: 0, burstT: 0, fireT: 0, reloadT: 0, charge: 0,
+    mats: 30, nades: 1, score: 0, kills: 0, combo: 0, comboT: 0, hitMark: 0, hitCrit: false, hurtT: 0, recoil: 0, ads: false, fp: false, emoteT: 0,
+    runPh: 0, gunDirty: true, wallT: 0, wallN: null, coyote: 0, jetting: false, invT: 0, blocks: 0, dead: false, lean: 0, airT: 0, landT: 0,
+    spin: 0, camDist: 3.4, fov: 75, yaw: SPAWN.yaw, pitch: 0, height: 1.8, respawnT: 0,
+  });
+  who.pos.set(SPAWN.x + (who.local ? 0 : 2.4), 0, SPAWN.z); who.vel.set(0, 0, 0);
+  who.cur = Math.max(0, order.indexOf('ar'));
+  who.netEdge = 0; who.netHeld = 0; who.netFire = who.netAds = who.netFireP = who.netFireR = false; who.netWheel = 0;
 }
 function cycleWeapon(d) {
   if (P.held) return;
-  for (let i = 1; i <= WP.length; i++) { const n = (P.cur + d * i + WP.length * 2) % WP.length; if (P.weapons[n]) { setWeapon(n); return; } }
+  for (let i = 1; i <= INV_SLOTS; i++) { const n = (P.cur + d * i + INV_SLOTS * 2) % INV_SLOTS; if (P.weapons[n]) { setWeapon(n); return; } }
 }
 function setWeapon(n) {
   if (!P.weapons[n] || n === P.cur) return;
@@ -100,26 +159,39 @@ function setWeapon(n) {
 
 const MULTI = ['', '', 'DOUBLE KILL!', 'TRIPLE KILL!!', 'QUAD KILL!!!', 'PENTA KILL!!!!', 'UNSTOPPABLE!!!!!'];
 export function onKill(e, info) {
-  P.kills++; P.combo = P.comboT > 0 ? P.combo + 1 : 1; P.comboT = 3.2;
-  const pts = Math.round(e.T.score * (1 + (P.combo - 1) * 0.25) * (info.crit ? 1.5 : 1));
-  P.score += pts; P.mats += e.type === 'boss' ? 60 : 5;
+  const p = P || G.human;
+  p.kills++; p.combo = p.comboT > 0 ? p.combo + 1 : 1; p.comboT = 3.2;
+  const pts = Math.round(e.T.score * (1 + (p.combo - 1) * 0.25) * (info.crit ? 1.5 : 1));
+  p.score += pts; p.mats += e.type === 'boss' ? 60 : 5;
   const how = info.src === 'cat' ? '🐱 Cat clawed' : info.src === 'prop' ? '🪑 Smashed' : info.src === 'area' ? '💥 Blew up' : info.crit ? '🎯 Headshot' : 'Destroyed';
   feed(`${how} ${e.T.name}  +${pts}`);
-  if (P.combo >= 2) { announce(MULTI[Math.min(P.combo, 6)], 'multi', 1.4); sfx.multi(P.combo); if (P.combo >= 3) G.slowT = Math.max(G.slowT, 0.45); }
+  if (p.combo >= 2) { announce(MULTI[Math.min(p.combo, 6)], 'multi', 1.4); sfx.multi(p.combo); if (p.combo >= 3) G.slowT = Math.max(G.slowT, 0.45); }
   else sfx.kill();
   if (e.type === 'boss') { announce('BOSS DEFEATED!', 'clear', 3); G.slowT = 1.6; confetti(e.pos.clone().setY(2)); }
 }
-export function hurtPlayer(dmg, from, knock = 0) {
-  if (P.dead || P.dashT > 0 || P.invT > 0 || G.state !== 'play') return false;
+function revive(p) {
+  p.dead = false; p.hp = 70; p.shield = 30; p.vel.set(0, 0, 0); p.respawnT = 0; p.invT = 1.2;
+  p.pos.set(SPAWN.x + (p.local ? 0 : 2.4), 0.2, SPAWN.z);
+  announce(p.local ? 'YOU ARE BACK' : 'PARTNER IS BACK', 'info', 1.2);
+}
+export function hurtPlayer(dmg, from, knock = 0, who) {
+  const p = who || P || G.human;
+  if (!p || p.dead || p.dashT > 0 || p.invT > 0 || G.state !== 'play') return false;
   dmg = Math.round(dmg);
-  const s = Math.min(P.shield, dmg); P.shield -= s; P.hp -= dmg - s;
-  P.hurtT = 0.5; P.hurtShield = s >= dmg; shake(0.25); sfx.hurt(); P.emoteT = 0;
+  const s = Math.min(p.shield, dmg); p.shield -= s; p.hp -= dmg - s;
+  p.hurtT = 0.5; p.hurtShield = s >= dmg; shake(0.25); sfx.hurt(); p.emoteT = 0;
   if (from) {
-    const dx = P.pos.x - from.x, dz = P.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
-    if (knock) { P.vel.x += dx / l * knock; P.vel.z += dz / l * knock; P.vel.y = Math.max(P.vel.y, knock * 0.35); }
-    P.hurtDir = Math.atan2(dx, dz);
+    const dx = p.pos.x - from.x, dz = p.pos.z - from.z, l = Math.hypot(dx, dz) || 1;
+    if (knock) { p.vel.x += dx / l * knock; p.vel.z += dz / l * knock; p.vel.y = Math.max(p.vel.y, knock * 0.35); }
+    p.hurtDir = Math.atan2(dx, dz);
   }
-  if (P.hp <= 0) { P.hp = 0; P.dead = true; if (P.held) dropHeld(); G.onDeath(); }
+  if (p.hp <= 0) {
+    p.hp = 0; p.dead = true;
+    const saved = P; P = p; if (p.held) dropHeld(); P = saved;
+    const mate = roster().find((q) => q !== p);
+    if (G.coop && mate && !mate.dead) { p.respawnT = 5; announce(p.local ? 'YOU ARE DOWN — back in 5s' : 'PARTNER IS DOWN', 'warn', 1.6); }
+    else if (!G.ending) { G.ending = true; if (G.onDeath) G.onDeath(); }
+  }
   return true;
 }
 
@@ -171,30 +243,47 @@ export function grabProp(target) {
 
 export function updatePlayer(dt) {
   const p = P;
-  // 视角
-  const sens = 0.0022 * (p.ads ? 0.6 : 1);
-  p.yaw -= mouse.dx * sens; p.pitch = clamp(p.pitch - mouse.dy * sens, -1.35, 1.35);
-  mouse.dx = mouse.dy = 0;
-  if (p.dead) { p.vel.x *= 0.9; p.vel.z *= 0.9; p.vel.y -= 24 * dt; moveBox(p.pos, p.hw, 0.6, p.vel, dt, _mv); updateCamera(dt); animate(dt, 0); clearPressed(); return; }
+  // 视角。另一台设备直接给朝向；本机读鼠标。
+  if (!p.local) { p.yaw = p.netYaw; p.pitch = clamp(p.netPitch, -1.35, 1.35); }
+  else {
+    const scoped = !!(p.weapons[p.cur] && WP[p.weapons[p.cur].wi].scope && p.ads && !p.held);
+    const sens = 0.0022 * (scoped ? 0.22 : p.ads ? 0.6 : 1);
+    p.yaw -= mouse.dx * sens; p.pitch = clamp(p.pitch - mouse.dy * sens, -1.35, 1.35);
+    mouse.dx = mouse.dy = 0;
+  }
+  updateAim();
+  if (!p.local && p.netWheel) {
+    const dir = p.netWheel > 0 ? 1 : -1, n = Math.min(3, Math.abs(p.netWheel | 0));
+    for (let i = 0; i < n; i++) cycleWeapon(dir);
+    p.netWheel = 0;
+  }
+  if (p.dead) {
+    p.vel.x *= 0.9; p.vel.z *= 0.9; p.vel.y -= 24 * dt; moveBox(p.pos, p.hw, 0.6, p.vel, dt, _mv);
+    if (p.respawnT > 0) { p.respawnT -= dt; if (p.respawnT <= 0) revive(p); }
+    if (p.local) updateCamera(dt);
+    animate(dt, 0); endInput(p); return;
+  }
 
   const fwdX = Math.sin(p.yaw), fwdZ = Math.cos(p.yaw), rgtX = -fwdZ, rgtZ = fwdX; // 屏幕右 = -cos, sin
-  let ix = (keys.KeyD ? 1 : 0) - (keys.KeyA ? 1 : 0), iz = (keys.KeyW ? 1 : 0) - (keys.KeyS ? 1 : 0);
+  let ix = (down('right') ? 1 : 0) - (down('left') ? 1 : 0), iz = (down('forward') ? 1 : 0) - (down('back') ? 1 : 0);
   const il = Math.hypot(ix, iz) || 1; ix /= il; iz /= il;
   let wx = fwdX * iz + rgtX * ix, wz = fwdZ * iz + rgtZ * ix;
   const moving = ix !== 0 || iz !== 0;
-  if (moving || mouse.l || pressed.Space) p.emoteT = 0;
-  const sprint = keys.ShiftLeft && iz > 0 && !p.ads && !p.blocking;
+  const leanT = (down('leanL') ? -1 : 0) + (down('leanR') ? 1 : 0);
+  p.lean = damp(p.lean, clamp(leanT, -1, 1), 10, dt);
+  if (moving || mouse.l || hit('jump')) p.emoteT = 0;
+  const sprint = down('sprint') && iz > 0 && !p.ads && !p.blocking && Math.abs(p.lean) < 0.45;
   p.dashCd -= dt; p.grappleCd -= dt; p.invT -= dt; p.comboT -= dt; if (p.comboT <= 0) p.combo = 0;
 
   // ---- 冲刺闪避 (X) ----
-  if (pressed.KeyX && p.dashCd <= 0) {
+  if (hit('dash') && p.dashCd <= 0) {
     p.dashT = 0.2; p.dashCd = 1.8; p.grapple = null; p.slideT = 0;
     if (!moving) { wx = fwdX; wz = fwdZ; }
     p.dashX = wx; p.dashZ = wz; p.vel.y = Math.max(p.vel.y, 1.5); sfx.dash(); p.spin = Math.PI * 2;
     ring(_v.set(p.pos.x, p.pos.y + 0.9, p.pos.z), 0x00f5d4, 1.4, 0.25);
   }
   // ---- 钩爪 (Q) ----
-  if (pressed.KeyQ) {
+  if (hit('grapple')) {
     if (p.grapple) p.grapple = null;
     else if (p.grappleCd <= 0) {
       const h = raycast(AIM.o, AIM.d, 32);
@@ -202,14 +291,20 @@ export function updatePlayer(dt) {
       else sfx.empty();
     }
   }
-  // ---- 滑铲 / 下砸 (C) ----
-  if (pressed.KeyC || pressed.ControlLeft) {
+  // ---- 下蹲 / 滑铲 / 下砸 ----
+  const slam = () => {
+    if (!p.onGround && !p.slamming && p.pos.y > 0.9) { p.slamming = true; p.vel.set(0, -30, 0); p.grapple = null; sfx.dash(); }
+  };
+  if (hit('slide')) {
     if (p.onGround && moving && p.slideT <= 0) { p.slideT = 0.75; const s = Math.max(11.5, Math.hypot(p.vel.x, p.vel.z) + 3); p.vel.x = wx * s; p.vel.z = wz * s; sfx.slide(); }
-    else if (!p.onGround && !p.slamming && p.pos.y > 0.9) { p.slamming = true; p.vel.set(0, -30, 0); p.grapple = null; sfx.dash(); }
+    else slam();
   }
+  if (hit('crouch')) slam();
+  p.crouch = down('crouch') && p.onGround && p.slideT <= 0 && p.dashT <= 0;
 
   // ---- 水平移动 ----
-  const maxSp = p.blocking || p.ads ? 3.6 : sprint ? 8.6 : 5.6;
+  let maxSp = (p.blocking || p.ads ? 3.6 : sprint ? 8.6 : 5.6) * (1 - Math.abs(p.lean) * 0.2);
+  if (p.crouch) maxSp = Math.min(maxSp, 2.6);
   if (p.dashT > 0) {
     p.dashT -= dt; p.vel.x = p.dashX * 19; p.vel.z = p.dashZ * 19; if (p.vel.y < 0) p.vel.y = 0;
     burst(_v.set(p.pos.x, p.pos.y + rand(0.3, 1.5), p.pos.z), { n: 4, color: [0x00f5d4, 0xff4dd8, 0xffffff], speed: [0, 1.5], life: [0.2, 0.45], size: [0.12, 0.26], grav: 0 });
@@ -238,14 +333,14 @@ export function updatePlayer(dt) {
   }
   // ---- 跳跃 / 二段跳 / 蹬墙 / 喷气背包 ----
   p.coyote -= dt; p.wallT -= dt;
-  if (pressed.Space) {
+  if (hit('jump')) {
     if (p.grapple) { p.grapple = null; p.vel.y = Math.max(p.vel.y, 0) + 6.5; p.jumps = 1; sfx.jump2(); }
     else if (p.onGround || p.coyote > 0) { p.vel.y = 8.8; p.jumps = 1; p.coyote = 0; p.onGround = false; if (p.slideT > 0) { p.slideT = 0; p.vel.x *= 1.12; p.vel.z *= 1.12; } sfx.jump(); }
     else if (p.wallT > 0 && p.wallN) { p.vel.x = p.wallN.x * 8.5 + wx * 3; p.vel.z = p.wallN.z * 8.5 + wz * 3; p.vel.y = 9; p.jumps = 1; p.wallT = 0; sfx.jump2(); ring(_v.set(p.pos.x - p.wallN.x * 0.3, p.pos.y + 0.6, p.pos.z - p.wallN.z * 0.3), 0xffffff, 1, 0.25); p.spin = Math.PI * 2; }
     else if (p.jumps < 2) { p.vel.y = 8.6; p.jumps = 2; p.slamming = false; sfx.jump2(); p.spin = Math.PI * 2; ring(_v.set(p.pos.x, p.pos.y, p.pos.z), 0x00f5d4, 1.2, 0.3); burst(_v, { n: 14, color: [0x00f5d4, 0xffffff], speed: [1, 4], life: [0.2, 0.5], dir: { x: 0, y: -1, z: 0 }, spread: 0.6 }); }
   }
   p.jetting = false;
-  if (keys.Space && !p.onGround && p.jumps >= 2 && p.fuel > 0 && p.vel.y < 6.5 && !p.slamming && p.spin <= 0.5 && !p.grapple) {
+  if (down('jump') && !p.onGround && p.jumps >= 2 && p.fuel > 0 && p.vel.y < 6.5 && !p.slamming && p.spin <= 0.5 && !p.grapple) {
     p.jetting = true; p.fuel -= dt / 1.7; p.vel.y += 44 * dt; if (p.vel.y > 6.5) p.vel.y = 6.5;
     for (const sx of [-0.13, 0.13]) burst(_v.set(p.pos.x - fwdX * 0.25 + rgtX * sx, p.pos.y + 0.95, p.pos.z - fwdZ * 0.25 + rgtZ * sx), { n: 2, color: [0xff4dd8, 0xffd166, 0xffffff], speed: [3, 6], life: [0.15, 0.35], size: [0.1, 0.2], dir: { x: 0, y: -1, z: 0 }, spread: 0.2, grav: 0 });
     if (Math.random() < 0.4) sfx.jet();
@@ -256,11 +351,11 @@ export function updatePlayer(dt) {
 
   // ---- 碰撞移动 ----
   const wasGround = p.onGround, vyBefore = p.vel.y;
-  const th = p.slideT > 0 ? 0.9 : 1.8; p.height = th;
+  const th = p.slideT > 0 || p.crouch ? 0.9 : 1.8; p.height = th;
   moveBox(p.pos, p.hw, th, p.vel, dt, _mv);
   p.onGround = _mv.ground;
   if (_mv.wallX || _mv.wallZ) { p.wallT = 0.22; p.wallN = { x: _mv.wallX, z: _mv.wallZ }; }
-  p.pos.x = clamp(p.pos.x, 0.45, G.W - 0.45); p.pos.z = clamp(p.pos.z, 0.45, G.D - 0.45);
+  p.pos.x = clamp(p.pos.x, G.X0 + 1.15, G.X1 - 1.15); p.pos.z = clamp(p.pos.z, G.Z0 + 1.15, G.Z1 - 1.15);
   if (p.onGround) {
     if (!wasGround) {
       p.landT = 0.18;
@@ -274,23 +369,23 @@ export function updatePlayer(dt) {
     p.jumps = 0; p.coyote = 0.12; p.slamming = false;
   } else if (wasGround && p.jumps === 0) p.jumps = 1;
 
-  updateCamera(dt);
+  if (p.local) updateCamera(dt);
   updateAim();
 
   // ---- 交互 ----
-  if (pressed.KeyT) { p.fp = !p.fp; }
-  if (pressed.KeyM) announce(toggleMute() ? '🔇 Muted' : '🔊 Sound on', 'info', 0.8);
-  if (pressed.KeyB && p.onGround && !p.held) { p.emoteT = 4.5; confetti(_v.set(p.pos.x, p.pos.y + 1.5, p.pos.z)); sfx.rare(); }
-  for (let i = 0; i < WP.length; i++) if (pressed['Digit' + (i + 1)] && !p.held) setWeapon(i);
-  if (pressed.KeyR && !p.held) tryReload(p);
-  if (pressed.KeyG) { if (p.held) dropHeld(); throwNade(p); }
+  if (hit('view')) { p.fp = !p.fp; }
+  if (hit('mute')) announce(toggleMute() ? '🔇 Muted' : '🔊 Sound on', 'info', 0.8);
+  if (hit('emote') && p.onGround && !p.held) { p.emoteT = 4.5; confetti(_v.set(p.pos.x, p.pos.y + 1.5, p.pos.z)); sfx.rare(); }
+  if (!p.held) for (let i = 0; i < INV_SLOTS; i++) if (hit('slot' + (i + 1))) setWeapon(i);
+  if (hit('reload') && !p.held) tryReload(p);
+  if (hit('nade')) { if (p.held) dropHeld(); throwNade(p); }
 
-  // 建造枕头堡垒 (F)
-  if (pressed.KeyF) {
+  // 建造枕头堡垒
+  if (hit('fort')) {
     const ax = Math.abs(fwdX) > Math.abs(fwdZ); // 面朝 x 方向 → 墙沿 z
     const bx0 = Math.round((p.pos.x + fwdX * 2.3) * 2) / 2, bz0 = Math.round((p.pos.z + fwdZ * 2.3) * 2) / 2;
     if (p.mats < 10) { announce('Not enough materials (destroy robots to get more)', 'warn', 1); sfx.empty(); }
-    else if (bx0 < 1.6 || bz0 < 1.6 || bx0 > G.W - 1.6 || bz0 > G.D - 1.6) sfx.empty();
+    else if (bx0 < G.X0 + 2.2 || bz0 < G.Z0 + 2.2 || bx0 > G.X1 - 2.2 || bz0 > G.Z1 - 2.2) sfx.empty();
     else { p.mats -= 10; buildFort(bx0, bz0, !ax); }
   }
 
@@ -302,21 +397,28 @@ export function updatePlayer(dt) {
   if (target) { p.mark.visible = true; p.mark.position.copy(target.pos); p.mark.scale.setScalar(target.r + 0.18 + Math.sin(G.time * 8) * 0.03); p.mark.quaternion.copy(G.camera.quaternion); hint = `[E] Grab: ${target.T.name}`; }
   else p.mark.visible = false;
   if (chest) hint = '[E] Open chest'; if (table) hint = '[E] Flip table!';
+  const swap = !p.held && !target && !chest && !table ? findSwapGun(p) : null;
+  if (swap) hint = `[E] Replace with ${RAR[swap.data.rar].name} ${WP[swap.data.wi].name}`;
   if (p.held) hint = `[LMB] Hold to throw  [RMB] Block  [E] Drop · ${p.held.T.name}${p.held.T.reflect ? ' (reflects shots)' : ''}`;
-  setHint(hint);
-  if (pressed.KeyE) {
+  if (p.local) setHint(hint);
+  if (hit('interact')) {
     if (p.held) dropHeld();
     else if (target) grabProp(target);
     else if (chest) { openChest(chest); chestLoot(chest); }
     else if (table) { flipTable(table, p.pos.x, p.pos.z); }
+    else if (swap) replaceCurrentGun(p, swap);
   }
 
   // ---- 手持物品：投掷 / 格挡；否则开枪 ----
+  const fire = p.local ? mouse.l : !!p.netFire;
+  const fireP = p.local ? mouse.lp : !!p.netFireP;
+  const adsHeld = p.local ? mouse.r : !!p.netAds;
+  const released = p.local ? mouse.lr : !!p.netFireR;
   p.ads = false; p.blocking = false;
   if (p.held) {
-    const h = p.held; p.blocking = mouse.r;
-    if (mouse.l) p.throwCharge = Math.min(1, p.throwCharge + dt / 0.7);
-    if (mouse.lr && !mouse.l) {
+    const h = p.held; p.blocking = adsHeld;
+    if (fire) p.throwCharge = Math.min(1, p.throwCharge + dt / 0.7);
+    if (released && !fire) {
       const k = p.throwCharge; p.throwCharge = 0;
       const sp = lerp(15, 36, k) / (1 + h.m * 0.07);
       sfx.throw(k); shake(0.1 + k * 0.15); flash(h.pos, 0xff4dd8, 0.5, 0.12); p.throwAnim = 0.25;
@@ -335,8 +437,8 @@ export function updatePlayer(dt) {
       if (p.throwCharge > 0.1) burst(h.pos, { n: 1, color: [0xff4dd8, 0xffffff], speed: [1, 3], life: [0.15, 0.3], size: [0.06, 0.12], grav: 0 });
     }
   } else {
-    p.ads = mouse.r;
-    updateWeapon(dt, mouse.l, mouse.lp);
+    p.ads = adsHeld;
+    updateWeapon(dt, fire, fireP);
   }
   p.hitMark -= dt; p.hurtT -= dt;
   p.recoil = damp(p.recoil, 0, 12, dt);
@@ -348,9 +450,13 @@ export function updatePlayer(dt) {
   } else p.rope.visible = false;
 
   animate(dt, Math.hypot(p.vel.x, p.vel.z), ix, iz);
-  clearPressed();
+  endInput(p);
 }
-function clearPressed() { for (const k in pressed) delete pressed[k]; mouse.lp = false; mouse.lr = false; }
+function endInput(p) {
+  if (p.local) clearPressed();
+  else { p.netEdge = 0; p.netFireP = false; p.netFireR = false; }
+}
+export function clearPressed() { for (const k in pressed) delete pressed[k]; mouse.lp = false; mouse.lr = false; mouse.rp = false; }
 
 // ---------- 相机 ----------
 function updateCamera(dt) {
@@ -366,7 +472,8 @@ function updateCamera(dt) {
   _o.set(p.pos.x, p.pos.y + p.eyeY, p.pos.z);
   let side = p.fp || emote ? 0 : 0.62;
   if (side) { _v.set(rx, 0, rz); const h = raycast(_o, _v, side + 0.25); if (h) side = Math.max(0, h.t - 0.25); }
-  _o.x += rx * side; _o.z += rz * side;
+  const peek = (p.lean || 0) * 0.42;
+  _o.x += rx * (side + peek); _o.z += rz * (side + peek);
   _v.set(-fx, -fy, -fz);
   let dist = tDist;
   if (dist > 0) { const h = raycast(_o, _v, dist + 0.3); if (h) dist = Math.max(0.3, h.t - 0.3); }
@@ -374,8 +481,10 @@ function updateCamera(dt) {
   cam.position.set(_o.x - fx * p.camDist, _o.y - fy * p.camDist, _o.z - fz * p.camDist);
   if (G.shake > 0.001) { cam.position.x += rand(-1, 1) * G.shake * 0.12; cam.position.y += rand(-1, 1) * G.shake * 0.12; cam.position.z += rand(-1, 1) * G.shake * 0.12; }
   _t.set(cam.position.x + fx, cam.position.y + fy, cam.position.z + fz); cam.lookAt(_t);
+  if (p.lean) cam.rotateZ(-p.lean * 0.1);
   const sp = Math.hypot(p.vel.x, p.vel.z);
-  const tf = (p.ads ? 48 : 74) + clamp((sp - 6) * 1.6, 0, 16) + (p.dashT > 0 ? 8 : 0);
+  const scope = !!(p.weapons[p.cur] && WP[p.weapons[p.cur].wi].scope && p.ads && !p.held);
+  const tf = (p.ads ? (scope ? 16 : 48) : 74) + clamp((sp - 6) * 1.6, 0, 16) + (p.dashT > 0 ? 8 : 0);
   p.fov = damp(p.fov, tf, 9, dt);
   if (Math.abs(cam.fov - p.fov) > 0.05) { cam.fov = p.fov; cam.updateProjectionMatrix(); }
   cam.updateMatrixWorld();
@@ -384,12 +493,13 @@ function updateCamera(dt) {
 // ---------- 模型动画 ----------
 function animate(dt, hs, ix = 0, iz = 0) {
   const p = P, root = p.root, t = G.time;
-  root.visible = (!p.fp && p.camDist > 0.85) || p.emoteT > 0;
+  if (!p.local && G.state !== 'play') { root.visible = false; return; }
+  root.visible = p.local ? ((!p.fp && p.camDist > 0.85) || p.emoteT > 0) : true;
   root.position.copy(p.pos);
   root.rotation.y = p.yaw;
   if (p.gunDirty) {
     p.gunDirty = false; p.gunHolder.clear();
-    if (!p.held && p.weapons[p.cur]) { p.gun = gunMesh(p.cur, p.weapons[p.cur].rar); p.gunHolder.add(p.gun); } else p.gun = null;
+    if (!p.held && p.weapons[p.cur]) { p.gun = gunMesh(p.weapons[p.cur].wi, p.weapons[p.cur].rar); p.gunHolder.add(p.gun); } else p.gun = null;
   }
   const B = p.body, L = p.lL, R = p.lR, aL = p.aL, aR = p.aR;
   let bodyRx = 0, bodyY = 0, bodyRz = 0, torsoRx = 0;
@@ -404,6 +514,7 @@ function animate(dt, hs, ix = 0, iz = 0) {
     aL.sh.rotation.set(-2.6 + Math.sin(b) * 0.5, 0, -0.5); aR.sh.rotation.set(-2.6 - Math.sin(b) * 0.5, 0, 0.5); aL.el.rotation.x = aR.el.rotation.x = -0.6 + Math.sin(b * 2) * 0.4;
     if (Math.random() < 0.15) burst(_v.set(p.pos.x + rand(-0.6, 0.6), p.pos.y + rand(0.5, 2), p.pos.z + rand(-0.6, 0.6)), { n: 2, color: [0xff4dd8, 0x00f5d4, 0xffd166], speed: [0.5, 2], life: [0.3, 0.7], grav: -1 });
   } else if (p.slideT > 0) { bodyRx = -1.05; bodyY = -0.55; lh = -1.3; rh = -0.9; lk = 0.2; rk = 0.9; }
+  else if (p.crouch) { bodyY = -0.42; lh = rh = 0.45; lk = rk = 1.35; }
   else if (!p.onGround) {
     if (p.slamming) { bodyRx = 0.5; lh = 0.4; rh = 0.4; lk = 1.6; rk = 1.6; }
     else { const up = clamp(p.vel.y / 9, -1, 1); lh = -0.7 - up * 0.3; rh = 0.25 + up * 0.2; lk = 1.1; rk = 0.5 - up * 0.3; torsoRx = up * -0.12; if (p.grapple) { bodyRx = 0.5; lh = 0.5; rh = 0.2; } }
@@ -416,7 +527,7 @@ function animate(dt, hs, ix = 0, iz = 0) {
   } else { bodyY = Math.sin(t * 2.2) * 0.012; lk = rk = 0.06; }
   if (p.landT > 0 && p.onGround) { bodyY -= p.landT * 1.2; lk += p.landT * 3; rk += p.landT * 3; lh -= p.landT * 1.5; rh -= p.landT * 1.5; }
   B.position.y = damp(B.position.y, bodyY, 18, dt);
-  B.rotation.x = damp(B.rotation.x, bodyRx, 14, dt) ; B.rotation.z = damp(B.rotation.z, bodyRz, 10, dt);
+  B.rotation.x = damp(B.rotation.x, bodyRx, 14, dt); B.rotation.z = damp(B.rotation.z, bodyRz - (p.lean || 0) * 0.45, 10, dt);
   B.rotation.y = p.dashT > 0 ? 0 : 0;
   // 空翻（二段跳/蹬墙/冲刺）
   if (p.spin > 0 && !p.emoteT) B.rotation.x = -(Math.PI * 2 - p.spin) * (p.dashT > 0 || p.onGround ? 0 : 1) + bodyRx;
@@ -446,8 +557,6 @@ function animate(dt, hs, ix = 0, iz = 0) {
   if (p.fp && !(p.emoteT > 0)) {
     G.camera.getWorldDirection(_f); _r.crossVectors(_f, UP).normalize();
     p.muzzle.copy(G.camera.position).addScaledVector(_f, 0.7).addScaledVector(_r, 0.25); p.muzzle.y -= 0.2;
-  } else if (p.gun) { p.muzzle.set(0, 0, WP[p.cur].len); p.gun.localToWorld(p.muzzle); }
+  } else if (p.gun) { p.muzzle.set(0, 0, WP[p.weapons[p.cur].wi].len); p.gun.localToWorld(p.muzzle); }
   else { p.muzzle.set(0, -0.1, 0); p.aL.hand.localToWorld(p.muzzle); }
-  // 建造预览关闭
-  p.ghost.visible = false;
 }

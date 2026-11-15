@@ -8,12 +8,14 @@ import { buildWorld, updateWorld, resetWorld } from './world.js';
 import { buildNav } from './phys.js';
 import { initFX, updateFX } from './fx.js';
 import { initAudio, sfx } from './audio.js';
-import { createPlayer, resetPlayer, updatePlayer, initInput, keys, pressed } from './player.js';
+import { createPlayer, resetPlayer, updatePlayer, initInput, keys, pressed, simRemote } from './player.js';
 import { updateEnemies, updateWaves, startCountdown, resetEnemies, W, spawnEnemy } from './enemies.js';
 import { updateProps, resetProps } from './props.js';
 import { updateShots, updatePickups, resetShots } from './weapons.js';
 import { updateDemo, endDemo } from './demo.js';
 import { initUI, updateUI, show, showOver, announce, note } from './ui.js';
+import { eventIs } from './binds.js';
+import { initNet, notePause, sendNet, guestFrame, hostAfterSim, leaveNet, resetNetScene } from './net.js';
 
 const canvas = document.getElementById('c');
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
@@ -22,13 +24,14 @@ renderer.setPixelRatio(pr); renderer.setSize(innerWidth, innerHeight);
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.0;
 G.renderer = renderer;
-const scene = G.scene = new THREE.Scene(); scene.background = new THREE.Color(0xbfe3ff);
-const camera = G.camera = new THREE.PerspectiveCamera(74, innerWidth / innerHeight, 0.08, 120);
+const scene = G.scene = new THREE.Scene(); scene.background = new THREE.Color(0xb7e0ff);
+scene.fog = new THREE.Fog(0xb7e0ff, 72, 165);
+const camera = G.camera = new THREE.PerspectiveCamera(74, innerWidth / innerHeight, 0.08, 280);
 scene.add(new THREE.HemisphereLight(0xffffff, 0xe6d8bc, 1.0));
 const sun = new THREE.DirectionalLight(0xfff4e0, 1.1);
-sun.position.set(8, 30, 6); sun.target.position.set(12, 0, 11); scene.add(sun, sun.target);
-sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -15, right: 15, top: 14, bottom: -14, near: 1, far: 50 });
+sun.position.set(18, 46, 12); sun.target.position.set(12, 0, 11); scene.add(sun, sun.target);
+sun.castShadow = true; sun.shadow.mapSize.set(4096, 4096);
+Object.assign(sun.shadow.camera, { left: -62, right: 62, top: 62, bottom: -62, near: 1, far: 140 });
 sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.03;
 
 const composer = new EffectComposer(renderer);
@@ -51,30 +54,49 @@ function noLock() {
   G.fakeLock = true; document.body.classList.add('nolock');
   note('Heads up: this page cannot lock the mouse, so move the mouse to look around (the view keeps turning near the screen edges). For the best feel, open the downloaded file in your browser.');
 }
-function start(fresh) {
+function start(fresh, simulate = true) {
   initAudio(); sfx.ui();
+  G.ending = false;
+  G.coop = !!G.netRole;
+  const resuming = !fresh && G.state === 'pause';
   if (fresh) {
     if (G.demo) { endDemo(); G.demo = false; }
     for (const m of G.temp || []) scene.remove(m); G.temp = [];
     document.getElementById('ann').innerHTML = ''; document.getElementById('feed').innerHTML = '';
-    resetEnemies(); resetShots(); resetProps(true); resetWorld(); resetPlayer(); G.timers.length = 0; G.anim.length = 0; G.slowT = 0; G.time = 0;
-    startCountdown(true); announce('DEFEND YOUR HOME!', 'wave', 2.5);
+    resetNetScene();
+    resetEnemies(); resetShots(); resetProps(true); resetWorld(); resetPlayer(G.human); if (G.partner) resetPlayer(G.partner);
+    G.timers.length = 0; G.anim.length = 0; G.slowT = 0; G.time = 0;
+    if (simulate) { startCountdown(true); announce(G.coop ? 'DEFEND TOGETHER!' : 'DEFEND YOUR HOME!', 'wave', 2.5); }
   }
-  G.state = 'play'; show('menu', false); show('pause', false); show('over', false); lock();
+  G.settingsOpen = false; G.state = 'play'; show('menu', false); show('pause', false); show('over', false); show('settings', false); show('coop', false); lock();
+  if (resuming) notePause(false);
 }
-function pause() { if (G.state !== 'play') return; G.state = 'pause'; show('pause', true); if (document.pointerLockElement) document.exitPointerLock(); }
-document.getElementById('startBtn').onclick = () => start(true);
-document.getElementById('resumeBtn').onclick = () => start(false);
-document.getElementById('againBtn').onclick = () => start(true);
+function pause() { if (G.state !== 'play') return; G.state = 'pause'; show('pause', true); if (document.pointerLockElement) document.exitPointerLock(); notePause(true); }
+document.getElementById('startBtn').onclick = () => { leaveNet(); G.coop = false; start(true, true); };
+document.getElementById('resumeBtn').onclick = () => start(false, G.netRole !== 'guest');
+document.getElementById('againBtn').onclick = () => {
+  if (G.netRole === 'guest') { sendNet({ t: 'again' }); return; }
+  if (G.netRole === 'host') sendNet({ t: 'go' });
+  start(true, true);
+};
+initNet({
+  pause: () => pause(),
+  resume: () => start(false, G.netRole !== 'guest'),
+  begin: () => start(true, G.netRole !== 'guest'),
+});
 document.addEventListener('pointerlockchange', () => { if (document.pointerLockElement !== canvas && G.state === 'play' && !G.fakeLock) pause(); });
 document.addEventListener('pointerlockerror', noLock);
-addEventListener('keydown', (e) => { if (e.code === 'KeyP' || (e.code === 'Escape' && G.fakeLock)) { G.state === 'play' ? pause() : G.state === 'pause' && start(false); } });
+addEventListener('keydown', (e) => { if (G.settingsOpen) return; if (eventIs(e, 'pause') || (e.code === 'Escape' && G.fakeLock)) { G.state === 'play' ? pause() : G.state === 'pause' && start(false); } });
 let mx = 0.5;
 addEventListener('mousemove', (e) => { mx = e.clientX / innerWidth; });
 G.onDeath = () => {
   sfx.dead(); G.slowT = 1.5;
-  if (G.player.score > best) { best = G.player.score; try { localStorage.setItem('hb_best', best); } catch (e) { } }
-  setTimeout(() => { G.state = 'over'; if (document.pointerLockElement) document.exitPointerLock(); showOver(best); }, 1800);
+  const score = (G.human ? G.human.score : 0) + (G.coop && G.partner ? G.partner.score : 0);
+  if (score > best) { best = score; try { localStorage.setItem('hb_best', best); } catch (e) { } }
+  setTimeout(() => {
+    G.state = 'over'; if (document.pointerLockElement) document.exitPointerLock(); showOver(best);
+    if (G.netRole === 'host') sendNet({ t: 'over', wave: G.wave, k: [G.human.kills, G.partner ? G.partner.kills : 0], s: [G.human.score, G.partner ? G.partner.score : 0] });
+  }, 1800);
 };
 
 // ---------- 主循环 ----------
@@ -88,11 +110,17 @@ function sim(raw) {
   const dt = G.dt = raw * G.timeScale;
   if (G.state === 'play') {
     G.time += dt;
-    if (G.fakeLock) { const k = mx < 0.12 ? (0.12 - mx) / 0.12 : mx > 0.88 ? -(mx - 0.88) / 0.12 : 0; G.player.yaw += k * 2.6 * raw; }
-    runTimers();
-    updatePlayer(dt); updateEnemies(dt); updateWaves(dt); updateProps(dt); updateShots(dt); updatePickups(dt); updateWorld(dt);
-    for (let i = G.anim.length - 1; i >= 0; i--) if (G.anim[i](dt) === false) G.anim.splice(i, 1);
-    updateFX(dt);
+    if (G.fakeLock) { const k = mx < 0.12 ? (0.12 - mx) / 0.12 : mx > 0.88 ? -(mx - 0.88) / 0.12 : 0; (G.human || G.player).yaw += k * 2.6 * raw; }
+    if (G.netRole === 'guest') {
+      updateWorld(dt); guestFrame(dt); updateFX(dt);
+    } else {
+      runTimers();
+      simRemote(dt);
+      updatePlayer(dt); updateEnemies(dt); updateWaves(dt); updateProps(dt); updateShots(dt); updatePickups(dt); updateWorld(dt);
+      for (let i = G.anim.length - 1; i >= 0; i--) if (G.anim[i](dt) === false) G.anim.splice(i, 1);
+      updateFX(dt);
+      hostAfterSim(dt);
+    }
     G.shake = Math.max(0, G.shake - raw * 2.2);
   } else if (G.state === 'menu') {
     // 开始界面背景：AI 自动试玩

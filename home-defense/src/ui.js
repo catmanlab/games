@@ -1,6 +1,7 @@
 // 界面：HUD、提示、伤害数字、小地图、菜单
 import { G, THREE, clamp } from './g.js';
-import { WP, RAR } from './weapons.js';
+import { WP, RAR, CAT_NAME, remapWeapons } from './weapons.js';
+import { order, binds, BIND_LABEL, keyName, setBind, shiftOrder, fromEvent, code } from './binds.js';
 import { ROOMS } from './world.js';
 import { W } from './enemies.js';
 
@@ -9,7 +10,12 @@ let el = {}, nums = [], mm, hintText = '', slotKey = '';
 const _v = new THREE.Vector3();
 
 export function initUI() {
-  for (const id of ['hud', 'hp', 'sh', 'hpT', 'slots', 'ammo', 'wname', 'top', 'score', 'combo', 'boss', 'bossF', 'bossN', 'ann', 'feed', 'hint', 'cross', 'hitm', 'vig', 'chg', 'chgF', 'abQ', 'abX', 'abG', 'abF', 'fuel', 'menu', 'pause', 'over', 'overT', 'nums', 'mm', 'low', 'note']) el[id] = $(id);
+  for (const id of ['hud', 'hp', 'sh', 'hpT', 'slots', 'ammo', 'wname', 'top', 'score', 'combo', 'boss', 'bossF', 'bossN', 'ann', 'feed', 'hint', 'cross', 'hitm', 'vig', 'scope', 'chg', 'chgF', 'abQ', 'abX', 'abG', 'abF', 'fuel', 'menu', 'pause', 'over', 'overT', 'nums', 'mm', 'low', 'note', 'settings', 'setOrder', 'setBinds', 'coop']) el[id] = $(id);
+  $('settingsBtn').onclick = () => openSettings('menu');
+  $('pauseSettings').onclick = () => openSettings('pause');
+  $('settingsBack').onclick = () => closeSettings();
+  addEventListener('keydown', onSettingsKey, true);
+  addEventListener('mousedown', onSettingsMouse, true);
   for (let i = 0; i < 30; i++) { const d = document.createElement('div'); d.className = 'num'; el.nums.appendChild(d); nums.push({ d, life: 0, pos: new THREE.Vector3() }); }
   mm = el.mm.getContext('2d');
 }
@@ -33,8 +39,12 @@ export function dmgNum(pos, n, crit, frozen) {
 }
 export function show(id, on) { el[id].style.display = on ? 'flex' : 'none'; }
 export function showOver(best) {
-  const p = G.player;
-  el.overT.innerHTML = `You made it to <b>wave ${G.wave}</b><br>Robots destroyed <b>${p.kills}</b> · Shots reflected <b>${p.blocks}</b><br>Score <b>${p.score}</b>${p.score >= best && p.score > 0 ? ' 🏆 New record!' : ` (best ${best})`}`;
+  const p = G.human || G.player;
+  const q = G.coop && G.partner && !G.partner.left ? G.partner : null;
+  const kills = p.kills + (q ? q.kills : 0);
+  const score = p.score + (q ? q.score : 0);
+  const blocks = p.blocks + (q ? q.blocks : 0);
+  el.overT.innerHTML = `You made it to <b>wave ${G.wave}</b><br>Robots destroyed <b>${kills}</b> · Shots reflected <b>${blocks}</b><br>Score <b>${score}</b>${score >= best && score > 0 ? ' 🏆 New record!' : ` (best ${best})`}` + (q ? `<br>You <b>${p.score}</b> · Partner <b>${q.score}</b>` : '');
   show('over', true);
 }
 
@@ -45,15 +55,20 @@ export function updateUI(dt) {
   el.hp.style.width = p.hp + '%'; el.sh.style.width = p.shield + '%'; el.hpT.textContent = `${Math.ceil(p.hp)}  🛡${Math.ceil(p.shield)}`;
   el.low.style.opacity = p.hp < 30 ? 0.35 + Math.sin(G.time * 6) * 0.2 : 0;
   // 武器栏
-  const key = p.weapons.map((w, i) => (w ? w.rar : '-')).join('') + p.cur + (p.held ? 'h' : '');
+  const key = p.weapons.map((w) => (w ? w.wi + ':' + w.rar : '-')).join('') + p.cur + (p.held ? 'h' : '') + order.join() + [1, 2, 3, 4, 5].map((i) => code('slot' + i)).join();
   if (key !== slotKey) {
     slotKey = key;
-    el.slots.innerHTML = p.weapons.map((w, i) => `<div class="slot${i === p.cur && !p.held ? ' on' : ''}${w ? '' : ' empty'}" style="--c:${w ? RAR[w.rar].css : '#444'}"><i>${i + 1}</i><b>${w ? WP[i].name : '—'}</b></div>`).join('');
+    el.slots.innerHTML = p.weapons.map((w, i) => `<div class="slot${i === p.cur && !p.held ? ' on' : ''}${w ? '' : ' empty'}" style="--c:${w ? RAR[w.rar].css : '#444'}"><i>${keyName(code('slot' + (i + 1)))}</i><b>${w ? WP[w.wi].name : CAT_NAME[order[i]]}</b></div>`).join('');
   }
   const w = p.weapons[p.cur];
+  const scoped = !!(w && WP[w.wi].scope && p.ads && !p.held);
+  if (el.scope) el.scope.style.display = scoped ? 'block' : 'none';
+  el.cross.style.visibility = scoped ? 'hidden' : 'visible';
   if (p.held) { el.ammo.textContent = '✋'; el.wname.textContent = p.held.T.name; el.wname.style.color = '#ff7ae0'; }
-  else if (w) { el.ammo.textContent = p.reloadT > 0 ? 'RELOAD' : `${w.ammo} / ${WP[p.cur].mag}`; el.wname.textContent = `${RAR[w.rar].name} · ${WP[p.cur].name}`; el.wname.style.color = RAR[w.rar].css; }
+  else if (w) { el.ammo.textContent = p.reloadT > 0 ? 'RELOAD' : `${w.ammo} / ${WP[w.wi].mag}`; el.wname.textContent = `${RAR[w.rar].name} · ${WP[w.wi].name}`; el.wname.style.color = RAR[w.rar].css; }
   // 技能
+  el.abQ.dataset.k = keyName(code('grapple')); el.abX.dataset.k = keyName(code('dash'));
+  el.abG.dataset.k = keyName(code('nade')); el.abF.dataset.k = keyName(code('fort'));
   el.abQ.style.setProperty('--k', clamp(1 - p.grappleCd / 2.2, 0, 1)); el.abX.style.setProperty('--k', clamp(1 - p.dashCd / 1.8, 0, 1));
   el.abG.dataset.n = p.nades; el.abG.style.setProperty('--k', p.nades > 0 ? 1 : 0); el.abF.dataset.n = p.mats; el.abF.style.setProperty('--k', p.mats >= 10 ? 1 : 0);
   el.fuel.style.width = p.fuel * 100 + '%';
@@ -61,7 +76,10 @@ export function updateUI(dt) {
   let top = '';
   if (W.phase === 'count') top = G.wave === 1 ? `Robots invade in ${Math.ceil(W.t)}s — go open the chests!` : `Wave ${G.wave} starts in ${Math.ceil(W.t)}s`;
   else if (W.phase === 'fight') top = `Wave ${G.wave} · ${G.enemies.length + W.queue.length + W.pending} left`;
-  el.top.textContent = top; el.score.textContent = `SCORE ${p.score}`;
+  if (G.netRole === 'guest' && G.netTop) top = G.netTop;
+  if (p.dead && p.respawnT > 0) top = `You are down — back in ${Math.ceil(p.respawnT)}s`;
+  else if (G.coop && G.partner && G.partner.dead && G.partner.respawnT > 0) top = `Partner is down — back in ${Math.ceil(G.partner.respawnT)}s`;
+  el.top.textContent = top; el.score.textContent = G.coop && G.partner && !G.partner.left ? `YOU ${p.score}  ·  PAL ${G.partner.score}` : `SCORE ${p.score}`;
   el.combo.textContent = p.combo >= 2 ? `COMBO x${p.combo}` : ''; el.combo.style.transform = `scale(${1 + Math.max(0, p.comboT - 2.9) * 2})`;
   if (G.boss) { el.boss.style.display = 'block'; el.bossF.style.width = clamp(G.boss.hp / G.boss.maxHp, 0, 1) * 100 + '%'; } else el.boss.style.display = 'none';
   // 准星
@@ -90,5 +108,74 @@ export function updateUI(dt) {
   for (const o of G.poops || []) { mm.fillStyle = '#9dff3c'; mm.fillRect(o.x * S - 1.5, o.z * S - 1.5, 3, 3); }
   if (G.catPos) { mm.fillStyle = '#ffa94d'; mm.beginPath(); mm.arc(G.catPos.x * S, G.catPos.z * S, 3, 0, 6.3); mm.fill(); }
   for (const e of G.enemies) { mm.fillStyle = e.type === 'boss' ? '#ff0054' : '#ff5a5a'; mm.beginPath(); mm.arc(e.pos.x * S, e.pos.z * S, e.type === 'boss' ? 5 : 2.5, 0, 6.3); mm.fill(); }
-  mm.save(); mm.translate(p.pos.x * S, p.pos.z * S); mm.rotate(-p.yaw); mm.fillStyle = '#00f5d4'; mm.beginPath(); mm.moveTo(0, 6); mm.lineTo(-4, -4); mm.lineTo(4, -4); mm.fill(); mm.restore();
+  const drawArrow = (who, color) => { mm.save(); mm.translate(who.pos.x * S, who.pos.z * S); mm.rotate(-who.yaw); mm.fillStyle = color; mm.beginPath(); mm.moveTo(0, 6); mm.lineTo(-4, -4); mm.lineTo(4, -4); mm.fill(); mm.restore(); };
+  if (G.coop && G.partner && !G.partner.left) drawArrow(G.partner, '#ffd60a');
+  drawArrow(p, '#00f5d4');
+}
+
+const BIND_GROUPS = [
+  ['Move', ['forward', 'back', 'left', 'right', 'jump', 'sprint', 'crouch', 'slide', 'dash', 'leanL', 'leanR']],
+  ['Combat', ['grapple', 'interact', 'reload', 'nade', 'fort', 'emote', 'view', 'mute', 'pause']],
+  ['Weapons', ['slot1', 'slot2', 'slot3', 'slot4', 'slot5']],
+];
+let capture = null, settingsFrom = 'menu';
+function renderSettings() {
+  el.setOrder.innerHTML = '';
+  order.forEach((cat, i) => {
+    const row = document.createElement('div'); row.className = 'setrow';
+    const left = document.createElement('button'); left.className = 'mini'; left.textContent = '◀'; left.disabled = i === 0;
+    const right = document.createElement('button'); right.className = 'mini'; right.textContent = '▶'; right.disabled = i === order.length - 1;
+    left.onclick = () => moveOrder(i, -1); right.onclick = () => moveOrder(i, 1);
+    const name = document.createElement('span'); name.textContent = (i + 1) + '  ' + CAT_NAME[cat];
+    row.append(left, name, right); el.setOrder.append(row);
+  });
+  el.setBinds.innerHTML = '';
+  for (const [title, actions] of BIND_GROUPS) {
+    const h = document.createElement('div'); h.className = 'sethead'; h.textContent = title; el.setBinds.append(h);
+    for (const a of actions) {
+      const lab = document.createElement('div'); lab.textContent = BIND_LABEL[a];
+      const b = document.createElement('button'); b.className = 'mini' + (capture === a ? ' on' : '');
+      b.textContent = capture === a ? 'Press a key…' : keyName(binds[a]);
+      b.onclick = (ev) => { ev.preventDefault(); capture = a; renderSettings(); };
+      el.setBinds.append(lab, b);
+    }
+  }
+}
+function moveOrder(i, dir) {
+  const prev = shiftOrder(i, dir);
+  if (!prev) return;
+  if (G.player) remapWeapons(G.player, prev, order);
+  slotKey = '';
+  renderSettings();
+}
+export function openSettings(from) {
+  settingsFrom = from; capture = null; G.settingsOpen = true;
+  renderSettings(); show('settings', true);
+  if (from === 'menu') show('menu', false);
+  if (from === 'pause') show('pause', false);
+}
+export function closeSettings() {
+  G.settingsOpen = false; capture = null; show('settings', false);
+  if (settingsFrom === 'menu' && G.state === 'menu') show('menu', true);
+  if (settingsFrom === 'pause' && G.state === 'pause') show('pause', true);
+}
+function onSettingsKey(e) {
+  if (!G.settingsOpen) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (capture) {
+    if (e.code === 'Escape') { capture = null; renderSettings(); return; }
+    const c = fromEvent(e);
+    if (!c || c === 'Escape') return;
+    setBind(capture, c); capture = null; slotKey = ''; renderSettings();
+    return;
+  }
+  if (e.code === 'Escape') closeSettings();
+}
+function onSettingsMouse(e) {
+  if (!G.settingsOpen || !capture) return;
+  if (e.button === 0 && e.target && e.target.closest && e.target.closest('button')) return;
+  if (e.button !== 0 && e.button !== 2) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  setBind(capture, e.button === 2 ? 'MouseRight' : 'MouseLeft');
+  capture = null; slotKey = ''; renderSettings();
 }

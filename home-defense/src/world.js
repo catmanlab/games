@@ -18,7 +18,8 @@ export const ROOMS = [
 ];
 // [x0,z0,x1,z1,[[门中心,门宽]...]]
 const WALLS = [
-  [0, 0, 24, 0], [0, 22, 24, 22], [0, 0, 0, 22], [24, 0, 24, 22],
+  [0, 0, 24, 0, [[14.5, 2.2]]], [0, 22, 24, 22, [[21.2, 1.6]]],
+  [0, 0, 0, 22, [[13.05, 1.15], [21.4, 1.0]]], [24, 0, 24, 22, [[14.7, 1.2]]],
   [12, 0, 12, 5],
   [0, 8, 24, 8, [[1.6, 2.0], [12, 3]]],
   [12, 10.5, 12, 14],
@@ -122,7 +123,7 @@ export function resetChests() { for (const c of G.chests) { c.opened = false; c.
 
 // ---------- 枕头堡垒（可建造的掩体） ----------
 const FORT = [0xff7aa2, 0x7ad7ff, 0xffd97a, 0x9dffb0, 0xc9a2ff, 0xffa66b];
-export function buildFort(x, z, alongX) {
+export function buildFort(x, z, alongX, nid) {
   const g = new THREE.Group(); g.position.set(x, 0, z); if (!alongX) g.rotation.y = Math.PI / 2; G.scene.add(g);
   for (let r = 0; r < 2; r++) for (let c = 0; c < 3; c++) {
     const m = bx(g, 0.96, 1.16, 0.4, FORT[(r * 3 + c + ((x * 7 + z * 3) | 0)) % 6], (c - 1) * 1.0, 0.6 + r * 1.2, 0, { r: 0.9 });
@@ -130,9 +131,9 @@ export function buildFort(x, z, alongX) {
   }
   const hw = alongX ? 1.5 : 0.22, hd = alongX ? 0.22 : 1.5;
   const box = addStatic(x - hw, 0, z - hd, x + hw, 2.4, z + hd, 'fort');
-  const w = { g, box, hp: 160, t: 0, flash: 0 }; box.ref = w; g.scale.set(1, 0.01, 1);
+  const w = { g, box, hp: 160, t: 0, flash: 0, nid: nid || ++G.fortSeq }; box.ref = w; g.scale.set(1, 0.01, 1);
   G.walls.push(w);
-  if (G.walls.length > 8) destroyFort(G.walls[0]);
+  if (!nid && G.walls.length > 8) destroyFort(G.walls[0]);
   sfx.build(); ring({ x, y: 0.1, z }, 0x80ffdb, 2, 0.3);
   return w;
 }
@@ -146,6 +147,25 @@ export function destroyFort(w) {
   G.walls.splice(i, 1); removeStatic(w.box); G.scene.remove(w.g); w.hp = 0;
   burst({ x: w.g.position.x, y: 1.2, z: w.g.position.z }, { n: 60, color: [0xffffff, 0xffe5ec, 0xcaf0f8], speed: [1, 6], life: [0.6, 1.4], size: [0.1, 0.22], grav: 2.5, drag: 3, jitter: 0.8, glow: 0.8 });
   sfx.thud(w.g.position, 3);
+}
+
+export function poseFlip(i, s) {
+  const f = G.flips[i];
+  if (!f || f.flipped) return;
+  f.flipped = true; f.s = s || 1; f.t = 0;
+  if (f.axis === 'x') { f.outer.position.z = f.cz + f.s * f.W / 2; f.inner.position.z = -f.s * f.W / 2; }
+  else { f.outer.position.x = f.cx + f.s * f.W / 2; f.inner.position.x = -f.s * f.W / 2; }
+  sfx.flip();
+}
+export function poseChest(i) {
+  const c = G.chests[i];
+  if (!c || c.opened) return;
+  c.opened = true; c.t = 0; c.beam.visible = false; c.lock.visible = false;
+  sfx.chest();
+}
+export function stampProps() {
+  G.props.forEach((p, i) => { p.nid = i + 1; });
+  G.propSeq = G.props.length;
 }
 
 // ---------- 家里的猫（无敌，到处溜达） ----------
@@ -271,6 +291,7 @@ export function resetWorld() {
   for (const o of G.poops) G.scene.remove(o.g); G.poops.length = 0; Object.assign(CAT, { mode: 'sit', sit: 2, atkCd: 3, poopCd: 4, target: null });
   for (const f of G.flips) unflip(f);
   while (G.walls.length) { const w = G.walls.pop(); removeStatic(w.box); G.scene.remove(w.g); }
+  G.fortSeq = 0;
   resetChests();
 }
 
@@ -278,7 +299,18 @@ export function updateWorld(dt) {
   const t = G.time;
   for (const a of animMats) a.m.emissive.setHSL((a.off + t * a.speed) % 1, a.sat, 0.5);
   if (G.fan) G.fan.rotation.y += dt * 6;
-  updateCat(dt); updatePoops(dt);
+  const yard = G.yard;
+  if (yard) {
+    for (let i = 0; i < yard.swings.length; i++) yard.swings[i].rotation.x = Math.sin(t * 1.7 + i * 1.4) * 0.55;
+    for (let i = 0; i < yard.seesaws.length; i++) yard.seesaws[i].rotation.z = Math.sin(t * 0.85 + i) * 0.2;
+    if (yard.merry) yard.merry.rotation.y += dt * 0.55;
+    for (let i = 0; i < yard.riders.length; i++) {
+      const a = Math.sin(t * 2.4 + i * 2.1);
+      yard.riders[i].rotation.z = a * 0.22;
+      yard.riders[i].position.y = 0.58 + Math.abs(a) * 0.06;
+    }
+  }
+  if (G.netRole !== 'guest') { updateCat(dt); updatePoops(dt); }
   if (G.fireMat) { G.fireMat.emissiveIntensity = 2.6 + Math.sin(t * 17) * 0.6 + Math.sin(t * 31) * 0.4; if (Math.random() < 0.35) burst(G.firePos, { n: 1, color: [0xff7b00, 0xffd166, 0xff3c00], speed: [0.4, 1.4], life: [0.3, 0.7], size: [0.1, 0.22], grav: -2.5, jitter: 0.25, dir: { x: 0, y: 1, z: 0 }, spread: 0.3 }); }
   for (const f of G.flips) if (f.flipped && f.t < 1) {
     f.t = Math.min(1, f.t + dt / 0.32);
@@ -313,10 +345,18 @@ export function buildWorld() {
     cyl(scene, 0.45, 0.08, 0xffffff, cx, H - 0.05, cz, { e: r.light, ei: 1.1, cast: false });
     const pl = new THREE.PointLight(r.light, 10, 16, 1.4); pl.position.set(cx, H - 1.3, cz); scene.add(pl);
   }
-  addStatic(-2, -2, -2, G.W + 2, 0, G.D + 2, 'floor');
+  addStatic(G.X0 - 4, -2, G.Z0 - 4, G.X1 + 4, 0, G.Z1 + 4, 'floor');
   const ceil = new THREE.Mesh(new THREE.PlaneGeometry(G.W, G.D), mat(0xf4f1ea, { r: 1 }));
-  ceil.rotation.x = Math.PI / 2; ceil.position.set(G.W / 2, H, G.D / 2); scene.add(ceil);
-  addStatic(-2, H, -2, G.W + 2, H + 2, G.D + 2, 'ceil');
+  ceil.rotation.x = Math.PI / 2; ceil.position.set(G.W / 2, H - 0.02, G.D / 2); scene.add(ceil);
+  addStatic(-0.9, H + 0.02, -0.9, G.W + 0.9, H + 0.48, G.D + 0.9, 'roof');
+  bx(scene, G.W + 1.8, 0.42, G.D + 1.8, 0x6b3a28, G.W / 2, H + 0.26, G.D / 2, { r: 0.92 });
+  bx(scene, G.W + 2.05, 0.16, 0.22, 0xf7f1e6, G.W / 2, H + 0.08, -0.95);
+  bx(scene, G.W + 2.05, 0.16, 0.22, 0xf7f1e6, G.W / 2, H + 0.08, G.D + 0.95);
+  bx(scene, 0.22, 0.16, G.D + 2.05, 0xf7f1e6, -0.95, H + 0.08, G.D / 2);
+  bx(scene, 0.22, 0.16, G.D + 2.05, 0xf7f1e6, G.W + 0.95, H + 0.08, G.D / 2);
+  bx(scene, 0.9, 1.5, 0.9, 0xc45c4a, 20.2, H + 0.9, 19.2);
+  bx(scene, 1.05, 0.16, 1.05, 0x8d3b32, 20.2, H + 1.7, 19.2);
+  addStatic(19.7, H + 0.45, 18.7, 20.7, H + 1.85, 19.7, 'roof');
 
   // 墙
   const wallMat = mat(0xfbf3dc, { r: 0.95 }), trim = mat(0xffffff, { r: 0.6 }), T = 0.1, DH = 2.9;
@@ -354,6 +394,8 @@ export function buildWorld() {
   win(0.12, 11, 1.8, 'z', 3.15, 1.3);                                                  // 门厅拱窗
 
   buildFurniture();
+  buildYard();
+  stampProps();
 }
 
 function rug(cx, cz, w, d, c1, c2, c3) {
@@ -476,4 +518,209 @@ function buildFurniture() {
   buildCat();
   // ===== 宝箱 =====
   makeChest(11.25, 1.1, -Math.PI / 2); makeChest(10.9, 13.35, Math.PI); makeChest(12.7, 13.3, Math.PI / 2); makeChest(23.2, 21.2, Math.PI); makeChest(0.75, 20.4, Math.PI / 2);
+}
+
+// 房子外面的大草坪、围栏，以及四边的游乐场
+function buildYard() {
+  const scene = G.scene;
+  G.yard = { swings: [], seesaws: [], riders: [], merry: null };
+  const X0 = G.X0 - 16, X1 = G.X1 + 16, Z0 = G.Z0 - 16, Z1 = G.Z1 + 16;
+  const grass = (x0, z0, x1, z1) => {
+    const w = x1 - x0, d = z1 - z0;
+    const t = tex(256, (g, s) => {
+      g.fillStyle = '#3c9a46'; g.fillRect(0, 0, s, s);
+      for (let i = 0; i < 8; i++) { g.fillStyle = i % 2 ? 'rgba(0,40,10,.08)' : 'rgba(255,255,255,.05)'; g.fillRect(0, i * 32, s, 32); }
+      for (let i = 0; i < 3200; i++) { g.fillStyle = Math.random() > 0.55 ? 'rgba(18,78,24,.4)' : 'rgba(190,230,110,.28)'; g.fillRect(Math.random() * s, Math.random() * s, 2, 3); }
+    }, w / 5, d / 5);
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, d), new THREE.MeshStandardMaterial({ map: t, roughness: 0.96 }));
+    m.rotation.x = -Math.PI / 2; m.position.set((x0 + x1) / 2, 0.004, (z0 + z1) / 2); m.receiveShadow = true; scene.add(m);
+  };
+  grass(X0, Z0, X1, 0); grass(X0, 22, X1, Z1); grass(X0, 0, 0, 22); grass(24, 0, X1, 22);
+
+  const path = (x, z, w, d) => bx(scene, w, 0.04, d, 0xc4a574, x, 0.03, z, { cast: false, r: 1 });
+  const porch = (x, z, w, d) => bx(scene, w, 0.07, d, 0xd9d3c6, x, 0.045, z, { cast: false, r: 0.75 });
+  path(14.5, -14, 2.3, 26); path(21.2, 32, 1.8, 16); path(-10, 13.05, 18, 1.7); path(-7, 21.4, 12, 1.5); path(34, 14.7, 18, 1.6);
+  porch(14.5, -1.3, 3.1, 1.7); porch(21.2, 23.15, 2.3, 1.5); porch(-1.2, 13.05, 1.5, 1.7); porch(-1.2, 21.4, 1.5, 1.45); porch(25.15, 14.7, 1.55, 1.7);
+
+  const lampPost = (x, z) => {
+    cyl(scene, 0.055, 2.15, 0x2b2d31, x, 1.08, z); cyl(scene, 0.16, 0.1, 0xffe8b0, x, 2.2, z, glow(0xffd27a, 1.5));
+    const pl = new THREE.PointLight(0xffe2b0, 4.5, 8, 1.6); pl.position.set(x, 2.2, z); scene.add(pl);
+  };
+  lampPost(12.7, -1.7); lampPost(19.5, 23.5); lampPost(-1.5, 12.15); lampPost(-1.5, 20.6); lampPost(25.4, 13.55);
+
+  const fx0 = G.X0 + 0.55, fx1 = G.X1 - 0.55, fz0 = G.Z0 + 0.55, fz1 = G.Z1 - 0.55;
+  const fence = (x0, z0, x1, z1) => {
+    const horiz = Math.abs(z1 - z0) < 0.01, len = Math.hypot(x1 - x0, z1 - z0), n = Math.max(2, Math.round(len / 2.5));
+    const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    for (let i = 0; i <= n; i++) { const k = i / n; bx(scene, 0.14, 1.7, 0.14, 0x8a5a32, x0 + (x1 - x0) * k, 0.85, z0 + (z1 - z0) * k); }
+    if (horiz) { bx(scene, len, 0.09, 0.08, 0xd4b483, cx, 0.48, cz); bx(scene, len, 0.09, 0.08, 0xd4b483, cx, 1.05, cz); bx(scene, len, 0.09, 0.08, 0xd4b483, cx, 1.52, cz); addStatic(Math.min(x0, x1), 0, cz - 0.12, Math.max(x0, x1), 1.7, cz + 0.12, 'fence'); }
+    else { bx(scene, 0.08, 0.09, len, 0xd4b483, cx, 0.48, cz); bx(scene, 0.08, 0.09, len, 0xd4b483, cx, 1.05, cz); bx(scene, 0.08, 0.09, len, 0xd4b483, cx, 1.52, cz); addStatic(cx - 0.12, 0, Math.min(z0, z1), cx + 0.12, 1.7, Math.max(z0, z1), 'fence'); }
+  };
+  fence(fx0, fz0, fx1, fz0); fence(fx0, fz1, fx1, fz1); fence(fx0, fz0, fx0, fz1); fence(fx1, fz0, fx1, fz1);
+  const hedge = (x0, z0, x1, z1) => {
+    const horiz = Math.abs(z1 - z0) < 0.01, len = Math.hypot(x1 - x0, z1 - z0), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    if (horiz) { bx(scene, len, 1.7, 1.5, 0x2d8a3a, cx, 0.85, cz, { r: 1 }); bx(scene, len, 0.7, 0.9, 0x3aaa48, cx, 1.7, cz, { r: 1 }); }
+    else { bx(scene, 1.5, 1.7, len, 0x2d8a3a, cx, 0.85, cz, { r: 1 }); bx(scene, 0.9, 0.7, len, 0x3aaa48, cx, 1.7, cz, { r: 1 }); }
+  };
+  hedge(fx0, fz0 - 2.4, fx1, fz0 - 2.4); hedge(fx0, fz1 + 2.4, fx1, fz1 + 2.4); hedge(fx0 - 2.4, fz0, fx0 - 2.4, fz1); hedge(fx1 + 2.4, fz0, fx1 + 2.4, fz1);
+
+  const tree = (x, z, s = 1) => {
+    const h = 1.6 * s + 0.9;
+    cyl(scene, 0.16 * s, h, 0x6b4226, x, h / 2, z);
+    addStatic(x - 0.18 * s, 0, z - 0.18 * s, x + 0.18 * s, h * 0.7, z + 0.18 * s, 'tree');
+    sph(scene, 0.95 * s, 0x2f8f3a, x, h + 0.3 * s, z, { r: 0.95 });
+    sph(scene, 0.68 * s, 0x3aaa48, x + 0.32 * s, h + 0.12 * s, z + 0.12 * s, { r: 0.95 });
+    sph(scene, 0.6 * s, 0x257a34, x - 0.28 * s, h + 0.08 * s, z - 0.18 * s, { r: 0.95 });
+  };
+  for (const [x, z, s] of [
+    [-16, -12, 1.25], [-28, -22, 1.1], [-6, -24, 1.05], [28, -14, 1.3], [38, -26, 1.05], [6, -8, 0.85], [24, -9, 1],
+    [-14, 30, 1.2], [-26, 42, 1.05], [6, 34, 1.15], [0, 44, 1], [34, 30, 1.25], [42, 44, 1.1],
+    [-14, -4, 1.05], [-20, 6, 1.15], [-10, 9, 0.95], [-24, 26, 1.1], [-12, 34, 1],
+    [34, -6, 1.15], [46, -20, 1.05], [32, 6, 1.1], [42, 8, 0.95], [34, 24, 1.15], [48, 30, 1], [34, 40, 1.2],
+  ]) tree(x, z, s);
+  const bush = (x, z, s = 1) => { sph(scene, 0.36 * s, 0x2d6a4f, x, 0.26 * s, z, { r: 1 }); sph(scene, 0.26 * s, 0x40916c, x + 0.16 * s, 0.2 * s, z + 0.06 * s, { r: 1 }); };
+  for (const [x, z] of [[2, -1.15], [6.5, -1.15], [10.2, -1.15], [18.2, -1.15], [22.2, -1.15], [3, 23.15], [8, 23.15], [13, 23.15], [17.2, 23.15], [-1.15, 3], [-1.15, 7.2], [-1.15, 16.2], [-1.15, 18.4], [25.15, 3], [25.15, 7.5], [25.15, 18], [25.15, 20.4]]) bush(x, z, 0.85);
+  const flowers = (x, z) => { const C = [0xff4d6d, 0xffd60a, 0xc77dff, 0xffffff]; for (let i = 0; i < 4; i++) { const fx = x + (i - 1.5) * 0.16, fz = z + (i % 2 - 0.5) * 0.12; cyl(scene, 0.015, 0.26, 0x2d6a4f, fx, 0.13, fz, { cast: false }); sph(scene, 0.06, C[i], fx, 0.28, fz, { cast: false }); } };
+  flowers(11.2, -2.3); flowers(17.6, -2.3); flowers(19.2, 24); flowers(-2.2, 14.4); flowers(26.2, 14.7);
+
+  const pad = (x, z, w, d, c) => bx(scene, w, 0.045, d, c, x, 0.03, z, { cast: false, r: 0.92 });
+  const ring = (x, z, r) => { const m = new THREE.Mesh(new THREE.TorusGeometry(r, 0.07, 6, 36), mat(0xf8f9fa, { r: 0.65 })); m.rotation.x = Math.PI / 2; m.position.set(x, 0.04, z); m.receiveShadow = true; scene.add(m); };
+  ring(4, -18, 3.6); ring(8, 40, 4.2);
+
+  // 南边：秋千 + 沙坑
+  pad(5, -33, 5.2, 3.6, 0x2f6f97);
+  swingSet(5, -33);
+  pad(19, -33.2, 4.2, 3.6, 0xe6c36a);
+  sandbox(19, -33.2);
+  // 北边：滑梯 + 攀爬架
+  pad(18, 53, 4.2, 6.2, 0xc44536);
+  slide(18, 53);
+  pad(5, 52.5, 4.2, 4.6, 0x2a9d4a);
+  monkeyBars(5, 52.5);
+  // 西边：跷跷板 + 攀登架
+  pad(-33, 5.5, 4.6, 2.2, 0xc4922a);
+  seesaw(-33, 5.5);
+  pad(-33, 16.5, 4.4, 5.4, 0x2a6f97);
+  jungleGym(-33, 16.5);
+  // 东边：旋转木马 + 弹簧摇马
+  pad(54, 16.5, 4.2, 4.2, 0x9b3a3a);
+  merry(54, 16.5);
+  pad(61, 8.5, 3.2, 7.2, 0x6a4c93);
+  springRider(61, 6.2, 0xffd60a);
+  springRider(61, 11, 0xff4d6d);
+
+  const bench = (x, z, rot) => {
+    const g = new THREE.Group(); g.position.set(x, 0, z); g.rotation.y = rot; scene.add(g);
+    bx(g, 1.5, 0.08, 0.42, 0x8d5a32, 0, 0.48, 0); bx(g, 1.5, 0.42, 0.08, 0x8d5a32, 0, 0.72, -0.18);
+    bx(g, 0.08, 0.48, 0.38, 0x5c3a1e, -0.62, 0.24, 0); bx(g, 0.08, 0.48, 0.38, 0x5c3a1e, 0.62, 0.24, 0);
+    const alongZ = Math.abs(Math.sin(rot)) > 0.5, hx = alongZ ? 0.28 : 0.78, hz = alongZ ? 0.78 : 0.28;
+    addStatic(x - hx, 0, z - hz, x + hx, 0.55, z + hz, 'bench');
+  };
+  bench(8, -27.5, Math.PI); bench(12, 46, 0); bench(-26, 16.5, Math.PI / 2); bench(48, 10, -Math.PI / 2);
+
+  spawnProp('soccer', 4, 0, -18); spawnProp('soccer', 30, 0, 38); spawnProp('bball', 48, 0, 12);
+  spawnProp('block', 18.3, 0.14, -32.6); spawnProp('duck', 19.6, 0.14, -33.4); spawnProp('bear', 3.6, 0, -31.4);
+}
+
+function swingSet(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  const MET = 0xc5ccd4, WOOD = 0xc48a4a, top = 2.45;
+  for (const sx of [-1.75, 1.75]) {
+    for (const s of [-1, 1]) { const p = new THREE.Group(); p.position.set(sx, top, 0); p.rotation.x = s * 0.32; g.add(p); bx(p, 0.08, 2.55, 0.08, MET, 0, -1.22, 0); }
+    addStatic(x + sx - 0.22, 0, z - 0.95, x + sx + 0.22, 2.2, z + 0.95, 'play');
+  }
+  bx(g, 3.7, 0.09, 0.09, MET, 0, top, 0);
+  for (const sx of [-0.7, 0.7]) {
+    const sw = new THREE.Group(); sw.position.set(sx, top - 0.06, 0); g.add(sw);
+    bx(sw, 0.025, 1.9, 0.025, 0xf4f4f4, -0.2, -0.95, 0); bx(sw, 0.025, 1.9, 0.025, 0xf4f4f4, 0.2, -0.95, 0);
+    bx(sw, 0.52, 0.07, 0.26, WOOD, 0, -1.88, 0); G.yard.swings.push(sw);
+  }
+}
+function sandbox(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  const W = 0xd7a15e;
+  bx(g, 3.3, 0.28, 0.14, W, 0, 0.16, -1.4); bx(g, 3.3, 0.28, 0.14, W, 0, 0.16, 1.4);
+  bx(g, 0.14, 0.28, 2.7, W, -1.6, 0.16, 0); bx(g, 0.14, 0.28, 2.7, W, 1.6, 0.16, 0);
+  bx(g, 3.0, 0.1, 2.5, 0xf0d48a, 0, 0.08, 0, { cast: false });
+  cone(g, 0.32, 0.42, 0xf6e2a8, -0.55, 0.28, 0.15);
+  cyl(g, 0.15, 0.2, 0xe63946, 0.75, 0.18, -0.35); cyl(g, 0.17, 0.04, 0xffd60a, 0.75, 0.3, -0.35);
+  bx(g, 0.04, 0.28, 0.04, 0x6b4226, 0.95, 0.18, 0.2); bx(g, 0.16, 0.04, 0.12, 0x9aa0a6, 0.95, 0.06, 0.2);
+}
+function slide(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  const YEL = 0xffd60a, RED = 0xe63946, BLU = 0x4cc9f0, MET = 0xced4da;
+  bx(g, 1.3, 0.12, 1.2, YEL, 0, 1.66, -0.1);
+  addStatic(x - 0.65, 0, z - 0.7, x + 0.65, 1.72, z + 0.5, 'play');
+  bx(g, 0.08, 0.55, 1.15, MET, -0.58, 1.95, -0.05); bx(g, 0.08, 0.55, 1.15, MET, 0.58, 1.95, -0.05);
+  addStatic(x - 0.66, 1.72, z - 0.62, x - 0.5, 2.25, z + 0.45, 'play');
+  addStatic(x + 0.5, 1.72, z - 0.62, x + 0.66, 2.25, z + 0.45, 'play');
+  for (let i = 0; i < 5; i++) {
+    const h = 0.34 * (i + 1), cz = 0.5 + 0.2 + (4 - i) * 0.4;
+    bx(g, 0.85, h, 0.36, i % 2 ? BLU : RED, 0, h / 2, cz);
+    addStatic(x - 0.42, 0, z + cz - 0.18, x + 0.42, h, z + cz + 0.18, 'play');
+  }
+  const chute = bx(g, 0.78, 0.08, 2.5, YEL, 0, 1.02, -1.6); chute.rotation.x = -0.5;
+  for (const sx of [-0.4, 0.4]) { const lip = bx(g, 0.08, 0.18, 2.5, RED, sx, 1.12, -1.6); lip.rotation.x = -0.5; }
+}
+function monkeyBars(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  const MET = 0xd0d5dc, RED = 0xe63946;
+  for (const sz of [-1.7, 1.7]) {
+    bx(g, 0.1, 2.35, 0.1, RED, -0.75, 1.17, sz); bx(g, 0.1, 2.35, 0.1, RED, 0.75, 1.17, sz);
+    bx(g, 1.7, 0.1, 0.1, MET, 0, 2.3, sz);
+    addStatic(x - 0.9, 0, z + sz - 0.14, x + 0.9, 2.35, z + sz + 0.14, 'play');
+  }
+  for (let i = 0; i < 6; i++) bx(g, 1.55, 0.07, 0.07, MET, 0, 2.2, -1.25 + i * 0.5);
+}
+function seesaw(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  bx(g, 0.5, 0.1, 0.5, 0x1d3557, 0, 0.05, 0); bx(g, 0.34, 0.42, 0.62, 0x4cc9f0, 0, 0.28, 0);
+  const plank = new THREE.Group(); plank.position.y = 0.56; g.add(plank);
+  bx(plank, 3.6, 0.1, 0.42, 0xffd60a, 0, 0, 0);
+  bx(plank, 0.5, 0.08, 0.46, 0xe63946, -1.5, 0.08, 0); bx(plank, 0.5, 0.08, 0.46, 0x52ff8f, 1.5, 0.08, 0);
+  bx(plank, 0.08, 0.26, 0.08, 0xced4da, -1.7, 0.18, 0); bx(plank, 0.08, 0.26, 0.08, 0xced4da, 1.7, 0.18, 0);
+  addStatic(x - 0.28, 0, z - 0.36, x + 0.28, 0.7, z + 0.36, 'play');
+  G.yard.seesaws.push(plank);
+}
+function merry(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  cyl(g, 1.45, 0.18, 0xffd60a, 0, 0.16, 0); cyl(g, 1.15, 0.06, 0xe63946, 0, 0.26, 0); cyl(g, 0.1, 1.15, 0xdee2e6, 0, 0.75, 0);
+  const spin = new THREE.Group(); spin.position.y = 1.2; g.add(spin);
+  const cols = [0xe63946, 0x4cc9f0, 0x52ff8f, 0xffd60a, 0xff4dd8, 0xffffff];
+  for (let i = 0; i < 6; i++) {
+    const a = i / 6 * Math.PI * 2;
+    const bar = bx(spin, 1.05, 0.07, 0.07, cols[i], Math.cos(a) * 0.55, 0, Math.sin(a) * 0.55); bar.rotation.y = -a;
+    sph(spin, 0.11, cols[i], Math.cos(a) * 1.1, 0, Math.sin(a) * 1.1);
+  }
+  addStatic(x - 1.25, 0, z - 1.25, x + 1.25, 0.28, z + 1.25, 'play');
+  addStatic(x - 0.16, 0, z - 0.16, x + 0.16, 1.35, z + 0.16, 'play');
+  G.yard.merry = spin;
+}
+function springRider(x, z, color) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  cyl(g, 0.28, 0.08, 0x8d9399, 0, 0.04, 0);
+  for (let i = 0; i < 5; i++) { const a = i * 1.15; bx(g, 0.3, 0.05, 0.3, 0xdee2e6, Math.cos(a) * 0.07, 0.14 + i * 0.07, Math.sin(a) * 0.07); }
+  const body = new THREE.Group(); body.position.y = 0.58; g.add(body);
+  bx(body, 0.48, 0.24, 0.26, color, 0, 0.16, 0); sph(body, 0.17, color, 0, 0.34, 0.14);
+  bx(body, 0.05, 0.1, 0.04, 0x222222, -0.1, 0.48, 0.14); bx(body, 0.05, 0.1, 0.04, 0x222222, 0.1, 0.48, 0.14);
+  bx(body, 0.06, 0.05, 0.03, 0xffffff, -0.06, 0.36, 0.28); bx(body, 0.06, 0.05, 0.03, 0xffffff, 0.06, 0.36, 0.28);
+  bx(body, 0.05, 0.04, 0.07, 0xfb8500, 0, 0.3, 0.28); bx(body, 0.32, 0.06, 0.2, 0x6b4226, 0, 0.02, -0.02);
+  addStatic(x - 0.26, 0, z - 0.26, x + 0.26, 0.95, z + 0.26, 'play');
+  G.yard.riders.push(body);
+}
+function jungleGym(x, z) {
+  const g = new THREE.Group(); g.position.set(x, 0, z); G.scene.add(g);
+  const cols = [0xe63946, 0xffd60a, 0x4cc9f0, 0x52ff8f];
+  for (const [sx, sz] of [[-1.15, -1.15], [1.15, -1.15], [-1.15, 1.15], [1.15, 1.15]]) {
+    cyl(g, 0.07, 2.15, 0xe9ecef, sx, 1.08, sz);
+    addStatic(x + sx - 0.1, 0, z + sz - 0.1, x + sx + 0.1, 2.15, z + sz + 0.1, 'play');
+  }
+  bx(g, 2.15, 0.1, 2.15, 0x4cc9f0, 0, 1.22, 0);
+  addStatic(x - 1.05, 1.16, z - 1.05, x + 1.05, 1.28, z + 1.05, 'play');
+  for (const [px, pz, w, d] of [[0, -1.05, 2.15, 0.08], [0, 1.05, 2.15, 0.08], [-1.05, 0, 0.08, 2.15], [1.05, 0, 0.08, 2.15]]) bx(g, w, 0.08, d, 0xffd60a, px, 1.7, pz);
+  for (let i = 0; i < 4; i++) {
+    const h = 0.31 * (i + 1), cz = -1.15 - 0.2 - (3 - i) * 0.38;
+    bx(g, 0.75, h, 0.34, cols[i], 0, h / 2, cz);
+    addStatic(x - 0.38, 0, z + cz - 0.17, x + 0.38, h, z + cz + 0.17, 'play');
+  }
 }

@@ -127,11 +127,11 @@ export function moveBox(pos, hw, h, vel, dt, out) {
 }
 
 // 圆（xz 平面）与静态盒，用于机器人
-export function circleResolve(pos, r, y0, y1) {
+export function circleResolve(pos, r, y0, y1, skip) {
   const S = G.statics; let hit = null;
   for (let k = 0; k < S.length; k++) {
     const b = S[k];
-    if (b.off || b.max.y <= y0 || b.min.y >= y1) continue;
+    if (b.off || b.max.y <= y0 || b.min.y >= y1 || (skip && skip(b))) continue;
     const cx = clamp(pos.x, b.min.x, b.max.x), cz = clamp(pos.z, b.min.z, b.max.z);
     const dx = pos.x - cx, dz = pos.z - cz, d2 = dx * dx + dz * dz;
     if (d2 >= r * r) continue;
@@ -147,27 +147,53 @@ export function circleResolve(pos, r, y0, y1) {
 }
 
 // ---------- 寻路流场 ----------
-export const NAV = { cs: 0.5, w: 0, h: 0, blocked: null, dist: null, free: [] };
+export const NAV = { cs: 0.5, w: 0, h: 0, ox: 0, oz: 0, blocked: null, dist: null, free: [] };
+let queue = new Int32Array(8192);
 export function buildNav() {
-  const cs = NAV.cs; NAV.w = Math.ceil(G.W / cs); NAV.h = Math.ceil(G.D / cs);
-  NAV.blocked = new Uint8Array(NAV.w * NAV.h); NAV.dist = new Int16Array(NAV.w * NAV.h); NAV.free = [];
-  const pad = 0.28;
+  const cs = NAV.cs;
+  NAV.ox = G.X0; NAV.oz = G.Z0;
+  NAV.w = Math.ceil((G.X1 - G.X0) / cs); NAV.h = Math.ceil((G.Z1 - G.Z0) / cs);
+  const n = NAV.w * NAV.h;
+  NAV.blocked = new Uint8Array(n); NAV.dist = new Int16Array(n); NAV.free = [];
+  if (queue.length < n) queue = new Int32Array(n);
   for (let j = 0; j < NAV.h; j++) for (let i = 0; i < NAV.w; i++) {
-    const x0 = i * cs - pad, x1 = (i + 1) * cs + pad, z0 = j * cs - pad, z1 = (j + 1) * cs + pad;
-    let blk = 0;
-    for (const b of G.statics) {
-      if (b.tag === 'floor' || b.tag === 'ceil' || b.min.y > 1.3 || b.max.y < 0.2) continue;
-      if (b.max.x > x0 && b.min.x < x1 && b.max.z > z0 && b.min.z < z1) { blk = 1; break; }
-    }
+    const blk = cellBlocked(i, j);
     NAV.blocked[j * NAV.w + i] = blk;
     if (!blk) NAV.free.push(j * NAV.w + i);
   }
 }
-const queue = new Int32Array(8192);
-export function cellOf(x, z) {
-  return clamp(Math.floor(z / NAV.cs), 0, NAV.h - 1) * NAV.w + clamp(Math.floor(x / NAV.cs), 0, NAV.w - 1);
+function cellBlocked(i, j) {
+  const cs = NAV.cs, pad = 0.28;
+  const x0 = NAV.ox + i * cs - pad, x1 = NAV.ox + (i + 1) * cs + pad, z0 = NAV.oz + j * cs - pad, z1 = NAV.oz + (j + 1) * cs + pad;
+  for (const b of G.statics) {
+    if (b.off || b.tag === 'floor' || b.tag === 'ceil' || b.tag === 'roof' || b.min.y > 1.3 || b.max.y < 0.2) continue;
+    if (b.max.x > x0 && b.min.x < x1 && b.max.z > z0 && b.min.z < z1) return 1;
+  }
+  return 0;
 }
-export function cellPos(c, out) { out.x = (c % NAV.w + 0.5) * NAV.cs; out.z = (Math.floor(c / NAV.w) + 0.5) * NAV.cs; return out; }
+function refillFree() {
+  NAV.free = [];
+  for (let n = 0; n < NAV.blocked.length; n++) if (!NAV.blocked[n]) NAV.free.push(n);
+}
+export function refreshNavArea(x0, z0, x1, z1) {
+  if (!NAV.blocked) return;
+  const cs = NAV.cs;
+  const i0 = clamp(Math.floor((Math.min(x0, x1) - NAV.ox) / cs) - 1, 0, NAV.w - 1);
+  const i1 = clamp(Math.ceil((Math.max(x0, x1) - NAV.ox) / cs) + 1, 0, NAV.w - 1);
+  const j0 = clamp(Math.floor((Math.min(z0, z1) - NAV.oz) / cs) - 1, 0, NAV.h - 1);
+  const j1 = clamp(Math.ceil((Math.max(z0, z1) - NAV.oz) / cs) + 1, 0, NAV.h - 1);
+  for (let j = j0; j <= j1; j++) for (let i = i0; i <= i1; i++) NAV.blocked[j * NAV.w + i] = cellBlocked(i, j);
+  refillFree();
+}
+export function rebuildBlocked() {
+  if (!NAV.blocked) return;
+  for (let j = 0; j < NAV.h; j++) for (let i = 0; i < NAV.w; i++) NAV.blocked[j * NAV.w + i] = cellBlocked(i, j);
+  refillFree();
+}
+export function cellOf(x, z) {
+  return clamp(Math.floor((z - NAV.oz) / NAV.cs), 0, NAV.h - 1) * NAV.w + clamp(Math.floor((x - NAV.ox) / NAV.cs), 0, NAV.w - 1);
+}
+export function cellPos(c, out) { out.x = NAV.ox + (c % NAV.w + 0.5) * NAV.cs; out.z = NAV.oz + (Math.floor(c / NAV.w) + 0.5) * NAV.cs; return out; }
 function nearestFree(c) {
   if (!NAV.blocked[c]) return c;
   const ci = c % NAV.w, cj = Math.floor(c / NAV.w);
@@ -210,7 +236,7 @@ export function flowDir(x, z, out) {
     if (dd < best) { best = dd; bi = di; bj = dj; }
   }
   // 朝目标格中心走，避免贴边
-  const tx = (i + bi + 0.5) * NAV.cs - x, tz = (j + bj + 0.5) * NAV.cs - z;
+  const tx = NAV.ox + (i + bi + 0.5) * NAV.cs - x, tz = NAV.oz + (j + bj + 0.5) * NAV.cs - z;
   const l = Math.hypot(tx, tz) || 1;
   out.x = tx / l; out.z = tz / l;
   return dist[c];
